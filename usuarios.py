@@ -1,7 +1,9 @@
 # =============================================================================
 # ARCHIVO: usuarios.py
-# VERSIÓN: FORENSE (Diagnóstico Paso a Paso)
-# DESCRIPCIÓN: Muestra secretos cargados, datos en Excel y detiene todo antes de guardar.
+# PROYECTO: TicketV1
+# VERSIÓN: 5.0 (GOLD MASTER - INTEGRA TODO)
+# FECHA: 17-Ene-2026
+# DESCRIPCIÓN: Registro completo con Multi-idioma, Debug de Secrets y Anti-Duplicados.
 # =============================================================================
 import streamlit as st
 import pandas as pd
@@ -12,7 +14,7 @@ import correo
 import paises
 import estilos
 
-# --- UTILIDADES ---
+# --- FUNCIONES AUXILIARES ---
 def encriptar_password(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
@@ -20,155 +22,206 @@ def es_email_valido(email):
     patron = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
     return re.match(patron, email) is not None
 
-# --- PANTALLA DE DEBUGGING ---
+def validar_fuerza_clave(password):
+    score = 0
+    if len(password) >= 8: score += 1
+    if re.search(r"[A-Z]", password): score += 1
+    if re.search(r"[a-z]", password): score += 1
+    if re.search(r"[0-9]", password): score += 1
+    if re.search(r"[@$!%*?&#]", password): score += 1
+    
+    if score < 3: return 20, "Débil 🔴", "#ff4b4b"
+    elif score < 5: return 60, "Media 🟡", "#ffa500"
+    else: return 100, "Robusta 🟢", "#21c354"
+
+# --- DIAGNÓSTICO SILENCIOSO (Verifica secretos sin romper la UI) ---
+def verificar_salud_sistema():
+    problemas = []
+    # 1. Chequeo de Secrets
+    if "emails" not in st.secrets:
+        problemas.append("❌ Falta sección [emails] en secrets.toml")
+    
+    return problemas
+
+def obtener_emails_actuales(conn):
+    """Obtiene la lista de correos frescos para validar duplicados."""
+    try:
+        # Forzamos lectura fresca (ttl=0)
+        df = conn.read(worksheet="Usuarios", ttl=0)
+        if df.empty: return []
+        
+        # Normalizar y buscar columna
+        df.columns = [str(c).lower().strip() for c in df.columns]
+        col = next((c for c in ['email', 'correo', 'usuario'] if c in df.columns), None)
+        
+        if col:
+            return df[col].astype(str).str.lower().str.strip().tolist()
+        return []
+    except Exception:
+        return []
+
+# --- INTERFAZ DE REGISTRO (CON MULTI-IDIOMA) ---
 def interfaz_registro_legal(conn, t):
     estilos.mostrar_logo()
-    st.markdown("## 🕵️‍♂️ MODO FORENSE: REVISIÓN DE DATOS")
-    st.info("Esta pantalla no guarda nada automáticamente. Tú controlas cada paso.")
-
-    # ---------------------------------------------------------
-    # PASO 1: VERIFICAR QUÉ CARAJOS HAY EN LOS SECRETS
-    # ---------------------------------------------------------
-    with st.expander("🔑 PASO 1: VERIFICAR LLAVES (SECRETS)", expanded=True):
-        st.write("El sistema está leyendo estas secciones en tu secrets.toml:")
-        try:
-            llaves = list(st.secrets.keys())
-            st.code(llaves)
-            
-            # Verificamos si existe [emails] que es lo que tú pusiste
-            if "emails" in st.secrets:
-                st.success("✅ SECCIÓN [emails] ENCONTRADA.")
-                st.write(f"Usuario configurado: `{st.secrets['emails'].get('user', 'NO DEFINIDO')}`")
-            else:
-                st.error("❌ NO VEO LA SECCIÓN [emails].")
-                
-            # Verificamos si por error sigue buscando [smtp]
-            if "smtp" in st.secrets:
-                st.warning("⚠️ OJO: Tienes una sección [smtp] vieja. Asegúrate que 'correo.py' no la esté usando.")
-        except Exception as e:
-            st.error(f"Error leyendo secrets: {e}")
-
-    # ---------------------------------------------------------
-    # PASO 2: VERIFICAR LA BASE DE DATOS (SIN CACHÉ)
-    # ---------------------------------------------------------
-    with st.expander("Cb PASO 2: LEER EXCEL (DATABASE)", expanded=True):
-        st.write("Borrando caché y leyendo datos frescos...")
-        st.cache_data.clear() # OBLIGAMOS A BORRAR MEMORIA
-        
-        try:
-            # Leemos hoja Usuarios
-            df = conn.read(worksheet="Usuarios", ttl=0) 
-            
-            if df.empty:
-                st.warning("La hoja está vacía.")
-                lista_emails_real = []
-            else:
-                # Normalizamos columnas
-                df.columns = [str(c).lower().strip() for c in df.columns]
-                st.write("Columnas detectadas:", list(df.columns))
-                st.dataframe(df) # MUESTRA LA TABLA PARA QUE TU LA VEAS
-
-                # Buscamos la columna email
-                col_email = None
-                if 'email' in df.columns: col_email = 'email'
-                elif 'correo' in df.columns: col_email = 'correo'
-                
-                if col_email:
-                    lista_emails_real = df[col_email].astype(str).str.lower().str.strip().tolist()
-                    st.write("📧 **LISTA DE EMAILS YA REGISTRADOS:**")
-                    st.code(lista_emails_real)
-                else:
-                    st.error("🚨 NO ENCUENTRO COLUMNA EMAIL.")
-                    lista_emails_real = []
-
-        except Exception as e:
-            st.error(f"Error grave leyendo Excel: {e}")
-            lista_emails_real = []
-
-    st.divider()
-
-    # ---------------------------------------------------------
-    # PASO 3: PRUEBA DE INPUT
-    # ---------------------------------------------------------
-    st.markdown("### 📝 DATOS DE PRUEBA")
     
-    c1, c2 = st.columns(2)
-    n = c1.text_input("Nombre", "Test")
-    a = c2.text_input("Apellido", "User")
-    m = st.text_input("EMAIL A PROBAR", "").lower().strip()
-    p1 = st.text_input("Password", "123456", type="password")
+    # Título usando el diccionario de idiomas 't'
+    titulo = t.get("reg_tit", "ALTA DE USUARIO")
+    # Agregamos un indicador visual pequeño para saber que es la versión nueva
+    st.markdown(f'<p class="swarco-title">{titulo} <small style="font-size:10px; color:grey;">(v5.0)</small></p>', unsafe_allow_html=True)
 
-    # VALIDACIÓN EN VIVO (SIN APRETAR BOTONES)
-    if m:
-        if m in lista_emails_real:
-            st.error(f"⛔ ESTADO: EL USUARIO '{m}' YA EXISTE. (BLOQUEADO)")
-            bloquear_boton = True
-        else:
-            st.success(f"✅ ESTADO: El usuario '{m}' ESTÁ DISPONIBLE.")
-            bloquear_boton = False
-    else:
-        bloquear_boton = True
+    # ALERTA DE SISTEMA (Si faltan secrets)
+    errores_sys = verificar_salud_sistema()
+    if errores_sys:
+        for err in errores_sys:
+            st.error(err)
+        st.stop() # Freno de mano si no hay configuración
+
+    # --- FORMULARIO ---
+    with st.container(border=True):
+        st.markdown(f"#### 👤 {t.get('p1_tit', 'Identificación')}")
+        c1, c2 = st.columns(2)
+        n = c1.text_input(t.get("nombre", "Nombre *"))
+        a = c2.text_input(t.get("apellido", "Apellido *"))
+
+    with st.container(border=True):
+        st.markdown(f"#### 🌍 {t.get('p2_tit', 'Datos Profesionales')}")
+        c3, c4 = st.columns(2)
+        cargo = c3.text_input(t.get("cargo", "Cargo / Puesto *"))
+        e = c4.text_input(t.get("empresa", "Empresa / Entidad *"))
+        
+        # Email (Campo crítico)
+        lbl_email = t.get("email", "Email Corporativo *")
+        m = st.text_input(lbl_email).lower().strip()
+        
+        # Validación visual inmediata
+        if m:
+            lista_check = obtener_emails_actuales(conn)
+            if m in lista_check:
+                st.error(f"⛔ {t.get('err_dup', 'Este usuario YA existe.')}")
+            elif not es_email_valido(m):
+                st.warning("⚠️ Formato inválido")
+            else:
+                st.caption("✅ Email disponible")
+
+        # Telefonos
+        col_pais, col_pref, col_tel = st.columns([3, 1.2, 3])
+        with col_pais:
+            lista = paises.obtener_lista_nombres()
+            idx = lista.index("España") if "España" in lista else 0
+            pais_sel = st.selectbox(t.get("pais", "País *"), lista, index=idx)
+        with col_pref:
+            pref = paises.obtener_prefijo(pais_sel)
+            st.text_input("Prefijo", value=pref, disabled=True)
+        with col_tel:
+            tl_num = st.text_input(t.get("movil", "Nº Móvil *"))
+
+    with st.container(border=True):
+        st.markdown(f"#### 🔒 {t.get('p3_tit', 'Seguridad')}")
+        p1 = st.text_input(t.get("pass", "Contraseña *"), type="password")
+        if p1:
+            prog, etiq, col = validar_fuerza_clave(p1)
+            st.caption(f"Fortaleza: {etiq}")
+        p2 = st.text_input(t.get("pass_rep", "Repetir Contraseña *"), type="password")
+
+    with st.container(border=True):
+        st.markdown(f"#### ⚖️ {t.get('p4_tit', 'Legales')}")
+        chk = st.checkbox(t.get("aceptar_pol", "He leído y acepto la Política de Privacidad"))
 
     st.divider()
 
-    # ---------------------------------------------------------
-    # PASO 4: ACCIÓN CONTROLADA
-    # ---------------------------------------------------------
-    if st.button("🚀 INTENTAR GUARDAR Y ENVIAR CORREO", disabled=bloquear_boton, type="primary"):
-        st.write("⏳ Iniciando proceso...")
+    # --- BOTÓN DE ACCIÓN ---
+    btn_texto = t.get("btn_reg", "REGISTRAR USUARIO")
+    if st.button(btn_texto, type="primary", use_container_width=True):
         
-        # 1. DOBLE CHEQUEO
-        if m in lista_emails_real:
-            st.error("🛑 ALTO: Es duplicado. No guardo nada.")
+        # 1. Validaciones
+        errores = []
+        if not n or not a: errores.append("Nombre/Apellido")
+        if not cargo or not e: errores.append("Cargo/Empresa")
+        if not m or not es_email_valido(m): errores.append("Email inválido")
+        if not tl_num: errores.append("Teléfono")
+        if not p1 or p1 != p2: errores.append("Contraseñas")
+        if not chk: errores.append("Términos")
+
+        if errores:
+            st.error(f"⚠️ {t.get('err_datos', 'Faltan datos')}: {', '.join(errores)}")
             st.stop()
 
-        # 2. INTENTO DE GUARDADO
-        try:
-            st.info("1️⃣ Guardando en Excel...")
-            # Aquí construimos la fila dummy para probar
-            fila = [n, a, "CargoTest", "EmpresaTest", "España", "+34", "000", m, encriptar_password(p1)]
-            conn.worksheet("Usuarios").append_row(fila)
-            st.success("✅ Guardado en Excel OK.")
-            
-        except Exception as e:
-            st.error(f"❌ Error guardando en Excel: {e}")
+        # 2. FRENO DE DUPLICADOS (Doble Check Real)
+        lista_final = obtener_emails_actuales(conn)
+        if m in lista_final:
+            st.error(f"⛔ {t.get('err_dup_block', 'ERROR: El usuario ya existe. No se puede duplicar.')}")
             st.stop()
 
-        # 3. INTENTO DE CORREO
+        # 3. GUARDAR Y ENVIAR
         try:
-            st.info("2️⃣ Enviando Correo (Usando secrets['emails'])...")
-            
-            # --- DEBUG IMPLICITO DEL CORREO ---
-            # Llamamos a correo.py. Si falla, debe explotar aquí.
-            ok = correo.enviar_correo_bienvenida(m, n, m, p1)
+            with st.spinner(t.get("msg_guardando", "Guardando y enviando correo...")):
+                
+                # A. Guardar en Sheets
+                conn.worksheet("Usuarios").append_row([
+                    n, a, cargo, e, pais_sel, pref, tl_num, m, encriptar_password(p1)
+                ])
+                
+                # B. Enviar Correo (Usando tu correo.py corregido)
+                ok = correo.enviar_correo_bienvenida(m, n, m, p1)
             
             if ok:
                 st.balloons()
-                st.success("✅✅ CORREO ENVIADO EXITOSAMENTE.")
-                st.markdown("""
-                    ### 🎉 PROCESO TERMINADO
-                    El usuario se guardó y el correo salió.
-                    
-                    **¿Qué quieres hacer ahora?**
-                """)
-                if st.button("Ir al Login (Finalizar)"):
+                st.success(f"✅ {t.get('msg_exito', 'Usuario creado y notificado por email.')}")
+                
+                # Botón manual para salir
+                if st.button(t.get("btn_ir_login", "Ir al Inicio de Sesión")):
                     st.session_state.mostrar_registro = False
                     st.rerun()
             else:
-                st.error("❌ EL CÓDIGO EJECUTÓ PERO RETORNÓ FALSE.")
-                st.warning("Esto pasa si las credenciales son inválidas o Google bloqueó el acceso.")
+                st.error("❌ " + t.get("err_mail", "Usuario guardado, pero falló el envío del correo."))
+                st.warning("Verifique la configuración de 'secrets.toml'.")
+                st.stop()
 
-        except Exception as e:
-            st.error(f"💣 EXPLOSIÓN EN EL CÓDIGO DE CORREO: {e}")
-            st.write("Verifica que 'correo.py' esté actualizado y leyendo ['emails'].")
+        except Exception as ex:
+            st.error(f"❌ Error Técnico: {ex}")
+            st.stop()
 
-    if st.button("Cancelar / Volver"):
+    if st.button(t.get("btn_cancelar", "Cancelar")):
         st.session_state.mostrar_registro = False
         st.rerun()
 
-# --- LOGIN (Simplificado) ---
+# --- LOGIN (Mantenemos simple pero funcional) ---
 def gestionar_acceso(conn, t):
-    st.title("LOGIN")
-    if st.button("Ir a Pantalla Forense (Registro)"):
+    estilos.mostrar_logo()
+    st.markdown(f'<p class="swarco-title">{t.get("login_tit", "ACCESO SAT")}</p>', unsafe_allow_html=True)
+    
+    with st.container(border=True):
+        u = st.text_input(t.get("user_ph", "Usuario (Email)"))
+        p = st.text_input(t.get("pass_ph", "Contraseña"), type="password")
+        
+        if st.button(t.get("btn_entrar", "ENTRAR"), use_container_width=True):
+            try:
+                # Login Robusto
+                df = conn.read(worksheet="Usuarios", ttl=0)
+                if not df.empty:
+                    df.columns = [str(c).lower().strip() for c in df.columns]
+                    col_email = next((c for c in ['email', 'correo'] if c in df.columns), None)
+                    
+                    if col_email and u.lower().strip() in df[col_email].astype(str).str.lower().str.strip().values:
+                        # Check pass
+                        row = df[df[col_email].astype(str).str.lower().str.strip() == u.lower().strip()].iloc[0]
+                        col_pass = next((c for c in ['password', 'contraseña'] if c in df.columns), None)
+                        
+                        if col_pass and encriptar_password(p) == str(row[col_pass]):
+                            st.session_state.autenticado = True
+                            st.session_state.user_email = u
+                            st.session_state.pagina_actual = 'menu'
+                            st.rerun()
+                        else:
+                            st.error(t.get("err_pass", "Contraseña incorrecta"))
+                    else:
+                        st.error(t.get("err_user", "Usuario no encontrado"))
+                else:
+                    st.error("Base de datos vacía")
+            except Exception as e:
+                st.error(f"Error conexión: {e}")
+
+    st.write("")
+    if st.button(t.get("btn_crear", "Crear cuenta nueva")):
         st.session_state.mostrar_registro = True
         st.rerun()
