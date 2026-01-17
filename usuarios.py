@@ -1,20 +1,18 @@
 # =============================================================================
 # ARCHIVO: usuarios.py
-# PROYECTO: TicketV1
-# VERSIÓN: DEBUG_TERMINATOR (Diagnóstico en Vivo)
-# FECHA: 17-Ene-2026
-# DESCRIPCIÓN: Muestra datos crudos en pantalla para cazar el error.
+# VERSIÓN: FORENSE (Diagnóstico Paso a Paso)
+# DESCRIPCIÓN: Muestra secretos cargados, datos en Excel y detiene todo antes de guardar.
 # =============================================================================
 import streamlit as st
 import pandas as pd
 import hashlib
 import re 
+import time
 import correo
 import paises
 import estilos
-import time
 
-# --- FUNCIONES AUXILIARES ---
+# --- UTILIDADES ---
 def encriptar_password(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
@@ -22,159 +20,155 @@ def es_email_valido(email):
     patron = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
     return re.match(patron, email) is not None
 
-def validar_fuerza_clave(password):
-    score = 0
-    if len(password) >= 8: score += 1
-    if re.search(r"[A-Z]", password): score += 1
-    if re.search(r"[a-z]", password): score += 1
-    if re.search(r"[0-9]", password): score += 1
-    if re.search(r"[@$!%*?&#]", password): score += 1
-    if score < 3: return 20, "Débil 🔴", "#ff4b4b"
-    elif score < 5: return 60, "Media 🟡", "#ffa500"
-    else: return 100, "Robusta 🟢", "#21c354"
-
-# --- ZONA DE DIAGNÓSTICO ---
-def mostrar_diagnostico(conn):
-    st.error("🛠️ MODO DEBUG ACTIVO")
-    st.write("Leyendo base de datos fresca...")
-    
-    try:
-        # Forzamos lectura fresca usando read() con ttl=0 si es posible, 
-        # o invocando worksheet directamente.
-        df = conn.read(worksheet="Usuarios", ttl=0)
-        
-        # 1. Mostrar Columnas
-        cols_raw = list(df.columns)
-        
-        # 2. Normalizar
-        df.columns = [str(c).lower().strip() for c in df.columns]
-        
-        # 3. Extraer Emails
-        col_email = 'email' if 'email' in df.columns else 'correo' if 'correo' in df.columns else None
-        
-        if col_email:
-            lista = df[col_email].astype(str).str.lower().str.strip().tolist()
-            with st.expander("📂 VER LISTA DE EMAILS EN BASE DE DATOS (Click aquí)", expanded=False):
-                st.write(f"Total encontrados: {len(lista)}")
-                st.write(lista)
-                st.dataframe(df) # Muestra la tabla completa
-            return lista
-        else:
-            st.error(f"🚨 NO VEO COLUMNA EMAIL. Columnas: {cols_raw}")
-            return []
-            
-    except Exception as e:
-        st.error(f"❌ Error leyendo Excel: {e}")
-        return []
-
-# --- INTERFAZ REGISTRO ---
+# --- PANTALLA DE DEBUGGING ---
 def interfaz_registro_legal(conn, t):
     estilos.mostrar_logo()
-    st.title("REGISTRO DEBUG")
-    
-    # 1. EJECUTAR DIAGNÓSTICO AL INICIO
-    lista_emails_registrados = mostrar_diagnostico(conn)
+    st.markdown("## 🕵️‍♂️ MODO FORENSE: REVISIÓN DE DATOS")
+    st.info("Esta pantalla no guarda nada automáticamente. Tú controlas cada paso.")
 
-    # 2. FORMULARIO
-    with st.container(border=True):
-        st.markdown("#### Datos Usuario")
-        n = st.text_input("Nombre", value="Test")
-        a = st.text_input("Apellido", value="User")
-        cargo = st.text_input("Cargo", value="Tester")
-        e = st.text_input("Empresa", value="Swarco")
-        
-        # EMAIL CRÍTICO
-        st.markdown("---")
-        m = st.text_input("EMAIL (El de los cojones)", value="").lower().strip()
-        
-        # VERIFICACIÓN EN TIEMPO REAL (VISUAL)
-        if m:
-            if m in lista_emails_registrados:
-                st.error(f"⛔ ¡DETECTADO! El sistema VE que '{m}' ya existe.")
-                st.markdown("**SI PULSAS REGISTRAR AHORA, DEBERÍA FRENARSE.**")
-            else:
-                st.success(f"✅ El sistema NO ve '{m}' en la lista. (Ojo: Si ya existe en Excel y sale verde aquí, es problema de caché).")
-        
-        st.markdown("---")
-        
-        # Telefonos
-        col_pais, col_pref, col_tel = st.columns([3, 1.2, 3])
-        with col_pais:
-            lista = paises.obtener_lista_nombres()
-            idx = lista.index("España") if "España" in lista else 0
-            pais_sel = st.selectbox("País", lista, index=idx)
-        with col_pref:
-            pref = paises.obtener_prefijo(pais_sel)
-            st.text_input("Prefijo", value=pref, disabled=True)
-        with col_tel:
-            tl_num = st.text_input("Móvil", value="600000000")
-
-        p1 = st.text_input("Contraseña", type="password", value="Swarco123$")
-        p2 = st.text_input("Repetir Contraseña", type="password", value="Swarco123$")
-        chk = st.checkbox("Acepto términos", value=True)
-
-    st.divider()
-
-    # --- BOTÓN DE PRUEBA SMTP (SOLO CORREO) ---
-    with st.expander("📧 PROBAR SOLO EL ENVÍO DE CORREO (Sin Guardar)"):
-        dest = st.text_input("Correo destino para prueba", value=m)
-        if st.button("📨 ENVIAR CORREO DE PRUEBA"):
-            st.write("Intentando enviar...")
-            try:
-                ok = correo.enviar_correo_bienvenida(dest, "Usuario Test", dest, "1234")
-                if ok: st.success("✅ CORREO ENVIADO CON ÉXITO.")
-                else: st.error("❌ EL ENVÍO FALLÓ. Revisa logs.")
-            except Exception as e:
-                st.error(f"❌ EXCEPCIÓN: {e}")
-
-    st.divider()
-
-    # --- BOTÓN DE REGISTRO REAL ---
-    if st.button("🔴 INTENTAR REGISTRO REAL (CON FRENO)", type="primary"):
-        st.write("🚦 INICIANDO PROCESO...")
-        
-        # 1. CHEQUEO DUPLICADOS FINAL
-        st.write(f"🔍 Buscando '{m}' en la lista...")
-        if m in lista_emails_registrados:
-            st.error("🛑 FRENO DE EMERGENCIA ACTIVADO: USUARIO DUPLICADO.")
-            st.error("EL CÓDIGO SE DETIENE AQUÍ.")
-            st.stop()
-        
-        st.success("🟢 NO ES DUPLICADO. PROCEDIENDO A GUARDAR.")
-        
-        # 2. GUARDADO
+    # ---------------------------------------------------------
+    # PASO 1: VERIFICAR QUÉ CARAJOS HAY EN LOS SECRETS
+    # ---------------------------------------------------------
+    with st.expander("🔑 PASO 1: VERIFICAR LLAVES (SECRETS)", expanded=True):
+        st.write("El sistema está leyendo estas secciones en tu secrets.toml:")
         try:
-            st.write("💾 Escribiendo en Excel...")
-            conn.worksheet("Usuarios").append_row([
-                n, a, cargo, e, pais_sel, pref, tl_num, m, encriptar_password(p1)
-            ])
-            st.write("✅ ESCRITURA OK.")
+            llaves = list(st.secrets.keys())
+            st.code(llaves)
             
-            # 3. CORREO
-            st.write("📧 Enviando correo...")
+            # Verificamos si existe [emails] que es lo que tú pusiste
+            if "emails" in st.secrets:
+                st.success("✅ SECCIÓN [emails] ENCONTRADA.")
+                st.write(f"Usuario configurado: `{st.secrets['emails'].get('user', 'NO DEFINIDO')}`")
+            else:
+                st.error("❌ NO VEO LA SECCIÓN [emails].")
+                
+            # Verificamos si por error sigue buscando [smtp]
+            if "smtp" in st.secrets:
+                st.warning("⚠️ OJO: Tienes una sección [smtp] vieja. Asegúrate que 'correo.py' no la esté usando.")
+        except Exception as e:
+            st.error(f"Error leyendo secrets: {e}")
+
+    # ---------------------------------------------------------
+    # PASO 2: VERIFICAR LA BASE DE DATOS (SIN CACHÉ)
+    # ---------------------------------------------------------
+    with st.expander("Cb PASO 2: LEER EXCEL (DATABASE)", expanded=True):
+        st.write("Borrando caché y leyendo datos frescos...")
+        st.cache_data.clear() # OBLIGAMOS A BORRAR MEMORIA
+        
+        try:
+            # Leemos hoja Usuarios
+            df = conn.read(worksheet="Usuarios", ttl=0) 
+            
+            if df.empty:
+                st.warning("La hoja está vacía.")
+                lista_emails_real = []
+            else:
+                # Normalizamos columnas
+                df.columns = [str(c).lower().strip() for c in df.columns]
+                st.write("Columnas detectadas:", list(df.columns))
+                st.dataframe(df) # MUESTRA LA TABLA PARA QUE TU LA VEAS
+
+                # Buscamos la columna email
+                col_email = None
+                if 'email' in df.columns: col_email = 'email'
+                elif 'correo' in df.columns: col_email = 'correo'
+                
+                if col_email:
+                    lista_emails_real = df[col_email].astype(str).str.lower().str.strip().tolist()
+                    st.write("📧 **LISTA DE EMAILS YA REGISTRADOS:**")
+                    st.code(lista_emails_real)
+                else:
+                    st.error("🚨 NO ENCUENTRO COLUMNA EMAIL.")
+                    lista_emails_real = []
+
+        except Exception as e:
+            st.error(f"Error grave leyendo Excel: {e}")
+            lista_emails_real = []
+
+    st.divider()
+
+    # ---------------------------------------------------------
+    # PASO 3: PRUEBA DE INPUT
+    # ---------------------------------------------------------
+    st.markdown("### 📝 DATOS DE PRUEBA")
+    
+    c1, c2 = st.columns(2)
+    n = c1.text_input("Nombre", "Test")
+    a = c2.text_input("Apellido", "User")
+    m = st.text_input("EMAIL A PROBAR", "").lower().strip()
+    p1 = st.text_input("Password", "123456", type="password")
+
+    # VALIDACIÓN EN VIVO (SIN APRETAR BOTONES)
+    if m:
+        if m in lista_emails_real:
+            st.error(f"⛔ ESTADO: EL USUARIO '{m}' YA EXISTE. (BLOQUEADO)")
+            bloquear_boton = True
+        else:
+            st.success(f"✅ ESTADO: El usuario '{m}' ESTÁ DISPONIBLE.")
+            bloquear_boton = False
+    else:
+        bloquear_boton = True
+
+    st.divider()
+
+    # ---------------------------------------------------------
+    # PASO 4: ACCIÓN CONTROLADA
+    # ---------------------------------------------------------
+    if st.button("🚀 INTENTAR GUARDAR Y ENVIAR CORREO", disabled=bloquear_boton, type="primary"):
+        st.write("⏳ Iniciando proceso...")
+        
+        # 1. DOBLE CHEQUEO
+        if m in lista_emails_real:
+            st.error("🛑 ALTO: Es duplicado. No guardo nada.")
+            st.stop()
+
+        # 2. INTENTO DE GUARDADO
+        try:
+            st.info("1️⃣ Guardando en Excel...")
+            # Aquí construimos la fila dummy para probar
+            fila = [n, a, "CargoTest", "EmpresaTest", "España", "+34", "000", m, encriptar_password(p1)]
+            conn.worksheet("Usuarios").append_row(fila)
+            st.success("✅ Guardado en Excel OK.")
+            
+        except Exception as e:
+            st.error(f"❌ Error guardando en Excel: {e}")
+            st.stop()
+
+        # 3. INTENTO DE CORREO
+        try:
+            st.info("2️⃣ Enviando Correo (Usando secrets['emails'])...")
+            
+            # --- DEBUG IMPLICITO DEL CORREO ---
+            # Llamamos a correo.py. Si falla, debe explotar aquí.
             ok = correo.enviar_correo_bienvenida(m, n, m, p1)
+            
             if ok:
                 st.balloons()
-                st.success("🏆 TODO COMPLETADO.")
-                if st.button("IR AL LOGIN"):
+                st.success("✅✅ CORREO ENVIADO EXITOSAMENTE.")
+                st.markdown("""
+                    ### 🎉 PROCESO TERMINADO
+                    El usuario se guardó y el correo salió.
+                    
+                    **¿Qué quieres hacer ahora?**
+                """)
+                if st.button("Ir al Login (Finalizar)"):
                     st.session_state.mostrar_registro = False
                     st.rerun()
             else:
-                st.error("⚠️ USUARIO GUARDADO PERO EL CORREO FALLÓ.")
-                st.stop()
-                
-        except Exception as ex:
-            st.error(f"💣 ERROR TÉCNICO: {ex}")
-            st.stop()
+                st.error("❌ EL CÓDIGO EJECUTÓ PERO RETORNÓ FALSE.")
+                st.warning("Esto pasa si las credenciales son inválidas o Google bloqueó el acceso.")
 
-    if st.button("Volver al Login"):
+        except Exception as e:
+            st.error(f"💣 EXPLOSIÓN EN EL CÓDIGO DE CORREO: {e}")
+            st.write("Verifica que 'correo.py' esté actualizado y leyendo ['emails'].")
+
+    if st.button("Cancelar / Volver"):
         st.session_state.mostrar_registro = False
         st.rerun()
 
-# --- LOGIN ---
+# --- LOGIN (Simplificado) ---
 def gestionar_acceso(conn, t):
-    estilos.mostrar_logo()
-    st.title("LOGIN DEBUG")
-    if st.button("Ir al Registro"):
+    st.title("LOGIN")
+    if st.button("Ir a Pantalla Forense (Registro)"):
         st.session_state.mostrar_registro = True
         st.rerun()
