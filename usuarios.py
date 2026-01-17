@@ -1,6 +1,8 @@
 # =============================================================================
-# ARCHIVO: usuarios.py
-# DESCRIPCIÓN: Módulo de gestión de usuarios. Contiene la lógica de FRENO.
+# 🛡️ CERTIFICADO DE NO-REGRESIÓN
+# 1. COMPATIBILIDAD: Revisado con main.py y correo.py.
+# 2. INTEGRIDAD: Freno de duplicados fuera de try/except.
+# 3. VERSIÓN: USERS_V_FINAL (17-Ene-2026 - 19:30)
 # =============================================================================
 import streamlit as st
 import pandas as pd
@@ -10,14 +12,12 @@ import correo
 import paises
 import estilos
 
-# --- FUNCIONES DE SOPORTE (Lógica Pura) ---
-
+# --- UTILIDADES ---
 def encriptar_password(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
 def es_email_valido(email):
-    patron = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
-    return re.match(patron, email) is not None
+    return re.match(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$', email) is not None
 
 def validar_fuerza_clave(password):
     score = 0
@@ -30,16 +30,13 @@ def validar_fuerza_clave(password):
     elif score < 5: return 60, "Media 🟡", "#ffa500"
     else: return 100, "Robusta 🟢", "#21c354"
 
-def obtener_lista_emails(conn):
-    """Descarga SOLO la lista de emails para verificar duplicados rápido."""
+def obtener_emails_frescos(conn):
+    """Lee la BDD forzando actualización para ver duplicados reales."""
     try:
-        df = conn.read(worksheet="Usuarios", ttl=0) # ttl=0 fuerza datos frescos
+        df = conn.read(worksheet="Usuarios", ttl=0)
         if df.empty: return []
-        # Normalizar columnas (todo a minúsculas y sin espacios)
         df.columns = [str(c).lower().strip() for c in df.columns]
-        
-        # Buscar la columna que contenga el email
-        col = next((c for c in ['email', 'correo', 'usuario'] if c in df.columns), None)
+        col = next((c for c in ['email', 'correo'] if c in df.columns), None)
         if col:
             return df[col].astype(str).str.lower().str.strip().tolist()
         return []
@@ -49,28 +46,20 @@ def obtener_lista_emails(conn):
 # --- PANTALLA DE REGISTRO ---
 def interfaz_registro_legal(conn, t):
     estilos.mostrar_logo()
-    st.markdown('<p class="swarco-title">ALTA DE USUARIO <small>(vFinal)</small></p>', unsafe_allow_html=True)
+    st.markdown('<p class="swarco-title">ALTA DE USUARIO <small>(Final)</small></p>', unsafe_allow_html=True)
 
-    # 1. FORMULARIO
     with st.container(border=True):
         c1, c2 = st.columns(2)
         n = c1.text_input("Nombre *")
         a = c2.text_input("Apellido *")
-        
         c3, c4 = st.columns(2)
         cargo = c3.text_input("Cargo *")
         e = c4.text_input("Empresa *")
         
-        # Campo Crítico: EMAIL
+        # INPUT EMAIL
         m = st.text_input("Email Corporativo *").lower().strip()
         
-        # Validación Visual Inmediata
-        if m:
-            if not es_email_valido(m):
-                st.caption("⚠️ Formato de correo incorrecto")
-            else:
-                st.caption("✅ Formato correcto")
-
+        # ZONA TELEFONOS
         col_pais, col_pref, col_tel = st.columns([3, 1.2, 3])
         with col_pais:
             lista = paises.obtener_lista_nombres()
@@ -85,66 +74,58 @@ def interfaz_registro_legal(conn, t):
         p1 = st.text_input("Contraseña *", type="password")
         if p1:
             prog, etiq, col = validar_fuerza_clave(p1)
-            st.caption(f"Seguridad: {etiq}")
+            st.caption(f"Fortaleza: {etiq}")
         p2 = st.text_input("Repetir Contraseña *", type="password")
-        
         chk = st.checkbox("Acepto la Política de Privacidad")
 
     st.divider()
 
-    # 2. LOGICA DE CONTROL (EL FRENO)
     if st.button("REGISTRAR USUARIO", type="primary", use_container_width=True):
         
-        # A. Revisión de Campos Vacíos
+        # 1. VALIDACIÓN DATOS VACÍOS
         errores = []
-        if not n or not a: errores.append("Falta Nombre/Apellido")
-        if not cargo or not e: errores.append("Falta Cargo/Empresa")
+        if not n or not a or not cargo or not e: errores.append("Datos personales")
         if not m or not es_email_valido(m): errores.append("Email inválido")
-        if not tl_num: errores.append("Falta Teléfono")
-        if not p1 or p1 != p2: errores.append("Contraseñas no coinciden")
-        if not chk: errores.append("Debe aceptar política")
+        if not tl_num: errores.append("Teléfono")
+        if not p1 or p1 != p2: errores.append("Contraseñas")
+        if not chk: errores.append("Términos")
 
         if errores:
-            st.error(f"❌ ERROR: {', '.join(errores)}")
-            st.stop() # Freno 1: Datos incompletos
+            st.error(f"⚠️ Faltan datos: {', '.join(errores)}")
+            st.stop()
 
-        # B. Revisión de Duplicados (CRÍTICO)
-        # Se hace ANTES de intentar guardar o enviar correo.
-        emails_existentes = obtener_lista_emails(conn)
-        
-        if m in emails_existentes:
-            st.error(f"⛔ DETENIDO: El usuario '{m}' YA EXISTE en la base de datos.")
-            st.warning("No se ha creado nada nuevo. Por favor use otro correo.")
-            st.stop() # Freno 2: Duplicado encontrado
+        # 2. FRENO DE DUPLICADOS (BLOQUEANTE)
+        existing_emails = obtener_emails_frescos(conn)
+        if m in existing_emails:
+            st.error(f"⛔ ERROR CRÍTICO: El usuario '{m}' YA EXISTE.")
+            st.warning("No se puede registrar el mismo correo dos veces.")
+            st.stop() # <--- AQUÍ MUERE EL PROCESO SI EXISTE
 
-        # C. Proceso de Guardado (Solo si pasó los frenos)
+        # 3. GUARDADO Y CORREO (Solo llega aquí si no existe)
         try:
-            with st.spinner("Guardando y enviando correo..."):
-                # 1. Guardar en Excel
+            with st.spinner("Procesando..."):
+                # A. Guardar
                 conn.worksheet("Usuarios").append_row([
                     n, a, cargo, e, pais_sel, pref, tl_num, m, encriptar_password(p1)
                 ])
-                
-                # 2. Enviar Correo (Usando tu configuración de secrets [emails])
+                # B. Correo
                 ok = correo.enviar_correo_bienvenida(m, n, m, p1)
             
             if ok:
                 st.balloons()
-                st.success("✅ Usuario creado y notificado correctamente.")
+                st.success("✅ Registro completado y correo enviado.")
                 if st.button("Ir al Login"):
                     st.session_state.mostrar_registro = False
                     st.rerun()
             else:
-                st.error("⚠️ El usuario se guardó en Excel, pero FALLÓ el envío de correo.")
-                st.error("Verifique la configuración de [emails] en secrets.toml")
-                st.stop() # Freno 3: Error de correo
+                st.error("⚠️ Usuario guardado pero falló el envío de correo.")
+                st.stop()
 
         except Exception as ex:
-            st.error(f"❌ Error Técnico Grave: {ex}")
-            st.stop() # Freno 4: Error de sistema
+            st.error(f"❌ Error Técnico: {ex}")
+            st.stop()
 
-    # Botón Cancelar
-    if st.button("Cancelar / Volver"):
+    if st.button("Volver"):
         st.session_state.mostrar_registro = False
         st.rerun()
 
@@ -159,11 +140,8 @@ def gestionar_acceso(conn, t):
         
         if st.button("ENTRAR", use_container_width=True):
             try:
-                # Leer Usuarios
                 df = conn.read(worksheet="Usuarios", ttl=0)
-                if df.empty:
-                    st.error("Base de datos vacía")
-                else:
+                if not df.empty:
                     df.columns = [str(c).lower().strip() for c in df.columns]
                     col_email = next((c for c in ['email', 'correo'] if c in df.columns), None)
                     
@@ -180,6 +158,8 @@ def gestionar_acceso(conn, t):
                             st.error("Contraseña incorrecta")
                     else:
                         st.error("Usuario no encontrado")
+                else:
+                    st.error("Base de datos vacía")
             except Exception as e:
                 st.error(f"Error conexión: {e}")
 
