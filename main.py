@@ -1,11 +1,8 @@
 # =============================================================================
 # ARCHIVO: main.py
-# PROYECTO: TicketV1
-# FECHA: 17-Ene-2026
-# DESCRIPCIÓN: Punto de entrada principal. Controla la navegación.
+# DESCRIPCIÓN: Cerebro de la aplicación. Mantiene la sesión viva.
 # =============================================================================
 import streamlit as st
-import pandas as pd
 from streamlit_gsheets import GSheetsConnection
 import usuarios
 import menu_principal
@@ -14,16 +11,22 @@ import repuestos
 import equipos_nuevos
 import estilos
 
-# Configuración de página (SIEMPRE PRIMERO)
-st.set_page_config(page_title="SWARCO SAT", page_icon="🚦", layout="centered")
+# 1. Configuración de Página (OBLIGATORIO AL INICIO)
+st.set_page_config(
+    page_title="SWARCO SAT",
+    page_icon="🚦",
+    layout="centered",
+    initial_sidebar_state="collapsed"
+)
 
-# Cargar Estilos CSS
+# 2. Cargar Estilos Globales
 estilos.cargar_css()
 
-# Conexión a Google Sheets
+# 3. Inicializar Conexión a Base de Datos
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# Inicialización de Estado (Session State)
+# 4. Inicializar Variables de Memoria (Session State)
+# Esto evita que la app se resetee sola.
 if 'autenticado' not in st.session_state:
     st.session_state.autenticado = False
 if 'user_email' not in st.session_state:
@@ -33,12 +36,12 @@ if 'pagina_actual' not in st.session_state:
 if 'mostrar_registro' not in st.session_state:
     st.session_state.mostrar_registro = False
 
+# 5. Lógica Principal de Navegación
 def main():
-    # 1. Si el usuario YA entró
+    # ESCENARIO A: Usuario ya entró (Login exitoso)
     if st.session_state.autenticado:
-        # Lógica de navegación del menú
         if st.session_state.pagina_actual == 'menu':
-            menu_principal.mostrar_menu(conn, {}) # Pasamos dict vacío por ahora si no hay traducciones
+            menu_principal.mostrar_menu(conn, {})
         elif st.session_state.pagina_actual == 'crear_ticket':
             tickets_sat.interfaz_tickets(conn, {})
         elif st.session_state.pagina_actual == 'repuestos':
@@ -49,16 +52,14 @@ def main():
             st.session_state.pagina_actual = 'menu'
             st.rerun()
 
-    # 2. Si el usuario NO ha entrado (Login o Registro)
+    # ESCENARIO B: Usuario NO ha entrado (Login o Registro)
     else:
         if st.session_state.mostrar_registro:
-            # Aquí llamamos al registro
+            # Llama a la pantalla de registro
             usuarios.interfaz_registro_legal(conn, {})
         else:
-            # Aquí llamamos al login
+            # Llama a la pantalla de login
             usuarios.gestionar_acceso(conn, {})
 
 if __name__ == "__main__":
     main()
-
-
