@@ -1,27 +1,22 @@
 # =============================================================================
 # ARCHIVO: usuarios.py
 # PROYECTO: TicketV1
-# VERSIÓN: 1.1.0 (Fix Error Visual Correo)
+# VERSIÓN: 1.2.0 (FRENO DE MANO - Sin Reruns Automáticos)
 # FECHA: 17-Ene-2026
-# DESCRIPCIÓN: Gestión de usuarios con freno de mano si falla el SMTP.
 # =============================================================================
 import streamlit as st
 import pandas as pd
 import hashlib
 import re 
-import time
-import estilos
 import correo
 import paises
+import estilos
 
 # --- Lógica Auxiliar ---
 def encriptar_password(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
 def es_email_valido(email):
-    """
-    Valida que el correo tenga estructura real: texto@dominio.extensión
-    """
     patron = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
     return re.match(patron, email) is not None
 
@@ -40,6 +35,7 @@ def validar_fuerza_clave(password):
 def usuario_existe(conn, email_input):
     if not email_input: return False
     try:
+        # Forzamos lectura fresca para evitar duplicados en el momento
         records = conn.worksheet("Usuarios").get_all_records()
         df = pd.DataFrame(records)
         if df.empty: return False
@@ -57,56 +53,23 @@ def interfaz_registro_legal(conn, t):
     estilos.mostrar_logo()
     st.markdown(f'<p class="swarco-title">{t.get("reg_tit", "ALTA DE USUARIO")}</p>', unsafe_allow_html=True)
     
-    st.info("ℹ️ NOTA: Presione **ENTER** en cada casilla para confirmar los datos.", icon="⌨️")
-
     if 'campos_error' not in st.session_state: st.session_state.campos_error = []
 
-    def limpiar_si_hay_dato(dato, key_error):
-        if dato and key_error in st.session_state.campos_error:
-            st.session_state.campos_error.remove(key_error)
-
-    # 1. ZONA IDENTIFICACIÓN
+    # --- 1. Formulario ---
     with st.container(border=True):
         st.markdown(f"#### 👤 {t.get('p1_tit', 'Identificación')}")
         c1, c2 = st.columns(2)
-        
         n = c1.text_input("Nombre *")
-        limpiar_si_hay_dato(n, "n")
-        if "n" in st.session_state.campos_error: c1.error("Campo obligatorio")
-        
         a = c2.text_input("Apellido *")
-        limpiar_si_hay_dato(a, "a")
-        if "a" in st.session_state.campos_error: c2.error("Campo obligatorio")
 
-    # 2. ZONA UBICACIÓN
     with st.container(border=True):
         st.markdown(f"#### 🌍 {t.get('p2_tit', 'Datos Profesionales')}")
         c_cargo, c_empresa = st.columns(2)
-        
         cargo = c_cargo.text_input("Cargo / Puesto *")
-        limpiar_si_hay_dato(cargo, "cargo")
-        if "cargo" in st.session_state.campos_error: c_cargo.error("Falta Cargo")
-        
         e = c_empresa.text_input("Empresa / Entidad *")
-        limpiar_si_hay_dato(e, "e")
-        if "e" in st.session_state.campos_error: c_empresa.error("Falta Empresa")
         
-        # Email
         m = st.text_input("Email Corporativo *").lower().strip()
         
-        if m:
-            if not es_email_valido(m):
-                st.warning("⚠️ Formato incorrecto. Ejemplo válido: usuario@dominio.com")
-            elif usuario_existe(conn, m):
-                st.error("⛔ DUPLICADO: Correo ya registrado.")
-            else:
-                limpiar_si_hay_dato(m, "m")
-                limpiar_si_hay_dato(m, "duplicado")
-                st.success("✅ Disponible")
-
-        if "m" in st.session_state.campos_error: st.error("Email inválido o vacío")
-        if "duplicado" in st.session_state.campos_error: st.error("Cambie el email para continuar.")
-
         col_pais, col_pref, col_tel = st.columns([3, 1.2, 3])
         with col_pais:
             lista = paises.obtener_lista_nombres()
@@ -117,94 +80,73 @@ def interfaz_registro_legal(conn, t):
             st.text_input("Prefijo", value=pref, disabled=True)
         with col_tel:
             tl_num = st.text_input("Nº Móvil *", placeholder="Solo números")
-            if tl_num and tl_num.isdigit(): limpiar_si_hay_dato(tl_num, "tl")
-            if tl_num and not tl_num.isdigit(): st.error("⚠️ Solo números")
-            if "tl" in st.session_state.campos_error: st.error("Mínimo 6 dígitos")
 
-    # 3. ZONA SEGURIDAD
     with st.container(border=True):
         st.markdown(f"#### 🔒 {t.get('p3_tit', 'Seguridad')}")
         p1 = st.text_input("Contraseña *", type='password')
         if p1:
             prog, etiq, col = validar_fuerza_clave(p1)
             st.markdown(f"""<div style="background-color:#ddd;height:5px;"><div style="width:{prog}%;background-color:{col};height:100%;"></div></div><small style="color:{col}">{etiq}</small>""", unsafe_allow_html=True)
-            if prog >= 60: limpiar_si_hay_dato(p1, "p1")
-            else: st.warning("⚠️ Nivel Medio Requerido 🟡")
-
-        p2 = st.text_input("Repetir Contraseña *", type='password')
-        if p2 and p1 == p2: limpiar_si_hay_dato(p2, "no_match")
         
-        if "p1" in st.session_state.campos_error: st.error("Contraseña débil")
-        if "no_match" in st.session_state.campos_error: st.error("No coinciden")
+        p2 = st.text_input("Repetir Contraseña *", type='password')
 
-    # 4. LEGAL
     with st.container(border=True):
         st.markdown(f"#### ⚖️ {t.get('p4_tit', 'Términos Legales')}")
-        link = "https://www.swarco.com/privacy-policy"
-        st.markdown(f"Acepto la [Política de Privacidad]({link}).", unsafe_allow_html=True)
-        chk = st.checkbox("He leído y acepto.")
-        if chk: limpiar_si_hay_dato(True, "chk")
-        if "chk" in st.session_state.campos_error: st.error("Debe aceptar")
+        chk = st.checkbox("He leído y acepto la Política de Privacidad.")
 
     st.divider()
 
-    # --- BOTÓN REGISTRO ---
+    # --- 2. Lógica del Botón (SIN RERUNS AUTOMÁTICOS) ---
     if st.button("REGISTRAR USUARIO", type="primary", use_container_width=True):
-        errores = []
         
-        if not n: errores.append("n")
-        if not a: errores.append("a")
-        if not cargo: errores.append("cargo")
-        if not e: errores.append("e")
-        if not m or not es_email_valido(m): errores.append("m")
-        if not chk: errores.append("chk")
-        if not tl_num or not tl_num.isdigit() or len(tl_num) < 6: errores.append("tl")
-        if not p1 or not p2: errores.append("p1")
-        elif p1 != p2: errores.append("no_match")
-        else:
-            f, _, _ = validar_fuerza_clave(p1)
-            if f < 60: errores.append("p1")
+        # Validaciones
+        errores = []
+        if not n: errores.append("Nombre")
+        if not a: errores.append("Apellido")
+        if not cargo: errores.append("Cargo")
+        if not e: errores.append("Empresa")
+        if not m or not es_email_valido(m): errores.append("Email inválido")
+        if not chk: errores.append("Aceptar Términos")
+        if not tl_num or not tl_num.isdigit(): errores.append("Teléfono")
+        if not p1 or p1 != p2: errores.append("Contraseñas no coinciden o vacías")
 
-        if m and es_email_valido(m) and usuario_existe(conn, m):
-            errores.append("duplicado")
+        # Chequeo Final de Duplicado antes de guardar
+        if m and usuario_existe(conn, m):
+            st.error("⛔ ALTO: Este usuario YA existe en la base de datos. Intente con otro email.")
+            st.stop()
 
         if errores:
-            st.session_state.campos_error = errores
-            st.error("⚠️ FALTAN DATOS O HAY ERRORES. Revise arriba.")
-            st.rerun()
-        
+            st.error(f"⚠️ Faltan datos: {', '.join(errores)}")
         else:
-            # === MODIFICACIÓN CRÍTICA PARA DEBUG ===
+            # === ZONA DE FUEGO ===
             try:
-                # 1. Intentamos guardar en Google Sheets primero
+                # 1. Guardar
                 conn.worksheet("Usuarios").append_row([
                     n, a, cargo, e, pais_sel, pref, tl_num, m, encriptar_password(p1)
                 ])
-                
-                # 2. Intentamos enviar el correo
-                # Si esto falla, 'ok' será False y entraremos al 'else'
+                st.info("💾 Datos guardados en Excel... Intentando enviar correo...")
+
+                # 2. Enviar Correo
                 ok = correo.enviar_correo_bienvenida(m, n, m, p1)
                 
                 if ok:
-                    st.success("✅ USUARIO CREADO Y CORREO ENVIADO CORRECTAMENTE")
-                    st.session_state.campos_error = []
-                    time.sleep(2)
-                    st.session_state.mostrar_registro = False
-                    st.rerun()
+                    st.balloons()
+                    st.success("✅ ¡TODO SALIÓ BIEN!")
+                    st.success("El usuario ha sido creado y el correo enviado.")
+                    # AQUI ESTA EL CAMBIO: NO SE REFRESCA SOLO
+                    if st.button("➡️ IR AL INICIO DE SESIÓN"):
+                        st.session_state.mostrar_registro = False
+                        st.rerun()
                 else:
-                    # SI FALLA EL CORREO:
-                    st.error("❌ EL USUARIO SE GUARDÓ EN LA BASE DE DATOS, PERO EL CORREO FALLÓ.")
-                    st.warning("⚠️ No se recargará la página. Por favor, revisa el error arriba o haz captura de pantalla.")
-                    st.stop() # <--- ESTO EVITA QUE LA PÁGINA SE RECARGUE Y BORRE EL ERROR
+                    st.error("❌ EL CORREO FALLÓ.")
+                    st.warning("⚠️ Mira el mensaje de error técnico arriba (texto rojo). NO refresques la página.")
+                    # No hay rerun, se queda aquí para que leas
             
             except Exception as ex:
-                st.error(f"Error Técnico General (Base de Datos o Conexión): {ex}")
-                # Aquí tampoco hacemos rerun para que leas el error
-                st.stop()
+                st.error(f"❌ ERROR CRÍTICO AL GUARDAR: {ex}")
 
-    if st.button("Cancelar"):
+    if st.button("Cancelar / Volver"):
         st.session_state.mostrar_registro = False
-        st.session_state.campos_error = []
         st.rerun()
 
 def gestionar_acceso(conn, t):
