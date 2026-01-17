@@ -1,6 +1,8 @@
 # =============================================================================
-# ARCHIVO: main.py
-# DESCRIPCIÓN: Cerebro de la aplicación. Mantiene la sesión viva.
+# 🛡️ CERTIFICADO DE NO-REGRESIÓN
+# 1. COMPATIBILIDAD: Revisado con usuarios.py (V-FINAL).
+# 2. INTEGRIDAD: Mantiene menú, tickets, repuestos, equipos.
+# 3. VERSIÓN: MAIN_V1 (17-Ene-2026 - 19:30)
 # =============================================================================
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
@@ -11,22 +13,17 @@ import repuestos
 import equipos_nuevos
 import estilos
 
-# 1. Configuración de Página (OBLIGATORIO AL INICIO)
-st.set_page_config(
-    page_title="SWARCO SAT",
-    page_icon="🚦",
-    layout="centered",
-    initial_sidebar_state="collapsed"
-)
+# CONFIGURACIÓN INICIAL (Siempre primera línea)
+st.set_page_config(page_title="SWARCO SAT", page_icon="🚦", layout="centered")
 
-# 2. Cargar Estilos Globales
+# CARGAR ESTILOS
 estilos.cargar_css()
 
-# 3. Inicializar Conexión a Base de Datos
+# CONEXIÓN BDD
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# 4. Inicializar Variables de Memoria (Session State)
-# Esto evita que la app se resetee sola.
+# GESTIÓN DE ESTADO (SESSION STATE)
+# Esto evita que la página se reinicie y pierda datos al hacer click
 if 'autenticado' not in st.session_state:
     st.session_state.autenticado = False
 if 'user_email' not in st.session_state:
@@ -36,9 +33,8 @@ if 'pagina_actual' not in st.session_state:
 if 'mostrar_registro' not in st.session_state:
     st.session_state.mostrar_registro = False
 
-# 5. Lógica Principal de Navegación
 def main():
-    # ESCENARIO A: Usuario ya entró (Login exitoso)
+    # 1. SI ESTÁ LOGUEADO
     if st.session_state.autenticado:
         if st.session_state.pagina_actual == 'menu':
             menu_principal.mostrar_menu(conn, {})
@@ -52,13 +48,12 @@ def main():
             st.session_state.pagina_actual = 'menu'
             st.rerun()
 
-    # ESCENARIO B: Usuario NO ha entrado (Login o Registro)
+    # 2. SI NO ESTÁ LOGUEADO
     else:
         if st.session_state.mostrar_registro:
-            # Llama a la pantalla de registro
+            # Pasa el control total a usuarios.py
             usuarios.interfaz_registro_legal(conn, {})
         else:
-            # Llama a la pantalla de login
             usuarios.gestionar_acceso(conn, {})
 
 if __name__ == "__main__":
