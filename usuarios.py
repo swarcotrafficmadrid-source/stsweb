@@ -1,11 +1,14 @@
 # =============================================================================
 # ARCHIVO: usuarios.py
-# VERSIÓN: 9.1.0 (Validación Email con Regex + Bloqueo Estricto)
+# PROYECTO: TicketV1
+# VERSIÓN: 1.1.0 (Fix Error Visual Correo)
+# FECHA: 17-Ene-2026
+# DESCRIPCIÓN: Gestión de usuarios con freno de mano si falla el SMTP.
 # =============================================================================
 import streamlit as st
 import pandas as pd
 import hashlib
-import re # Importante para la validación del correo
+import re 
 import time
 import estilos
 import correo
@@ -18,10 +21,7 @@ def encriptar_password(password):
 def es_email_valido(email):
     """
     Valida que el correo tenga estructura real: texto@dominio.extensión
-    Ejemplo válido: nombre@swarco.com
-    Ejemplo inválido: nombre@swarco
     """
-    # Patrón: Texto + @ + Texto + . + 2 o más letras
     patron = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
     return re.match(patron, email) is not None
 
@@ -94,12 +94,9 @@ def interfaz_registro_legal(conn, t):
         # Email
         m = st.text_input("Email Corporativo *").lower().strip()
         
-        # Validación Visual Inmediata
         if m:
-            # 1. Chequeo de Formato (Regex)
             if not es_email_valido(m):
                 st.warning("⚠️ Formato incorrecto. Ejemplo válido: usuario@dominio.com")
-            # 2. Chequeo de Duplicado
             elif usuario_existe(conn, m):
                 st.error("⛔ DUPLICADO: Correo ya registrado.")
             else:
@@ -155,17 +152,11 @@ def interfaz_registro_legal(conn, t):
     if st.button("REGISTRAR USUARIO", type="primary", use_container_width=True):
         errores = []
         
-        # 1. Chequeo de Vacíos
         if not n: errores.append("n")
         if not a: errores.append("a")
         if not cargo: errores.append("cargo")
         if not e: errores.append("e")
-        
-        # 2. VALIDACIÓN ESTRICTA DE EMAIL
-        # Si está vacío O NO cumple el patrón regex -> Error 'm'
-        if not m or not es_email_valido(m): 
-            errores.append("m")
-        
+        if not m or not es_email_valido(m): errores.append("m")
         if not chk: errores.append("chk")
         if not tl_num or not tl_num.isdigit() or len(tl_num) < 6: errores.append("tl")
         if not p1 or not p2: errores.append("p1")
@@ -174,41 +165,42 @@ def interfaz_registro_legal(conn, t):
             f, _, _ = validar_fuerza_clave(p1)
             if f < 60: errores.append("p1")
 
-        # 3. Chequeo de Duplicado (Solo si el email es válido)
         if m and es_email_valido(m) and usuario_existe(conn, m):
             errores.append("duplicado")
 
-        # 4. Decisión Final
         if errores:
             st.session_state.campos_error = errores
-            
-            # Mensajes Específicos abajo del botón
-            if "duplicado" in errores:
-                st.error("⛔ ERROR: El usuario ya existe.", icon="🚫")
-            elif "m" in errores and m: # Si escribió algo pero está mal
-                st.error("⚠️ ERROR: El formato del correo es inválido (falta @ o dominio).", icon="📧")
-            else:
-                st.error("⚠️ FALTAN DATOS: Revise los campos marcados en rojo.", icon="🚨")
-            
+            st.error("⚠️ FALTAN DATOS O HAY ERRORES. Revise arriba.")
             st.rerun()
         
         else:
+            # === MODIFICACIÓN CRÍTICA PARA DEBUG ===
             try:
+                # 1. Intentamos guardar en Google Sheets primero
                 conn.worksheet("Usuarios").append_row([
                     n, a, cargo, e, pais_sel, pref, tl_num, m, encriptar_password(p1)
                 ])
-                try:
-                    ok = correo.enviar_correo_bienvenida(m, n, m, p1)
-                    if ok: st.success("✅ USUARIO CREADO Y CORREO ENVIADO")
-                    else: st.warning("⚠️ Creado, pero falló el correo.")
-                except: st.warning("⚠️ Creado, sin correo.")
                 
-                st.session_state.campos_error = []
-                time.sleep(2)
-                st.session_state.mostrar_registro = False
-                st.rerun()
+                # 2. Intentamos enviar el correo
+                # Si esto falla, 'ok' será False y entraremos al 'else'
+                ok = correo.enviar_correo_bienvenida(m, n, m, p1)
+                
+                if ok:
+                    st.success("✅ USUARIO CREADO Y CORREO ENVIADO CORRECTAMENTE")
+                    st.session_state.campos_error = []
+                    time.sleep(2)
+                    st.session_state.mostrar_registro = False
+                    st.rerun()
+                else:
+                    # SI FALLA EL CORREO:
+                    st.error("❌ EL USUARIO SE GUARDÓ EN LA BASE DE DATOS, PERO EL CORREO FALLÓ.")
+                    st.warning("⚠️ No se recargará la página. Por favor, revisa el error arriba o haz captura de pantalla.")
+                    st.stop() # <--- ESTO EVITA QUE LA PÁGINA SE RECARGUE Y BORRE EL ERROR
+            
             except Exception as ex:
-                st.error(f"Error Técnico: {ex}")
+                st.error(f"Error Técnico General (Base de Datos o Conexión): {ex}")
+                # Aquí tampoco hacemos rerun para que leas el error
+                st.stop()
 
     if st.button("Cancelar"):
         st.session_state.mostrar_registro = False
