@@ -8,5 +8,4 @@ phonenumbers
 deep-translator
 streamlit-javascript
 xlsxwriter
-requests
 

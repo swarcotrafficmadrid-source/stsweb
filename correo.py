@@ -8,41 +8,9 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import streamlit as st
-import requests
-
-
-def _enviar_por_resend(destinatario, asunto, cuerpo):
-    emails_cfg = st.secrets.get("emails", {})
-    api_key = str(emails_cfg.get("api_key", "")).strip()
-    from_email = str(emails_cfg.get("from_email", "")).strip()
-
-    if not api_key or not from_email:
-        st.error("Faltan 'api_key' o 'from_email' en [emails] para Resend.")
-        return False
-
-    resp = requests.post(
-        "https://api.resend.com/emails",
-        headers={"Authorization": f"Bearer {api_key}"},
-        json={
-            "from": from_email,
-            "to": [destinatario],
-            "subject": asunto,
-            "text": cuerpo,
-        },
-        timeout=20,
-    )
-
-    if resp.status_code >= 200 and resp.status_code < 300:
-        return True
-
-    st.error(f"Error Resend: {resp.status_code} - {resp.text}")
-    return False
 
 def enviar_correo_bienvenida(destinatario, nombre, usuario, password_real):
     try:
-        emails_cfg = st.secrets.get("emails", {})
-        provider = str(emails_cfg.get("provider", "smtp")).strip().lower()
-
         # --- CAMBIO CRÍTICO AQUÍ ---
         # Antes buscaba ["smtp"]["email"], ahora busca lo que tú tienes:
         email_real_user = str(st.secrets["emails"]["user"]).strip()
@@ -79,9 +47,6 @@ def enviar_correo_bienvenida(destinatario, nombre, usuario, password_real):
         Soporte Técnico SWARCO
         """
         msg.attach(MIMEText(cuerpo, 'plain'))
-
-        if provider == "resend":
-            return _enviar_por_resend(destinatario, asunto, cuerpo)
 
         # Conexión SMTP
         if use_ssl:
