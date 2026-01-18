@@ -16,12 +16,27 @@ def hash_password(password):
 
 def _leer_usuarios(conn):
     try:
+        gsheets_cfg = st.secrets["connections"]["gsheets"]
+        sa_cfg = gsheets_cfg.get("service_account", {})
+        spreadsheet_url = gsheets_cfg.get("spreadsheet", "NO_DEFINIDO")
+        client_email = sa_cfg.get("client_email", "NO_DEFINIDO")
+    except Exception:
+        st.error(
+            "No encuentro la configuración de Google Sheets en Secrets. "
+            "Debe existir [connections.gsheets] y "
+            "[connections.gsheets.service_account]."
+        )
+        return None
+
+    try:
         return conn.read(worksheet="usuarios")
     except Exception as e:
         st.error(
             "No se pudo leer la hoja `usuarios`. "
             "Revisa que exista la pestaña `usuarios` (minúsculas) "
             "y que el Service Account tenga acceso. "
+            f"URL: {spreadsheet_url} | "
+            f"Service Account: {client_email} | "
             f"Detalle: {e}"
         )
         return None
