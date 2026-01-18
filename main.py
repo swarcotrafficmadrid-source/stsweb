@@ -4,6 +4,7 @@ from streamlit_gsheets import GSheetsConnection
 from streamlit_javascript import st_javascript
 
 import idiomas
+import estilos
 
 # Intentamos importar los módulos, si uno falta avisamos
 try:
@@ -26,20 +27,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS
-st.markdown("""
-    <style>
-    .stApp { background-color: #ffffff; }
-    [data-testid="stSidebar"] { background-color: #f0f2f6; }
-    .swarco-title {
-        color: #000000;
-        font-size: 2.5rem;
-        font-weight: 700;
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# Estilos globales
+estilos.cargar_estilos()
 
 def _detectar_idioma_navegador():
     try:
@@ -85,12 +74,7 @@ def main():
     conn = st.connection("gsheets", type=GSheetsConnection)
         
     # LOGO
-    col1, col2, col3 = st.columns([1,2,1])
-    with col2:
-        try:
-            st.image("logo.png", width=300)
-        except:
-            st.warning("⚠️ Logo no encontrado (logo.png)")
+    estilos.mostrar_logo()
 
     # SISTEMA DE NAVEGACIÓN
     if st.session_state.usuario is None:
