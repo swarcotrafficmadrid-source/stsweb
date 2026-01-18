@@ -1,37 +1,32 @@
 import streamlit as st
 import hashlib
-from supabase import create_client, Client
-import re
+import pandas as pd
+from streamlit_gsheets import GSheetsConnection
 
-# Conexión a Supabase
+# --- CONEXIÓN A GOOGLE SHEETS ---
 def init_connection():
-    url = st.secrets["SUPABASE_URL"]
-    key = st.secrets["SUPABASE_KEY"]
-    return create_client(url, key)
+    # Usamos el conector de Sheets, eliminamos Supabase por completo
+    return st.connection("gsheets", type=GSheetsConnection)
 
 def hash_password(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
-# --- FUNCIÓN CLAVE PARA EVITAR DUPLICADOS ---
+# --- FUNCIÓN PARA EVITAR DUPLICADOS ---
 def verificar_duplicado(email, username):
-    """Retorna True si el usuario o email ya existen"""
-    supabase = init_connection()
+    """Retorna mensaje si ya existe el usuario o email"""
+    conn = init_connection()
+    df = conn.read(worksheet="usuarios")
     
-    # 1. Chequear email
-    res_email = supabase.table('usuarios').select("*").eq('email', email).execute()
-    if res_email.data and len(res_email.data) > 0:
-        return "El correo electrónico ya está registrado."
-        
-    # 2. Chequear usuario
-    res_user = supabase.table('usuarios').select("*").eq('usuario', username).execute()
-    if res_user.data and len(res_user.data) > 0:
-        return "El nombre de usuario ya está en uso."
-        
-    return None # No hay duplicados
+    if df is not None and not df.empty:
+        if email in df['email'].values:
+            return "El correo electrónico ya está registrado."
+        if username in df['usuario'].values:
+            return "El nombre de usuario ya está en uso."
+    return None 
 
 # --- PANTALLA DE REGISTRO ---
 def interfaz_registro_legal():
-    st.markdown('<p class="swarco-title">REGISTRAR USUARIO <small style="color:red;">(vFinal)</small></p>', unsafe_allow_html=True)
+    st.markdown('<p class="swarco-title">REGISTRAR USUARIO <small style="color:red;">(vSheets)</small></p>', unsafe_allow_html=True)
     
     with st.form("registro_form"):
         col1, col2 = st.columns(2)
@@ -55,24 +50,27 @@ def interfaz_registro_legal():
                 st.error("Las contraseñas no coinciden")
                 return
             
-            # VERIFICACIÓN DE DUPLICADOS
             error_duplicado = verificar_duplicado(nuevo_email, nuevo_usuario)
             if error_duplicado:
                 st.error(f"❌ ERROR: {error_duplicado}")
-                return # Detener aquí
+                return 
                 
-            # Si pasa, guardar
             try:
-                supabase = init_connection()
-                datos = {
+                conn = init_connection()
+                df_actual = conn.read(worksheet="usuarios")
+                
+                nuevos_datos = pd.DataFrame([{
                     "usuario": nuevo_usuario,
                     "nombre": nuevo_nombre,
                     "email": nuevo_email,
                     "password": hash_password(nueva_clave),
                     "rol": rol,
                     "activo": True
-                }
-                supabase.table("usuarios").insert(datos).execute()
+                }])
+                
+                df_final = pd.concat([df_actual, nuevos_datos], ignore_index=True)
+                conn.update(worksheet="usuarios", data=df_final)
+                
                 st.success("✅ Usuario creado exitosamente")
                 st.info("Por favor inicie sesión")
             except Exception as e:
@@ -87,12 +85,14 @@ def login_form():
         
         if submit:
             try:
-                supabase = init_connection()
+                conn = init_connection()
+                df = conn.read(worksheet="usuarios")
                 hashed_pw = hash_password(password)
-                response = supabase.table("usuarios").select("*").eq("usuario", usuario).eq("password", hashed_pw).execute()
                 
-                if response.data:
-                    user_data = response.data[0]
+                user_match = df[(df['usuario'] == usuario) & (df['password'] == hashed_pw)]
+                
+                if not user_match.empty:
+                    user_data = user_match.iloc[0]
                     if user_data.get('activo'):
                         st.session_state.usuario = user_data['usuario']
                         st.session_state.rol = user_data['rol']
