@@ -13,6 +13,15 @@ import uuid
 from datetime import datetime
 import estilos
 
+from gsheets_utils import append_row
+
+TICKETS_COLUMNS = [
+    "id", "fecha", "tipo", "email", "pais", "equipo", "serial",
+    "fecha_averia", "prioridad", "descripcion", "estado",
+    "proyecto", "empresa", "email_contacto", "tel_contacto",
+    "ns", "ref", "urgencia", "falla"
+]
+
 def gestionar_equipos(t, urg_val_default):
     """Módulo para la entrada de datos técnicos del equipo."""
     # Inicializar lista si no existe en el estado de la sesión
@@ -80,15 +89,32 @@ def interfaz_tickets(conn, t):
         if enviar:
             if proyecto and ns and falla:
                 try:
-                    ws = conn.worksheet("Tickets")
                     id_ticket = str(uuid.uuid4())[:8].upper()
                     fecha_hoy = datetime.now().strftime("%Y-%m-%d %H:%M")
-                    
-                    ws.append_row([
-                        id_ticket, fecha_hoy, st.session_state.user_email, 
-                        proyecto, empresa, email_cont, tel_cont, 
-                        ns, ref, urgencia, falla
-                    ])
+
+                    columnas = TICKETS_COLUMNS
+                    row = {
+                        "id": id_ticket,
+                        "fecha": fecha_hoy,
+                        "tipo": "sat",
+                        "email": st.session_state.get("user_email"),
+                        "pais": "",
+                        "equipo": "",
+                        "serial": "",
+                        "fecha_averia": "",
+                        "prioridad": "",
+                        "descripcion": "",
+                        "estado": "Abierto",
+                        "proyecto": proyecto,
+                        "empresa": empresa,
+                        "email_contacto": email_cont,
+                        "tel_contacto": tel_cont,
+                        "ns": ns,
+                        "ref": ref,
+                        "urgencia": urgencia,
+                        "falla": falla
+                    }
+                    append_row(conn, "Tickets", row, columnas)
                     
                     st.success(f"{t.get('exito', '✅ Enviado')} - ID: {id_ticket}")
                 except Exception as e:

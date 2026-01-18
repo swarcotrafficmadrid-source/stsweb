@@ -10,10 +10,19 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
+from gsheets_utils import append_row
+
+TICKETS_COLUMNS = [
+    "id", "fecha", "tipo", "email", "pais", "equipo", "serial",
+    "fecha_averia", "prioridad", "descripcion", "estado",
+    "proyecto", "empresa", "email_contacto", "tel_contacto",
+    "ns", "ref", "urgencia", "falla"
+]
+
 def interfaz_tickets(conn, t):
     """Muestra el formulario para reportar un nuevo ticket."""
     st.markdown(f"### 📝 {t.get('ticket_main_title', 'Gestión de Tickets')}")
-    st.info(f"Sesión iniciada como: {st.session_state.user_email}")
+    st.info(f"Sesión iniciada como: {st.session_state.get('user_email')}")
 
     with st.form("ticket_form"):
         col1, col2 = st.columns(2)
@@ -37,23 +46,35 @@ def interfaz_tickets(conn, t):
                 return
 
             try:
-                ws = conn.worksheet("Tickets")
-                nueva_fila = [
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    st.session_state.user_email,
-                    pais,
-                    equipo,
-                    serial,
-                    str(fecha_averia),
-                    prioridad,
-                    descripcion,
-                    "Abierto"
-                ]
-                ws.append_row(nueva_fila)
+                columnas = TICKETS_COLUMNS
+                row = {
+                    "id": datetime.now().strftime("%Y%m%d%H%M%S"),
+                    "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "tipo": "rapido",
+                    "email": st.session_state.get("user_email"),
+                    "pais": pais,
+                    "equipo": equipo,
+                    "serial": serial,
+                    "fecha_averia": str(fecha_averia),
+                    "prioridad": prioridad,
+                    "descripcion": descripcion,
+                    "estado": "Abierto",
+                    "proyecto": "",
+                    "empresa": "",
+                    "email_contacto": "",
+                    "tel_contacto": "",
+                    "ns": "",
+                    "ref": "",
+                    "urgencia": "",
+                    "falla": ""
+                }
+                append_row(conn, "Tickets", row, columnas)
                 st.success("✅ Ticket enviado correctamente al departamento SAT.")
             except Exception as e:
                 st.error(f"Error al guardar ticket: {e}")
 
     if st.sidebar.button(t.get('btn_logout', 'Cerrar Sesión')):
-        st.session_state.autenticado = False
+        st.session_state.usuario = None
+        st.session_state.rol = None
+        st.session_state.user_email = None
         st.rerun()
