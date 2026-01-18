@@ -18,6 +18,7 @@ try:
 except ImportError as e:
     st.error(f"❌ Error: No se encuentra el módulo {e.name}")
     st.info("Asegúrate de que todos los archivos .py estén en la carpeta raíz (Root).")
+    st.stop()
 
 # Configuración de página
 st.set_page_config(
