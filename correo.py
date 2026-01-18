@@ -13,14 +13,15 @@ def enviar_correo_bienvenida(destinatario, nombre, usuario, password_real):
     try:
         # --- CAMBIO CRÍTICO AQUÍ ---
         # Antes buscaba ["smtp"]["email"], ahora busca lo que tú tienes:
-        email_real_user = st.secrets["emails"]["user"]
-        email_pass = st.secrets["emails"]["password"]
-        
-        smtp_server = "smtp.gmail.com"
-        smtp_port = 587
+        email_real_user = str(st.secrets["emails"]["user"]).strip()
+        email_pass = str(st.secrets["emails"]["password"]).strip()
+
+        smtp_server = st.secrets.get("emails", {}).get("smtp_server", "smtp.gmail.com")
+        smtp_port = int(st.secrets.get("emails", {}).get("smtp_port", 587))
+        use_ssl = bool(st.secrets.get("emails", {}).get("use_ssl", False))
 
         # Alias (Esto se mantiene igual)
-        email_alias = "ticket@swarcotrafficspain.com"
+        email_alias = st.secrets.get("emails", {}).get("from_alias", email_real_user)
 
         # Construir Mensaje
         msg = MIMEMultipart()
@@ -47,10 +48,13 @@ def enviar_correo_bienvenida(destinatario, nombre, usuario, password_real):
         msg.attach(MIMEText(cuerpo, 'plain'))
 
         # Conexión SMTP
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.ehlo()
-        server.starttls()
-        server.ehlo()
+        if use_ssl:
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+        else:
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
         
         # Login con las credenciales reales de secrets.toml
         server.login(email_real_user, email_pass)
