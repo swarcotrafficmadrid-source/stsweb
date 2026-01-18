@@ -19,6 +19,7 @@ def enviar_correo_bienvenida(destinatario, nombre, usuario, password_real):
         smtp_port = int(st.secrets.get("emails", {}).get("smtp_port", 587))
         # Para el Relay de Google que activaste, usaremos STARTTLS por el puerto 587
         use_ssl = bool(st.secrets.get("emails", {}).get("use_ssl", False))
+        smtp_auth = bool(st.secrets.get("emails", {}).get("smtp_auth", True))
 
         email_alias = st.secrets.get("emails", {}).get("from_alias", email_real_user)
 
@@ -51,10 +52,13 @@ def enviar_correo_bienvenida(destinatario, nombre, usuario, password_real):
             server = smtplib.SMTP_SSL(smtp_server, smtp_port)
         else:
             server = smtplib.SMTP(smtp_server, smtp_port)
+            server.ehlo()
             server.starttls()
+            server.ehlo()
         
-        # Login con la App Password de 16 letras
-        server.login(email_real_user, email_pass)
+        # Login con la App Password de 16 letras (si aplica)
+        if smtp_auth:
+            server.login(email_real_user, email_pass)
         server.send_message(msg)
         server.quit()
         
