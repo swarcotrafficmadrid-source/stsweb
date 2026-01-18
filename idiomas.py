@@ -13,9 +13,9 @@ except:
 IDIOMAS_DISPONIBLES = pd.DataFrame({
     'nombre': [
         'Español', 'English', 'Deutsch', 'Français', 'Italiano', 'Português',
-        'Русский', '中文 (Chino)', '日本語 (Japonés)', 'العربية (Árabe)', 'עברית (Hebreo)'
+        'Euskara', 'Русский', '中文 (Chino)', '日本語 (Japonés)', 'العربية (Árabe)', 'עברית (Hebreo)'
     ],
-    'codigo': ['es', 'en', 'de', 'fr', 'it', 'pt', 'ru', 'zh-CN', 'ja', 'ar', 'he']
+    'codigo': ['es', 'en', 'de', 'fr', 'it', 'pt', 'eu', 'ru', 'zh-CN', 'ja', 'ar', 'he']
 })
 
 
@@ -41,6 +41,8 @@ def normalizar_codigo_idioma(lang_code):
         return 'it'
     if code.startswith('pt'):
         return 'pt'
+    if code.startswith('eu'):
+        return 'eu'
     if code.startswith('ru'):
         return 'ru'
     if code.startswith('zh'):

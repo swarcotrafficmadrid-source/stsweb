@@ -14,10 +14,24 @@ def init_connection():
 def hash_password(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
+def _leer_usuarios(conn):
+    try:
+        return conn.read(worksheet="usuarios")
+    except Exception as e:
+        st.error(
+            "No se pudo leer la hoja `usuarios`. "
+            "Revisa que exista la pestaña `usuarios` (minúsculas) "
+            "y que el Service Account tenga acceso. "
+            f"Detalle: {e}"
+        )
+        return None
+
 # --- FUNCIÓN PARA EVITAR DUPLICADOS ---
 def verificar_duplicado(conn, email, username):
     """Retorna mensaje si ya existe el usuario o email"""
-    df = conn.read(worksheet="usuarios")
+    df = _leer_usuarios(conn)
+    if df is None:
+        return "No se pudo acceder a la hoja `usuarios`."
 
     if df is not None and not df.empty:
         if 'email' in df.columns and email in df['email'].values:
@@ -59,7 +73,9 @@ def interfaz_registro_legal(conn, t):
                 
             try:
                 columnas = ["usuario", "nombre", "email", "password", "rol", "activo", "idioma"]
-                df_actual = conn.read(worksheet="usuarios")
+                df_actual = _leer_usuarios(conn)
+                if df_actual is None:
+                    return
                 df_actual = ensure_columns(df_actual, columnas)
                 nuevos_datos = {
                     "usuario": nuevo_usuario,
@@ -90,7 +106,9 @@ def login_form(conn, t):
         
         if submit:
             try:
-                df = conn.read(worksheet="usuarios")
+                df = _leer_usuarios(conn)
+                if df is None:
+                    return
                 hashed_pw = hash_password(password)
                 if df is None or df.empty:
                     st.error("No hay usuarios registrados")
