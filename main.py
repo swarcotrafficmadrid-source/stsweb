@@ -68,6 +68,10 @@ def _ensure_secrets_from_env():
         st.error(f"Error leyendo GSHEETS_SECRET: {e}")
         return
 
+    private_key = creds.get("private_key", "")
+    if "\\n" in private_key:
+        private_key = private_key.replace("\\n", "\n")
+
     print(
         "[gsheets] cargando secrets:",
         f"client_email={creds.get('client_email')}",
@@ -77,10 +81,6 @@ def _ensure_secrets_from_env():
         f"private_key_len={len(private_key)}",
         f"spreadsheet_url={spreadsheet_url}",
     )
-
-    private_key = creds.get("private_key", "")
-    if "\\n" in private_key:
-        private_key = private_key.replace("\\n", "\n")
 
     content = [
         "[connections.gsheets]",
