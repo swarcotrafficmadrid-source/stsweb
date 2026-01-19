@@ -11,27 +11,26 @@ import streamlit as st
 
 def enviar_correo_bienvenida(destinatario, nombre, usuario, password_real):
     try:
-        # 1. Traer datos
-        user = st.secrets["emails"]["user"]
-        password = st.secrets["emails"]["password"]
+        # 1. Credenciales directas de los secrets
+        email_user = st.secrets["emails"]["user"]
+        email_pass = st.secrets["emails"]["password"]
 
-        # 2. Crear mensaje
+        # 2. Construir el mensaje
         msg = MIMEMultipart()
-        msg["From"] = user
+        msg["From"] = email_user
         msg["To"] = destinatario
         msg["Subject"] = "Bienvenida - Gestión de Tickets SWARCO"
 
-        cuerpo = f"Hola {nombre},\n\nTu usuario es: {usuario}\nTu clave es: {password_real}"
+        cuerpo = f"Hola {nombre},\n\nBienvenido. Tu usuario es {usuario} y tu clave {password_real}."
         msg.attach(MIMEText(cuerpo, "plain"))
 
-        # 3. Conexión Directa (Como al principio)
-        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=15)
-        server.starttls()  # Seguridad obligatoria
-        server.login(user, password)
+        # 3. Conexión SMTP estándar
+        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=20)
+        server.starttls()
+        server.login(email_user, email_pass)
         server.send_message(msg)
         server.quit()
-
         return True
     except Exception as e:
-        st.error(f"Error crítico: {e}")
+        st.error(f"Error enviando correo: {e}")
         return False
