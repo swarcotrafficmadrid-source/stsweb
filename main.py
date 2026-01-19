@@ -2,6 +2,8 @@ import streamlit as st
 from PIL import Image
 from streamlit_gsheets import GSheetsConnection
 from streamlit_javascript import st_javascript
+import json
+import os
 
 import idiomas
 import estilos
@@ -71,8 +73,23 @@ def main():
 
     t = idiomas.traducir_interfaz(st.session_state.lang)
 
-    # Conexión a Sheets
-    conn = st.connection("gsheets", type=GSheetsConnection)
+    # Conexión a Sheets (Cloud Run o Secrets de Streamlit)
+    service_account_json = os.environ.get("GSHEETS_SECRET")
+    spreadsheet_url = os.environ.get("SPREADSHEET_URL")
+    if service_account_json and spreadsheet_url:
+        try:
+            creds_dict = json.loads(service_account_json)
+            conn = st.connection(
+                "gsheets",
+                type=GSheetsConnection,
+                service_account=creds_dict,
+                spreadsheet=spreadsheet_url,
+            )
+        except Exception as e:
+            st.error(f"Error leyendo GSHEETS_SECRET/SPREADSHEET_URL: {e}")
+            conn = st.connection("gsheets", type=GSheetsConnection)
+    else:
+        conn = st.connection("gsheets", type=GSheetsConnection)
         
     # LOGO
     estilos.mostrar_logo()
