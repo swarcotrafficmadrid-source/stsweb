@@ -72,6 +72,9 @@ def _ensure_secrets_from_env():
         "[gsheets] cargando secrets:",
         f"client_email={creds.get('client_email')}",
         f"private_key_id={creds.get('private_key_id')}",
+        f"auth_provider_x509_cert_url={creds.get('auth_provider_x509_cert_url')}",
+        f"private_key_has_begin={'BEGIN PRIVATE KEY' in private_key}",
+        f"private_key_len={len(private_key)}",
         f"spreadsheet_url={spreadsheet_url}",
     )
 
