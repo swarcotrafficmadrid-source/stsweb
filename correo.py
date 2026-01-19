@@ -6,14 +6,15 @@
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import os
 import streamlit as st
 
 
 def enviar_correo_bienvenida(destinatario, nombre, usuario, password_real):
     try:
-        # 1. Credenciales directas de los secrets
-        email_user = st.secrets["emails"]["user"]
-        email_pass = st.secrets["emails"]["password"]
+        # 1. Credenciales directas de los secrets o variables de entorno
+        email_user = os.environ.get("EMAIL_USER") or st.secrets["emails"]["user"]
+        email_pass = os.environ.get("EMAIL_PASSWORD") or st.secrets["emails"]["password"]
 
         # 2. Construir el mensaje
         msg = MIMEMultipart()
