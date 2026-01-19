@@ -59,6 +59,7 @@ def _ensure_secrets_from_env():
     service_account_json = os.environ.get("GSHEETS_SECRET")
     spreadsheet_url = os.environ.get("SPREADSHEET_URL")
     if not service_account_json or not spreadsheet_url:
+        print("[gsheets] GSHEETS_SECRET o SPREADSHEET_URL no definidos")
         return
 
     try:
@@ -66,6 +67,13 @@ def _ensure_secrets_from_env():
     except Exception as e:
         st.error(f"Error leyendo GSHEETS_SECRET: {e}")
         return
+
+    print(
+        "[gsheets] cargando secrets:",
+        f"client_email={creds.get('client_email')}",
+        f"private_key_id={creds.get('private_key_id')}",
+        f"spreadsheet_url={spreadsheet_url}",
+    )
 
     private_key = creds.get("private_key", "")
     if "\\n" in private_key:
