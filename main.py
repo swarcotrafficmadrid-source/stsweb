@@ -42,6 +42,19 @@ def _detectar_idioma_navegador():
         return "es"
 
 
+def _write_secrets_file(secrets_dir, content):
+    try:
+        os.makedirs(secrets_dir, exist_ok=True)
+        secrets_path = os.path.join(secrets_dir, "secrets.toml")
+        with open(secrets_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(content))
+        print(f"[gsheets] secrets.toml escrito en {secrets_path}")
+        return True
+    except Exception as e:
+        print(f"[gsheets] No se pudo escribir secrets.toml en {secrets_dir}: {e}")
+        return False
+
+
 def _ensure_secrets_from_env():
     service_account_json = os.environ.get("GSHEETS_SECRET")
     spreadsheet_url = os.environ.get("SPREADSHEET_URL")
@@ -53,12 +66,6 @@ def _ensure_secrets_from_env():
     except Exception as e:
         st.error(f"Error leyendo GSHEETS_SECRET: {e}")
         return
-
-    # En Cloud Run, usamos un directorio escribible en /tmp
-    secrets_dir = os.environ.get("STREAMLIT_CONFIG_DIR", "/tmp/streamlit")
-    os.environ["STREAMLIT_CONFIG_DIR"] = secrets_dir
-    os.makedirs(secrets_dir, exist_ok=True)
-    secrets_path = os.path.join(secrets_dir, "secrets.toml")
 
     private_key = creds.get("private_key", "")
     if "\\n" in private_key:
@@ -83,11 +90,12 @@ def _ensure_secrets_from_env():
         "",
     ]
 
-    try:
-        with open(secrets_path, "w", encoding="utf-8") as f:
-            f.write("\n".join(content))
-    except Exception as e:
-        st.error(f"Error escribiendo secrets.toml: {e}")
+    # En Cloud Run, preferimos /tmp. También escribimos en ~/.streamlit como fallback.
+    os.environ.setdefault("STREAMLIT_CONFIG_DIR", "/tmp/streamlit")
+    wrote_tmp = _write_secrets_file(os.environ["STREAMLIT_CONFIG_DIR"], content)
+    wrote_home = _write_secrets_file(os.path.expanduser("~/.streamlit"), content)
+    if not wrote_tmp and not wrote_home:
+        st.error("No se pudo escribir secrets.toml en ninguna ruta.")
         return
 
 
