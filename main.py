@@ -54,7 +54,9 @@ def _ensure_secrets_from_env():
         st.error(f"Error leyendo GSHEETS_SECRET: {e}")
         return
 
-    secrets_dir = os.path.expanduser("~/.streamlit")
+    # En Cloud Run, usamos un directorio escribible en /tmp
+    secrets_dir = os.environ.get("STREAMLIT_CONFIG_DIR", "/tmp/streamlit")
+    os.environ["STREAMLIT_CONFIG_DIR"] = secrets_dir
     os.makedirs(secrets_dir, exist_ok=True)
     secrets_path = os.path.join(secrets_dir, "secrets.toml")
 
