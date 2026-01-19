@@ -41,6 +41,54 @@ def _detectar_idioma_navegador():
         return "es"
 
 
+def _ensure_secrets_from_env():
+    service_account_json = os.environ.get("GSHEETS_SECRET")
+    spreadsheet_url = os.environ.get("SPREADSHEET_URL")
+    if not service_account_json or not spreadsheet_url:
+        return
+
+    try:
+        creds = json.loads(service_account_json)
+    except Exception as e:
+        st.error(f"Error leyendo GSHEETS_SECRET: {e}")
+        return
+
+    secrets_dir = os.path.expanduser("~/.streamlit")
+    os.makedirs(secrets_dir, exist_ok=True)
+    secrets_path = os.path.join(secrets_dir, "secrets.toml")
+
+    private_key = creds.get("private_key", "")
+    # Asegurar saltos de línea reales en la clave
+    if "\\n" in private_key:
+        private_key = private_key.replace("\\n", "\n")
+
+    content = [
+        '[connections.gsheets]',
+        f'spreadsheet = "{spreadsheet_url}"',
+        "",
+        '[connections.gsheets.service_account]',
+        f'type = "{creds.get("type", "")}"',
+        f'project_id = "{creds.get("project_id", "")}"',
+        f'private_key_id = "{creds.get("private_key_id", "")}"',
+        'private_key = """' + private_key + '"""',
+        f'client_email = "{creds.get("client_email", "")}"',
+        f'client_id = "{creds.get("client_id", "")}"',
+        f'auth_uri = "{creds.get("auth_uri", "")}"',
+        f'token_uri = "{creds.get("token_uri", "")}"',
+        f'auth_provider_x509_cert_url = "{creds.get("auth_provider_x509_cert_url", "")}"',
+        f'client_x509_cert_url = "{creds.get("client_x509_cert_url", "")}"',
+        f'universe_domain = "{creds.get("universe_domain", "googleapis.com")}"',
+        "",
+    ]
+
+    try:
+        with open(secrets_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(content))
+    except Exception as e:
+        st.error(f"Error escribiendo secrets.toml: {e}")
+        return
+
+
 def main():
     # Inicializar estado de sesión
     if 'usuario' not in st.session_state:
@@ -74,22 +122,8 @@ def main():
     t = idiomas.traducir_interfaz(st.session_state.lang)
 
     # Conexión a Sheets (Cloud Run o Secrets de Streamlit)
-    service_account_json = os.environ.get("GSHEETS_SECRET")
-    spreadsheet_url = os.environ.get("SPREADSHEET_URL")
-    if service_account_json and spreadsheet_url:
-        try:
-            creds_dict = json.loads(service_account_json)
-            conn = st.connection(
-                "gsheets",
-                type=GSheetsConnection,
-                service_account=creds_dict,
-                spreadsheet=spreadsheet_url,
-            )
-        except Exception as e:
-            st.error(f"Error leyendo GSHEETS_SECRET/SPREADSHEET_URL: {e}")
-            conn = st.connection("gsheets", type=GSheetsConnection)
-    else:
-        conn = st.connection("gsheets", type=GSheetsConnection)
+    _ensure_secrets_from_env()
+    conn = st.connection("gsheets", type=GSheetsConnection)
         
     # LOGO
     estilos.mostrar_logo()
