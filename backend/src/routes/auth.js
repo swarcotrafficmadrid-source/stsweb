@@ -6,25 +6,41 @@ import { User } from "../models/index.js";
 const router = Router();
 
 router.post("/register", async (req, res) => {
-  const { usuario, nombre, email, password } = req.body;
+  const usuarioRaw = (req.body.usuario || "").trim();
+  const nombreRaw = (req.body.nombre || "").trim();
+  const emailRaw = (req.body.email || "").trim();
+  const password = req.body.password;
+
+  const usuario = usuarioRaw;
+  const nombre = nombreRaw;
+  const email = emailRaw;
+
   if (!usuario || !nombre || !email || !password) {
     return res.status(400).json({ error: "Datos incompletos" });
   }
 
-  const exists = await User.findOne({ where: { email } });
-  if (exists) {
+  const existsEmail = await User.findOne({ where: { email } });
+  if (existsEmail) {
     return res.status(409).json({ error: "Email ya registrado" });
   }
+  const existsUser = await User.findOne({ where: { usuario } });
+  if (existsUser) {
+    return res.status(409).json({ error: "Usuario ya registrado" });
+  }
 
-  const hash = await bcrypt.hash(password, 10);
-  const user = await User.create({
-    usuario,
-    nombre,
-    email,
-    passwordHash: hash
-  });
+  try {
+    const hash = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      usuario,
+      nombre,
+      email,
+      passwordHash: hash
+    });
 
-  return res.json({ id: user.id });
+    return res.json({ id: user.id });
+  } catch (err) {
+    return res.status(409).json({ error: "Usuario o email duplicado" });
+  }
 });
 
 router.post("/login", async (req, res) => {
