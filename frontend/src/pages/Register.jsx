@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { apiRequest } from "../lib/api.js";
 
-export default function Register() {
+export default function Register({ onSuccess }) {
   const [usuario, setUsuario] = useState("");
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
@@ -19,6 +19,9 @@ export default function Register() {
         password
       });
       setResult("Usuario creado. Ya puedes iniciar sesión.");
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (err) {
       setResult(err.message);
     }

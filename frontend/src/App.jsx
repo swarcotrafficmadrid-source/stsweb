@@ -15,6 +15,7 @@ const pages = {
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
+  const [authView, setAuthView] = useState("login");
   const [page, setPage] = useState("dashboard");
 
   if (!token) {
@@ -22,9 +23,31 @@ export default function App() {
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="w-full max-w-md border rounded-lg p-8 shadow">
           <h1 className="text-2xl font-bold text-swarcoBlue mb-6">SWARCO Ops</h1>
-          <Login onSuccess={(t) => { setToken(t); localStorage.setItem("token", t); }} />
-          <div className="my-6 border-t" />
-          <Register />
+          {authView === "login" ? (
+            <>
+              <Login onSuccess={(t) => { setToken(t); localStorage.setItem("token", t); }} />
+              <div className="mt-6 text-center">
+                <button
+                  className="text-sm text-swarcoBlue"
+                  onClick={() => setAuthView("register")}
+                >
+                  ¿No tienes cuenta? Regístrate
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Register onSuccess={() => setAuthView("login")} />
+              <div className="mt-6 text-center">
+                <button
+                  className="text-sm text-swarcoBlue"
+                  onClick={() => setAuthView("login")}
+                >
+                  Ya tengo cuenta
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );
