@@ -16,7 +16,9 @@ export default function Register({ lang = "es" }) {
       emailPlaceholder: "correo@empresa.com",
       password: "Contraseña",
       button: "Registrar",
-      buttonLoading: "Creando cuenta..."
+      buttonLoading: "Creando cuenta...",
+      successMail: "Usuario creado con éxito. En breve recibirás un correo con la activación de tu cuenta completada.",
+      successNoMail: "Usuario creado con éxito, pero no se pudo enviar el correo de activación. Contacta soporte."
     },
     en: {
       fullName: "Full name",
@@ -25,7 +27,9 @@ export default function Register({ lang = "es" }) {
       emailPlaceholder: "email@company.com",
       password: "Password",
       button: "Create account",
-      buttonLoading: "Creating account..."
+      buttonLoading: "Creating account...",
+      successMail: "Account created successfully. You will receive an activation email shortly.",
+      successNoMail: "Account created, but the activation email could not be sent. Please contact support."
     }
   };
   const t = copy[lang] || copy.es;
@@ -42,9 +46,7 @@ export default function Register({ lang = "es" }) {
       });
       const okMail = data?.mailSent;
       setResult(
-        okMail
-          ? "Usuario creado con éxito. En breve recibirás un correo con la activación de tu cuenta completada."
-          : "Usuario creado con éxito, pero no se pudo enviar el correo de activación. Contacta soporte."
+        okMail ? t.successMail : t.successNoMail
       );
     } catch (err) {
       setResult(err.message);

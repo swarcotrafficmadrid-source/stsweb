@@ -74,6 +74,8 @@ export default function App() {
       loginDesc: "Usa tu email corporativo para acceder.",
       registerDesc: "Completa tus datos para registrarte.",
       welcome: "Bienvenido al portal de soporte SWARCO Traffic Spain.",
+      sideIntro: "Acceso seguro para incidencias, repuestos y compras.",
+      searchLang: "Buscar idioma",
       noAccount: "¿No tienes cuenta? Regístrate",
       haveAccount: "Ya tengo cuenta",
       langLabel: "ES"
@@ -86,6 +88,8 @@ export default function App() {
       loginDesc: "Use your corporate email to access.",
       registerDesc: "Complete your details to register.",
       welcome: "Welcome to the SWARCO Traffic Spain support portal.",
+      sideIntro: "Secure access for incidents, spares, and purchases.",
+      searchLang: "Search language",
       noAccount: "No account? Create one",
       haveAccount: "I already have an account",
       langLabel: "EN"
@@ -109,9 +113,7 @@ export default function App() {
                 <div className="mt-6 h-1 w-12 rounded bg-swarcoOrange" />
                 <h1 className="text-3xl font-semibold mt-4">Portal SWARCO Traffic Spain</h1>
                 <p className="text-white/90 mt-3">The better way, every day.</p>
-                <p className="text-white/80 mt-4">
-                  Acceso seguro para incidencias, repuestos y compras.
-                </p>
+                <p className="text-white/80 mt-4">{t.sideIntro}</p>
               </div>
               <div className="text-xs text-white/70">
                 www.swarco.com
@@ -145,7 +147,7 @@ export default function App() {
                         </svg>
                         <input
                           className="w-full text-sm outline-none"
-                          placeholder="Buscar idioma"
+                          placeholder={t.searchLang}
                           value={langQuery}
                           onChange={(e) => setLangQuery(e.target.value)}
                         />
