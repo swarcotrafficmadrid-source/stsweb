@@ -9,6 +9,10 @@ const User = sequelize.define(
     nombre: { type: DataTypes.STRING(120), allowNull: false },
     email: { type: DataTypes.STRING(120), allowNull: false, unique: true },
     passwordHash: { type: DataTypes.STRING(255), allowNull: false },
+    emailVerified: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    emailVerificationToken: { type: DataTypes.STRING(128), allowNull: true },
+    emailVerificationExpiresAt: { type: DataTypes.DATE, allowNull: true },
+    emailWelcomeSentAt: { type: DataTypes.DATE, allowNull: true },
     rol: { type: DataTypes.STRING(32), allowNull: false, defaultValue: "Técnico" },
     activo: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true }
   },

@@ -12,13 +12,18 @@ export default function Register({ onSuccess }) {
     e.preventDefault();
     setResult("");
     try {
-      await apiRequest("/api/auth/register", "POST", {
+      const data = await apiRequest("/api/auth/register", "POST", {
         usuario,
         nombre,
         email,
         password
       });
-      setResult("Usuario creado con éxito. En breve recibirás un correo con la activación de tu cuenta completada.");
+      const okMail = data?.mailSent;
+      setResult(
+        okMail
+          ? "Usuario creado con éxito. En breve recibirás un correo con la activación de tu cuenta completada."
+          : "Usuario creado con éxito, pero no se pudo enviar el correo de activación. Contacta soporte."
+      );
       if (onSuccess) {
         onSuccess();
       }

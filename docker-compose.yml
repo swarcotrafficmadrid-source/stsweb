@@ -18,21 +18,25 @@ services:
 
   backend:
     build: ./backend
+    env_file:
+      - .env
     environment:
       PORT: 8080
       DB_HOST: db
       DB_PORT: 3306
       DB_NAME: swarco_ops
       DB_USER: swarco
-      DB_PASSWORD: L@croix/2026
-      JWT_SECRET: supersecreto
-      SMTP_HOST:
-      SMTP_PORT: 587
-      SMTP_USER:
-      SMTP_PASS:
-      SMTP_FROM:
-      SMTP_SECURE: "false"
-      SMTP_NOTIFY_TO:
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      DB_SYNC_ALTER: ${DB_SYNC_ALTER}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_NOTIFY_TO: ${SMTP_NOTIFY_TO}
+      VERIFY_BASE_URL: ${VERIFY_BASE_URL}
     ports:
       - "8080:8080"
     depends_on:

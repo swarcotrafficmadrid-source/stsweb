@@ -24,7 +24,8 @@ const port = process.env.PORT || 8080;
 
 async function start() {
   await sequelize.authenticate();
-  await sequelize.sync();
+  const alter = String(process.env.DB_SYNC_ALTER || "").toLowerCase() === "true";
+  await sequelize.sync({ alter });
   app.listen(port, () => {
     console.log(`API listening on ${port}`);
   });

@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { Router } from "express";
 import { User } from "../models/index.js";
 import { sendMail } from "../utils/mailer.js";
+import crypto from "crypto";
 
 const router = Router();
 
@@ -31,24 +32,32 @@ router.post("/register", async (req, res) => {
 
   try {
     const hash = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
     const user = await User.create({
       usuario,
       nombre,
       email,
-      passwordHash: hash
+      passwordHash: hash,
+      emailVerified: false,
+      emailVerificationToken: verificationToken,
+      emailVerificationExpiresAt: verificationExpires
     });
 
-    try {
-      await sendMail({
-        to: user.email,
-        subject: "Bienvenido a SWARCO Ops Portal",
-        text: `Hola ${user.nombre},\n\nTu usuario ${user.usuario} ya está activo.\n\nPuedes iniciar sesión en el portal cuando quieras.\n\nSWARCO Ops Portal`
-      });
-    } catch {
-      // Si el correo falla, no bloqueamos el registro.
+    const verifyBase = process.env.VERIFY_BASE_URL || "http://localhost:8080";
+    const verifyUrl = `${verifyBase}/api/auth/verify?token=${verificationToken}`;
+    const mailSent = await sendMail({
+      to: user.email,
+      subject: "Activa tu cuenta en SWARCO Ops Portal",
+      text: `Hola ${user.nombre},\n\nActiva tu cuenta aquí:\n${verifyUrl}\n\nSi no solicitaste este registro, ignora este mensaje.\n`,
+      html: `<p>Hola ${user.nombre},</p><p>Activa tu cuenta aquí:</p><p><a href="${verifyUrl}">Activar cuenta</a></p><p>Si no solicitaste este registro, ignora este mensaje.</p>`
+    });
+
+    if (mailSent) {
+      await user.update({ emailWelcomeSentAt: new Date() });
     }
 
-    return res.json({ id: user.id });
+    return res.json({ id: user.id, mailSent });
   } catch (err) {
     return res.status(409).json({ error: "Usuario o email duplicado" });
   }
@@ -67,6 +76,9 @@ router.post("/login", async (req, res) => {
   if (!user) {
     return res.status(401).json({ error: "Credenciales inválidas" });
   }
+  if (!user.emailVerified) {
+    return res.status(403).json({ error: "Cuenta no verificada" });
+  }
 
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) {
@@ -83,6 +95,29 @@ router.post("/login", async (req, res) => {
     token,
     user: { id: user.id, email: user.email, usuario: user.usuario, rol: user.rol }
   });
+});
+
+router.get("/verify", async (req, res) => {
+  const token = (req.query.token || "").toString();
+  if (!token) {
+    return res.status(400).send("Token inválido");
+  }
+
+  const user = await User.findOne({ where: { emailVerificationToken: token } });
+  if (!user || !user.emailVerificationExpiresAt) {
+    return res.status(400).send("Token inválido");
+  }
+  if (user.emailVerificationExpiresAt.getTime() < Date.now()) {
+    return res.status(400).send("Token expirado");
+  }
+
+  await user.update({
+    emailVerified: true,
+    emailVerificationToken: null,
+    emailVerificationExpiresAt: null
+  });
+
+  return res.send("Cuenta verificada. Ya puedes iniciar sesión.");
 });
 
 export default router;

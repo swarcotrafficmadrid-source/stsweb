@@ -31,12 +31,17 @@ export async function sendMail({ to, subject, text, html }) {
     return false;
   }
 
-  await transporter.sendMail({
-    from,
-    to,
-    subject,
-    text,
-    html
-  });
-  return true;
+  try {
+    await transporter.sendMail({
+      from,
+      to,
+      subject,
+      text,
+      html
+    });
+    return true;
+  } catch (err) {
+    console.error("SMTP error:", err.message);
+    return false;
+  }
 }
