@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Router } from "express";
 import { User } from "../models/index.js";
+import { sendMail } from "../utils/mailer.js";
 
 const router = Router();
 
@@ -36,6 +37,16 @@ router.post("/register", async (req, res) => {
       email,
       passwordHash: hash
     });
+
+    try {
+      await sendMail({
+        to: user.email,
+        subject: "Bienvenido a SWARCO Ops Portal",
+        text: `Hola ${user.nombre},\n\nTu usuario ${user.usuario} ya está activo.\n\nPuedes iniciar sesión en el portal cuando quieras.\n\nSWARCO Ops Portal`
+      });
+    } catch {
+      // Si el correo falla, no bloqueamos el registro.
+    }
 
     return res.json({ id: user.id });
   } catch (err) {

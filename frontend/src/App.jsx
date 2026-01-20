@@ -98,7 +98,7 @@ export default function App() {
 
       <nav className="max-w-6xl mx-auto px-6 py-4 flex gap-4 text-sm">
         <button onClick={() => setPage("dashboard")} className="text-swarcoBlue">Inicio</button>
-        <button onClick={() => setPage("failures")} className="text-swarcoBlue">Fallas</button>
+        <button onClick={() => setPage("failures")} className="text-swarcoBlue">Incidencias</button>
         <button onClick={() => setPage("spares")} className="text-swarcoBlue">Repuestos</button>
         <button onClick={() => setPage("purchases")} className="text-swarcoBlue">Compras</button>
       </nav>

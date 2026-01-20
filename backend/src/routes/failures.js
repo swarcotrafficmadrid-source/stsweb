@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { FailureReport } from "../models/index.js";
 import { requireAuth } from "../middleware/auth.js";
+import { sendMail } from "../utils/mailer.js";
 
 const router = Router();
 
@@ -20,6 +21,18 @@ router.post("/", requireAuth, async (req, res) => {
     descripcion,
     prioridad: prioridad || "Media"
   });
+  const notifyTo = process.env.SMTP_NOTIFY_TO || req.user.email;
+  if (notifyTo) {
+    try {
+      await sendMail({
+        to: notifyTo,
+        subject: `Nueva incidencia #${item.id}`,
+        text: `Usuario: ${req.user.email}\nTítulo: ${titulo}\nPrioridad: ${item.prioridad}\n\n${descripcion}`
+      });
+    } catch {
+      // No bloquear si falla el correo.
+    }
+  }
   return res.json(item);
 });
 

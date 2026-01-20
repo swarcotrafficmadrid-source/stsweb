@@ -12,7 +12,7 @@ export default function Failures({ token }) {
     setMessage("");
     try {
       await apiRequest("/api/failures", "POST", { titulo, descripcion, prioridad }, token);
-      setMessage("Reporte enviado.");
+      setMessage("Incidencia enviada.");
       setTitulo("");
       setDescripcion("");
       setPrioridad("Media");
@@ -23,7 +23,7 @@ export default function Failures({ token }) {
 
   return (
     <div className="bg-white p-6 rounded shadow">
-      <h2 className="text-lg font-semibold text-swarcoBlue mb-4">Reporte de Fallas</h2>
+      <h2 className="text-lg font-semibold text-swarcoBlue mb-4">Reporte de Incidencia</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input className="w-full border rounded px-3 py-2" placeholder="Título" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
         <textarea className="w-full border rounded px-3 py-2" rows="4" placeholder="Descripción" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
