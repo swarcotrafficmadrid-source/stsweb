@@ -25,29 +25,37 @@ export default function App() {
           <div className="grid md:grid-cols-2">
             <div className="hidden md:flex flex-col justify-between p-10 bg-swarcoBlue text-white">
               <div>
-                <div className="text-xs uppercase tracking-[0.2em] text-white/70">SWARCO</div>
-                <h1 className="text-3xl font-semibold mt-3">Ops Portal</h1>
+                <img src="/logo.png" alt="SWARCO" className="h-10" />
+                <div className="mt-6 h-1 w-12 rounded bg-swarcoOrange" />
+                <h1 className="text-3xl font-semibold mt-4">Portal SWARCO Traffic Spain</h1>
+                <p className="text-white/90 mt-3">The better way, every day.</p>
                 <p className="text-white/80 mt-4">
-                  Acceso seguro para solicitudes de repuestos, fallas y compras.
+                  Acceso seguro para incidencias, repuestos y compras.
                 </p>
               </div>
               <div className="text-xs text-white/70">
-                Soporte interno • Madrid • 2026
+                www.swarco.com
               </div>
             </div>
             <div className="p-8 md:p-10">
               <div className="md:hidden mb-6">
-                <div className="text-xs uppercase tracking-[0.2em] text-swarcoBlue/70">SWARCO</div>
-                <h1 className="text-2xl font-semibold text-swarcoBlue mt-2">Ops Portal</h1>
+                <img src="/logo.png" alt="SWARCO" className="h-9" />
+                <h1 className="text-2xl font-semibold text-swarcoBlue mt-3">Portal SWARCO Traffic Spain</h1>
+                <p className="text-sm text-slate-500 mt-1">The better way, every day.</p>
               </div>
               <h2 className="text-xl font-semibold text-slate-800 mb-2">
                 {authView === "login" ? "Iniciar sesión" : "Crear cuenta"}
               </h2>
               <p className="text-sm text-slate-500 mb-6">
                 {authView === "login"
-                  ? "Usa tu usuario o email para acceder."
+                  ? "Usa tu email corporativo para acceder."
                   : "Completa tus datos para registrarte."}
               </p>
+              {authView === "login" && (
+                <p className="text-sm text-slate-600 mb-6">
+                  Bienvenido al portal de soporte SWARCO Traffic Spain.
+                </p>
+              )}
           {authView === "login" ? (
             <>
               <Login onSuccess={(t) => { setToken(t); localStorage.setItem("token", t); }} />
@@ -73,6 +81,9 @@ export default function App() {
               </div>
             </>
           )}
+              <div className="mt-8 text-xs text-slate-400 text-center">
+                www.swarco.com
+              </div>
             </div>
           </div>
         </div>
