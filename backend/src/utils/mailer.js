@@ -16,7 +16,10 @@ function getTransporter() {
     host,
     port,
     secure,
-    auth
+    auth,
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 10000
   });
 }
 
@@ -31,15 +34,21 @@ export async function sendMail({ to, subject, text, html }) {
     return false;
   }
 
+  const timeoutMs = 6000;
+  const timeoutPromise = new Promise((resolve) => {
+    setTimeout(() => resolve(false), timeoutMs);
+  });
+
   try {
-    await transporter.sendMail({
-      from,
-      to,
-      subject,
-      text,
-      html
-    });
-    return true;
+    const sendPromise = transporter
+      .sendMail({ from, to, subject, text, html })
+      .then(() => true)
+      .catch((err) => {
+        console.error("SMTP error:", err.message);
+        return false;
+      });
+
+    return await Promise.race([sendPromise, timeoutPromise]);
   } catch (err) {
     console.error("SMTP error:", err.message);
     return false;

@@ -8,16 +8,15 @@ import crypto from "crypto";
 const router = Router();
 
 router.post("/register", async (req, res) => {
-  const usuarioRaw = (req.body.usuario || "").trim();
   const nombreRaw = (req.body.nombre || "").trim();
   const emailRaw = (req.body.email || "").trim();
   const password = req.body.password;
 
-  const usuario = usuarioRaw;
   const nombre = nombreRaw;
   const email = emailRaw;
+  const usuario = emailRaw;
 
-  if (!usuario || !nombre || !email || !password) {
+  if (!nombre || !email || !password) {
     return res.status(400).json({ error: "Datos incompletos" });
   }
 
