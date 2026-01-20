@@ -68,14 +68,13 @@ export default function App() {
   const copy = {
     es: {
       portalTitle: "Portal SWARCO Traffic Spain",
-      tagline: "The better way, every day.",
       access: "Acceso",
       register: "Registro",
       loginTitle: "Iniciar sesión",
       registerTitle: "Crear cuenta",
       loginDesc: "Usa tu email corporativo para acceder.",
       registerDesc: "Completa tus datos para registrarte.",
-      welcome: "Bienvenido. Inicia sesión para entrar al portal.",
+      welcome: "¡Hola! Estamos listos para ayudarte.",
       sideIntro: "Acceso seguro para incidencias, repuestos y compras.",
       searchLang: "Buscar idioma",
       noAccount: "¿No tienes cuenta? Regístrate",
@@ -83,15 +82,14 @@ export default function App() {
       langLabel: "ES"
     },
     en: {
-      portalTitle: "SWARCO Traffic Spain Portal",
-      tagline: "The better way, every day.",
+      portalTitle: "Portal SWARCO Traffic Spain",
       access: "Access",
       register: "Register",
       loginTitle: "Sign in",
       registerTitle: "Create account",
       loginDesc: "Use your corporate email to access.",
       registerDesc: "Complete your details to register.",
-      welcome: "Welcome. Sign in to enter the portal.",
+      welcome: "Hi! We are ready to help you.",
       sideIntro: "Secure access for incidents, spares, and purchases.",
       searchLang: "Search language",
       noAccount: "No account? Create one",
@@ -111,21 +109,43 @@ export default function App() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4">
         <div className="w-full max-w-4xl bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
           <div className="grid md:grid-cols-2">
-            <div className="hidden md:flex flex-col justify-between p-10 bg-swarcoBlue text-white">
-              <div>
-                <img src="/logo.png" alt="SWARCO" className="h-10" />
-                <div className="mt-6 h-1 w-12 rounded bg-swarcoOrange" />
-                <h1 className="text-3xl font-semibold mt-4">{t.portalTitle}</h1>
-                <p className="text-white/90 mt-3">{t.tagline}</p>
-                <p className="text-white/80 mt-4">{t.sideIntro}</p>
+            <div className="hidden md:flex flex-col justify-between p-10 bg-swarcoBlue text-white relative overflow-hidden">
+              <div
+                className="absolute inset-0 opacity-15"
+                style={{
+                  backgroundImage:
+                    "repeating-linear-gradient(135deg, rgba(255,255,255,0.18) 0, rgba(255,255,255,0.18) 1px, transparent 1px, transparent 16px)"
+                }}
+              />
+              <div className="absolute inset-0 opacity-10">
+                <svg viewBox="0 0 800 600" className="w-full h-full">
+                  <g fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1">
+                    <path d="M40 420h720M80 360h640M120 300h560M160 240h480M200 180h400" />
+                    <path d="M120 460c80-140 180-210 300-210 120 0 220 70 300 210" />
+                    <circle cx="620" cy="180" r="40" />
+                  </g>
+                  <g fill="rgba(255,255,255,0.12)">
+                    <rect x="60" y="280" width="90" height="140" rx="6" />
+                    <rect x="170" y="240" width="120" height="180" rx="6" />
+                    <rect x="310" y="260" width="110" height="160" rx="6" />
+                    <rect x="440" y="220" width="130" height="200" rx="6" />
+                  </g>
+                </svg>
               </div>
-              <div className="text-xs text-white/70">
+              <div>
+                <img src="/logo.png" alt="SWARCO" className="h-10 relative z-10" />
+                <div className="mt-6 h-1 w-12 rounded bg-swarcoOrange relative z-10" />
+                <h1 className="text-3xl font-semibold mt-4 relative z-10">{t.portalTitle}</h1>
+                <p className="text-white/90 mt-3 relative z-10">The better way, every day.</p>
+                <p className="text-white/80 mt-4 relative z-10">{t.sideIntro}</p>
+              </div>
+              <div className="text-xs text-white/70 relative z-10">
                 www.swarco.com
               </div>
             </div>
             <div className="p-8 md:p-10">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-semibold text-swarcoOrange">
+                <h2 className="text-3xl font-semibold text-swarcoOrange">
                   {authView === "login" ? t.access : t.register}
                 </h2>
                 <div className="relative">
@@ -181,7 +201,7 @@ export default function App() {
               <div className="md:hidden mb-6">
                 <img src="/logo.png" alt="SWARCO" className="h-9" />
                 <h1 className="text-2xl font-semibold text-swarcoBlue mt-3">{t.portalTitle}</h1>
-                <p className="text-sm text-slate-500 mt-1">{t.tagline}</p>
+                <p className="text-sm text-slate-500 mt-1">The better way, every day.</p>
               </div>
               <h3 className="text-2xl font-semibold text-slate-800 mb-2">
                 {authView === "login" ? t.loginTitle : t.registerTitle}
@@ -194,7 +214,7 @@ export default function App() {
               {authView === "login" && (
                 <div className="mb-6">
                   <div className="h-1 w-12 rounded bg-swarcoOrange mb-3" />
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-swarcoBlue font-medium">
                     {t.welcome}
                   </p>
                 </div>
