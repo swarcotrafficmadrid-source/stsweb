@@ -60,7 +60,7 @@ const LANGUAGES = [
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [authView, setAuthView] = useState("login");
-  const [lang, setLang] = useState(getBrowserLang());
+  const [lang, setLang] = useState(() => localStorage.getItem("lang") || getBrowserLang());
   const [langOpen, setLangOpen] = useState(false);
   const [langQuery, setLangQuery] = useState("");
   const [page, setPage] = useState("dashboard");
@@ -77,6 +77,12 @@ export default function App() {
       welcome: "¡Hola! Estamos listos para ayudarte.",
       sideIntro: "Acceso seguro para incidencias, repuestos y compras.",
       searchLang: "Buscar idioma",
+      headerTitle: "Portal SWARCO Traffic Spain",
+      logout: "Cerrar sesión",
+      navDashboard: "Inicio",
+      navFailures: "Incidencias",
+      navSpares: "Repuestos",
+      navPurchases: "Compras",
       noAccount: "¿No tienes cuenta? Regístrate",
       haveAccount: "Ya tengo cuenta",
       langLabel: "ES"
@@ -92,6 +98,12 @@ export default function App() {
       welcome: "Hi! We are ready to help you.",
       sideIntro: "Secure access for incidents, spares, and purchases.",
       searchLang: "Search language",
+      headerTitle: "SWARCO Traffic Spain Portal",
+      logout: "Sign out",
+      navDashboard: "Home",
+      navFailures: "Incidents",
+      navSpares: "Spares",
+      navPurchases: "Purchases",
       noAccount: "No account? Create one",
       haveAccount: "I already have an account",
       langLabel: "EN"
@@ -103,6 +115,10 @@ export default function App() {
     if (!q) return true;
     return item.name.toLowerCase().includes(q) || item.code.toLowerCase().includes(q);
   });
+  const applyLang = (code) => {
+    setLang(code);
+    localStorage.setItem("lang", code);
+  };
 
   if (!token) {
     return (
@@ -185,7 +201,7 @@ export default function App() {
                               item.code === lang ? "text-swarcoBlue font-semibold" : "text-slate-700"
                             }`}
                             onClick={() => {
-                              setLang(item.code);
+                              applyLang(item.code);
                               setLangOpen(false);
                               setLangQuery("");
                             }}
@@ -259,26 +275,77 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between">
-          <h1 className="text-xl font-semibold text-swarcoBlue">SWARCO Ops Portal</h1>
-          <button
-            className="text-sm text-gray-600"
-            onClick={() => { localStorage.removeItem("token"); setToken(null); }}
-          >
-            Cerrar sesión
-          </button>
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-swarcoBlue">{t.headerTitle}</h1>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-swarcoBlue"
+                aria-label="Cambiar idioma"
+                onClick={() => setLangOpen((prev) => !prev)}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2a10 10 0 100 20 10 10 0 000-20z" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M2 12h20" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M12 2c3.5 3.5 3.5 16.5 0 20M12 2c-3.5 3.5-3.5 16.5 0 20" stroke="currentColor" strokeWidth="1.5" />
+                </svg>
+                {lang.toUpperCase()}
+              </button>
+              {langOpen && (
+                <div className="absolute right-0 mt-3 w-64 rounded-xl border border-slate-200 bg-white shadow-xl p-3 z-20">
+                  <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-2 py-1.5 mb-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-slate-400">
+                      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.5" />
+                      <path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="1.5" />
+                    </svg>
+                    <input
+                      className="w-full text-sm outline-none"
+                      placeholder={t.searchLang}
+                      value={langQuery}
+                      onChange={(e) => setLangQuery(e.target.value)}
+                    />
+                  </div>
+                  <div className="max-h-56 overflow-auto">
+                    {filteredLanguages.map((item) => (
+                      <button
+                        key={item.code}
+                        type="button"
+                        className={`w-full text-left text-sm px-2 py-1.5 rounded hover:bg-slate-100 ${
+                          item.code === lang ? "text-swarcoBlue font-semibold" : "text-slate-700"
+                        }`}
+                        onClick={() => {
+                          applyLang(item.code);
+                          setLangOpen(false);
+                          setLangQuery("");
+                        }}
+                      >
+                        {item.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <button
+              className="text-sm text-gray-600"
+              onClick={() => { localStorage.removeItem("token"); setToken(null); }}
+            >
+              {t.logout}
+            </button>
+          </div>
         </div>
       </header>
 
       <nav className="max-w-6xl mx-auto px-6 py-4 flex gap-4 text-sm">
-        <button onClick={() => setPage("dashboard")} className="text-swarcoBlue">Inicio</button>
-        <button onClick={() => setPage("failures")} className="text-swarcoBlue">Incidencias</button>
-        <button onClick={() => setPage("spares")} className="text-swarcoBlue">Repuestos</button>
-        <button onClick={() => setPage("purchases")} className="text-swarcoBlue">Compras</button>
+        <button onClick={() => setPage("dashboard")} className="text-swarcoBlue">{t.navDashboard}</button>
+        <button onClick={() => setPage("failures")} className="text-swarcoBlue">{t.navFailures}</button>
+        <button onClick={() => setPage("spares")} className="text-swarcoBlue">{t.navSpares}</button>
+        <button onClick={() => setPage("purchases")} className="text-swarcoBlue">{t.navPurchases}</button>
       </nav>
 
       <main className="max-w-6xl mx-auto px-6 pb-10">
-        <PageComponent token={token} />
+        <PageComponent token={token} lang={lang} />
       </main>
     </div>
   );

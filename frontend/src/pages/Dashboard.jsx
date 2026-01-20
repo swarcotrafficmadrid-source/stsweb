@@ -1,10 +1,20 @@
-export default function Dashboard() {
+export default function Dashboard({ lang = "es" }) {
+  const copy = {
+    es: {
+      title: "Bienvenido",
+      body: "Usa el menú superior para crear una incidencia o solicitar repuestos y compras."
+    },
+    en: {
+      title: "Welcome",
+      body: "Use the top menu to create an incident or request spares and purchases."
+    }
+  };
+  const t = copy[lang] || copy.en;
+
   return (
     <div className="bg-white p-6 rounded shadow">
-      <h2 className="text-lg font-semibold text-swarcoBlue mb-2">Bienvenido</h2>
-      <p className="text-sm text-slate-600">
-        Usa el menú superior para crear una incidencia o solicitar repuestos y compras.
-      </p>
+      <h2 className="text-lg font-semibold text-swarcoBlue mb-2">{t.title}</h2>
+      <p className="text-sm text-slate-600">{t.body}</p>
     </div>
   );
 }
