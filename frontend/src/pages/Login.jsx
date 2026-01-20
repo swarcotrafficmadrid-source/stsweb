@@ -5,15 +5,19 @@ export default function Login({ onSuccess }) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setIsSubmitting(true);
     try {
       const data = await apiRequest("/api/auth/login", "POST", { identifier, password });
       onSuccess(data.token);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -27,6 +31,7 @@ export default function Login({ onSuccess }) {
           value={identifier}
           onChange={(e) => setIdentifier(e.target.value)}
         />
+        <p className="text-xs text-slate-400">Usa el correo con el que te registraste.</p>
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium text-slate-700">Contraseña</label>
@@ -39,8 +44,11 @@ export default function Login({ onSuccess }) {
         />
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <button className="w-full bg-swarcoBlue text-white py-2.5 rounded-lg font-semibold hover:bg-swarcoBlue/90 transition">
-        Entrar
+      <button
+        className="w-full bg-swarcoBlue text-white py-2.5 rounded-lg font-semibold hover:bg-swarcoBlue/90 transition disabled:opacity-70"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? "Entrando..." : "Entrar"}
       </button>
     </form>
   );
