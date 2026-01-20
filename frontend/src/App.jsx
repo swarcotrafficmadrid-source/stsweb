@@ -148,22 +148,22 @@ export default function App() {
         <div className="w-full max-w-4xl bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
           <div className="grid md:grid-cols-2">
             <div
-              className="hidden md:flex flex-col justify-between p-10 bg-swarcoBlue text-white relative overflow-hidden"
+              className="hidden md:flex flex-col justify-between p-10 text-white relative overflow-hidden"
               style={{
                 backgroundImage:
-                  "linear-gradient(180deg, rgba(0,59,113,0.9) 0%, rgba(0,59,113,0.92) 100%), url('/hero.jpg')",
+                  "linear-gradient(180deg, rgba(0,107,171,0.55) 0%, rgba(0,107,171,0.6) 100%), url('/hero.jpg')",
                 backgroundSize: "cover",
                 backgroundPosition: "center"
               }}
             >
               <div
-                className="absolute inset-0 opacity-15"
+                className="absolute inset-0 opacity-10"
                 style={{
                   backgroundImage:
-                    "repeating-linear-gradient(135deg, rgba(255,255,255,0.18) 0, rgba(255,255,255,0.18) 1px, transparent 1px, transparent 16px)"
+                    "repeating-linear-gradient(135deg, rgba(255,255,255,0.2) 0, rgba(255,255,255,0.2) 1px, transparent 1px, transparent 18px)"
                 }}
               />
-              <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 opacity-06">
                 <svg viewBox="0 0 800 600" className="w-full h-full">
                   <g fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1">
                     <path d="M40 420h720M80 360h640M120 300h560M160 240h480M200 180h400" />
