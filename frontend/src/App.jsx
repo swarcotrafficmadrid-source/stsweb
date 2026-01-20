@@ -38,23 +38,37 @@ export default function App() {
               </div>
             </div>
             <div className="p-8 md:p-10">
+              <div className="relative mb-8">
+                <div className="h-12 bg-swarcoBlue swarco-slope w-4/5 shadow" />
+                <img
+                  src="/logo.png"
+                  alt="SWARCO"
+                  className="absolute top-3 left-4 h-6"
+                />
+              </div>
               <div className="md:hidden mb-6">
                 <img src="/logo.png" alt="SWARCO" className="h-9" />
                 <h1 className="text-2xl font-semibold text-swarcoBlue mt-3">Portal SWARCO Traffic Spain</h1>
                 <p className="text-sm text-slate-500 mt-1">The better way, every day.</p>
               </div>
-              <h2 className="text-xl font-semibold text-slate-800 mb-2">
-                {authView === "login" ? "Iniciar sesión" : "Crear cuenta"}
+              <h2 className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-2">
+                {authView === "login" ? "Acceso" : "Registro"}
               </h2>
+              <h3 className="text-2xl font-semibold text-slate-800 mb-2">
+                {authView === "login" ? "Iniciar sesión" : "Crear cuenta"}
+              </h3>
               <p className="text-sm text-slate-500 mb-6">
                 {authView === "login"
                   ? "Usa tu email corporativo para acceder."
                   : "Completa tus datos para registrarte."}
               </p>
               {authView === "login" && (
-                <p className="text-sm text-slate-600 mb-6">
-                  Bienvenido al portal de soporte SWARCO Traffic Spain.
-                </p>
+                <div className="mb-6">
+                  <div className="h-1 w-12 rounded bg-swarcoOrange mb-3" />
+                  <p className="text-sm text-slate-600">
+                    Bienvenido al portal de soporte SWARCO Traffic Spain.
+                  </p>
+                </div>
               )}
           {authView === "login" ? (
             <>

@@ -45,7 +45,7 @@ export default function Login({ onSuccess }) {
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <button
-        className="w-full bg-swarcoBlue text-white py-2.5 rounded-lg font-semibold hover:bg-swarcoBlue/90 transition disabled:opacity-70"
+        className="w-full bg-swarcoBlue text-white py-2.5 rounded-full font-semibold hover:bg-swarcoBlue/90 transition disabled:opacity-70"
         disabled={isSubmitting}
       >
         {isSubmitting ? "Entrando..." : "Entrar"}
