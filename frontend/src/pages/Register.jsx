@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { apiRequest } from "../lib/api.js";
+import { useTranslatedMap } from "../lib/i18n.js";
 
 export default function Register({ lang = "es" }) {
   const [nombre, setNombre] = useState("");
@@ -43,7 +44,7 @@ export default function Register({ lang = "es" }) {
       successNoMail: "Account creato, ma l'email di attivazione non è stata inviata. Contatta il supporto."
     }
   };
-  const t = copy[lang] || copy.es;
+  const t = useTranslatedMap({ base: copy, lang, cacheKey: "register" });
 
   async function handleSubmit(e) {
     e.preventDefault();

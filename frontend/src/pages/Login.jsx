@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { apiRequest } from "../lib/api.js";
+import { useTranslatedMap } from "../lib/i18n.js";
 
 export default function Login({ onSuccess, lang = "es" }) {
   const [identifier, setIdentifier] = useState("");
@@ -30,7 +31,7 @@ export default function Login({ onSuccess, lang = "es" }) {
       buttonLoading: "Accesso..."
     }
   };
-  const t = copy[lang] || copy.es;
+  const t = useTranslatedMap({ base: copy, lang, cacheKey: "login" });
 
   async function handleSubmit(e) {
     e.preventDefault();

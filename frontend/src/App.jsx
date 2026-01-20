@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Failures from "./pages/Failures.jsx";
 import Spares from "./pages/Spares.jsx";
 import Purchases from "./pages/Purchases.jsx";
+import { useTranslatedMap } from "./lib/i18n.js";
 
 const pages = {
   dashboard: Dashboard,
@@ -65,7 +66,7 @@ export default function App() {
   const [langQuery, setLangQuery] = useState("");
   const [page, setPage] = useState("dashboard");
 
-  const copy = {
+  const copy = useMemo(() => ({
     es: {
       portalTitle: "Portal SWARCO Traffic Spain",
       access: "Acceso",
@@ -129,8 +130,8 @@ export default function App() {
       haveAccount: "Ho già un account",
       langLabel: "IT"
     }
-  };
-  const t = copy[lang] || copy.en;
+  }), []);
+  const t = useTranslatedMap({ base: copy, lang, cacheKey: "app" });
   const filteredLanguages = LANGUAGES.filter((item) => {
     const q = langQuery.trim().toLowerCase();
     if (!q) return true;
@@ -146,7 +147,15 @@ export default function App() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4">
         <div className="w-full max-w-4xl bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
           <div className="grid md:grid-cols-2">
-            <div className="hidden md:flex flex-col justify-between p-10 bg-swarcoBlue text-white relative overflow-hidden">
+            <div
+              className="hidden md:flex flex-col justify-between p-10 bg-swarcoBlue text-white relative overflow-hidden"
+              style={{
+                backgroundImage:
+                  "linear-gradient(180deg, rgba(0,59,113,0.9) 0%, rgba(0,59,113,0.92) 100%), url('/hero.jpg')",
+                backgroundSize: "cover",
+                backgroundPosition: "center"
+              }}
+            >
               <div
                 className="absolute inset-0 opacity-15"
                 style={{

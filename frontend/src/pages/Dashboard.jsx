@@ -1,3 +1,5 @@
+import { useTranslatedMap } from "../lib/i18n.js";
+
 export default function Dashboard({ lang = "es" }) {
   const copy = {
     es: {
@@ -13,7 +15,7 @@ export default function Dashboard({ lang = "es" }) {
       body: "Usa il menu in alto per creare un incidente o richiedere ricambi e acquisti."
     }
   };
-  const t = copy[lang] || copy.en;
+  const t = useTranslatedMap({ base: copy, lang, cacheKey: "dashboard" });
 
   return (
     <div className="bg-white p-6 rounded shadow">

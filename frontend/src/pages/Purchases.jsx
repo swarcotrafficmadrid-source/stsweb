@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { apiRequest } from "../lib/api.js";
+import { useTranslatedMap } from "../lib/i18n.js";
 
 export default function Purchases({ token, lang = "es" }) {
   const [equipo, setEquipo] = useState("");
@@ -29,7 +30,7 @@ export default function Purchases({ token, lang = "es" }) {
       ok: "Richiesta inviata."
     }
   };
-  const t = copy[lang] || copy.en;
+  const t = useTranslatedMap({ base: copy, lang, cacheKey: "purchases" });
 
   async function handleSubmit(e) {
     e.preventDefault();
