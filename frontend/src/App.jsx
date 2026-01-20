@@ -67,13 +67,15 @@ export default function App() {
 
   const copy = {
     es: {
+      portalTitle: "Portal SWARCO Traffic Spain",
+      tagline: "The better way, every day.",
       access: "Acceso",
       register: "Registro",
       loginTitle: "Iniciar sesión",
       registerTitle: "Crear cuenta",
       loginDesc: "Usa tu email corporativo para acceder.",
       registerDesc: "Completa tus datos para registrarte.",
-      welcome: "Bienvenido al portal de soporte SWARCO Traffic Spain.",
+      welcome: "Bienvenido. Inicia sesión para entrar al portal.",
       sideIntro: "Acceso seguro para incidencias, repuestos y compras.",
       searchLang: "Buscar idioma",
       noAccount: "¿No tienes cuenta? Regístrate",
@@ -81,13 +83,15 @@ export default function App() {
       langLabel: "ES"
     },
     en: {
+      portalTitle: "SWARCO Traffic Spain Portal",
+      tagline: "The better way, every day.",
       access: "Access",
       register: "Register",
       loginTitle: "Sign in",
       registerTitle: "Create account",
       loginDesc: "Use your corporate email to access.",
       registerDesc: "Complete your details to register.",
-      welcome: "Welcome to the SWARCO Traffic Spain support portal.",
+      welcome: "Welcome. Sign in to enter the portal.",
       sideIntro: "Secure access for incidents, spares, and purchases.",
       searchLang: "Search language",
       noAccount: "No account? Create one",
@@ -111,8 +115,8 @@ export default function App() {
               <div>
                 <img src="/logo.png" alt="SWARCO" className="h-10" />
                 <div className="mt-6 h-1 w-12 rounded bg-swarcoOrange" />
-                <h1 className="text-3xl font-semibold mt-4">Portal SWARCO Traffic Spain</h1>
-                <p className="text-white/90 mt-3">The better way, every day.</p>
+                <h1 className="text-3xl font-semibold mt-4">{t.portalTitle}</h1>
+                <p className="text-white/90 mt-3">{t.tagline}</p>
                 <p className="text-white/80 mt-4">{t.sideIntro}</p>
               </div>
               <div className="text-xs text-white/70">
@@ -176,8 +180,8 @@ export default function App() {
               </div>
               <div className="md:hidden mb-6">
                 <img src="/logo.png" alt="SWARCO" className="h-9" />
-                <h1 className="text-2xl font-semibold text-swarcoBlue mt-3">Portal SWARCO Traffic Spain</h1>
-                <p className="text-sm text-slate-500 mt-1">The better way, every day.</p>
+                <h1 className="text-2xl font-semibold text-swarcoBlue mt-3">{t.portalTitle}</h1>
+                <p className="text-sm text-slate-500 mt-1">{t.tagline}</p>
               </div>
               <h3 className="text-2xl font-semibold text-slate-800 mb-2">
                 {authView === "login" ? t.loginTitle : t.registerTitle}
