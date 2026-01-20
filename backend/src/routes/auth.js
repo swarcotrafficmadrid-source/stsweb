@@ -137,8 +137,8 @@ router.post("/forgot", async (req, res) => {
     resetPasswordExpiresAt: resetExpires
   });
 
-  const resetBase = process.env.RESET_BASE_URL || "http://localhost:8080";
-  const resetUrl = `${resetBase}/api/auth/reset?token=${resetToken}`;
+  const resetBase = process.env.RESET_BASE_URL || "http://localhost:3000/reset";
+  const resetUrl = `${resetBase}?token=${resetToken}`;
   await sendMail({
     to: user.email,
     subject: "Recupera tu contraseña - SWARCO Traffic Spain",
@@ -154,22 +154,8 @@ router.get("/reset", async (req, res) => {
   if (!token) {
     return res.status(400).send("Token inválido");
   }
-  return res.send(`
-    <html>
-      <head><meta charset="utf-8"><title>Restablecer contraseña</title></head>
-      <body style="font-family: Arial, sans-serif; padding: 24px;">
-        <h2>Restablecer contraseña</h2>
-        <form method="POST" action="/api/auth/reset">
-          <input type="hidden" name="token" value="${token}" />
-          <div style="margin-bottom: 12px;">
-            <label>Nueva contraseña</label><br/>
-            <input type="password" name="password" style="padding:8px; width: 280px;" required />
-          </div>
-          <button type="submit" style="padding:8px 16px;">Guardar</button>
-        </form>
-      </body>
-    </html>
-  `);
+  const resetBase = process.env.RESET_BASE_URL || "http://localhost:3000/reset";
+  return res.redirect(`${resetBase}?token=${token}`);
 });
 
 router.post("/reset", async (req, res) => {
@@ -191,7 +177,7 @@ router.post("/reset", async (req, res) => {
     resetPasswordToken: null,
     resetPasswordExpiresAt: null
   });
-  return res.send("Contraseña actualizada. Ya puedes iniciar sesión.");
+  return res.json({ ok: true, message: "Contraseña actualizada. Ya puedes iniciar sesión." });
 });
 
 export default router;

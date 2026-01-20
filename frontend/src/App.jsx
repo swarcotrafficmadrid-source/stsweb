@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Failures from "./pages/Failures.jsx";
 import Spares from "./pages/Spares.jsx";
@@ -65,6 +66,12 @@ export default function App() {
   const [langOpen, setLangOpen] = useState(false);
   const [langQuery, setLangQuery] = useState("");
   const [page, setPage] = useState("dashboard");
+  const [resetToken, setResetToken] = useState(() => {
+    if (typeof window === "undefined") return "";
+    const params = new URLSearchParams(window.location.search);
+    return params.get("token") || "";
+  });
+  const isResetView = typeof window !== "undefined" && window.location.pathname.startsWith("/reset");
 
   const copy = useMemo(() => ({
     es: {
@@ -227,50 +234,63 @@ export default function App() {
                 <h1 className="text-2xl font-semibold text-swarcoBlue mt-3">{t.portalTitle}</h1>
                 <p className="text-sm text-slate-500 mt-1">The better way, every day.</p>
               </div>
-              <h3 className="text-2xl font-semibold text-slate-800 mb-2">
-                {authView === "login" ? t.loginTitle : t.registerTitle}
-              </h3>
-              <p className="text-sm text-slate-500 mb-6">
-                {authView === "login"
-                  ? t.loginDesc
-                  : t.registerDesc}
-              </p>
-              {authView === "login" && (
-                <div className="mb-6">
-                  <div className="h-1 w-12 rounded bg-swarcoOrange mb-3" />
-                  <p className="text-sm text-swarcoBlue font-medium">
-                    {t.welcome}
+              {!isResetView && (
+                <>
+                  <h3 className="text-2xl font-semibold text-slate-800 mb-2">
+                    {authView === "login" ? t.loginTitle : t.registerTitle}
+                  </h3>
+                  <p className="text-sm text-slate-500 mb-6">
+                    {authView === "login"
+                      ? t.loginDesc
+                      : t.registerDesc}
                   </p>
-                </div>
+                  {authView === "login" && (
+                    <div className="mb-6">
+                      <div className="h-1 w-12 rounded bg-swarcoOrange mb-3" />
+                      <p className="text-sm text-swarcoBlue font-medium">
+                        {t.welcome}
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
-          {authView === "login" ? (
-            <>
-              <Login
-                onSuccess={(tokenValue) => { setToken(tokenValue); localStorage.setItem("token", tokenValue); }}
-                lang={lang}
-              />
-              <div className="mt-6 text-center">
-                <button
-                  className="text-sm text-swarcoBlue hover:text-swarcoBlue/80"
-                  onClick={() => setAuthView("register")}
-                >
-                  {t.noAccount}
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <Register lang={lang} />
-              <div className="mt-6 text-center">
-                <button
-                  className="text-sm text-swarcoBlue hover:text-swarcoBlue/80"
-                  onClick={() => setAuthView("login")}
-                >
-                  {t.haveAccount}
-                </button>
-              </div>
-            </>
-          )}
+              {isResetView ? (
+                <ResetPassword
+                  token={resetToken}
+                  lang={lang}
+                  onBack={() => {
+                    window.history.pushState({}, "", "/");
+                    setResetToken("");
+                  }}
+                />
+              ) : authView === "login" ? (
+                <>
+                  <Login
+                    onSuccess={(tokenValue) => { setToken(tokenValue); localStorage.setItem("token", tokenValue); }}
+                    lang={lang}
+                  />
+                  <div className="mt-6">
+                    <button
+                      className="w-full bg-swarcoOrange text-white py-2.5 rounded-full font-semibold hover:bg-swarcoOrange/90 transition"
+                      onClick={() => setAuthView("register")}
+                    >
+                      {t.noAccount}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Register lang={lang} />
+                  <div className="mt-6 text-center">
+                    <button
+                      className="text-sm text-swarcoBlue hover:text-swarcoBlue/80"
+                      onClick={() => setAuthView("login")}
+                    >
+                      {t.haveAccount}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
