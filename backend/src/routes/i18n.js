@@ -21,7 +21,8 @@ router.post("/translate", async (req, res) => {
     }
     return res.json({ translations: result });
   } catch (err) {
-    return res.status(500).json({ error: "Error traduciendo" });
+    console.error("Translate error:", err?.message || err);
+    return res.status(500).json({ error: "Error traduciendo", detail: err?.message || "unknown" });
   }
 });
 

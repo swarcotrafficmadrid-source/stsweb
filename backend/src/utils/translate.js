@@ -22,6 +22,9 @@ function getTranslationClient() {
     return null;
   }
   const projectId = process.env.TRANSLATE_PROJECT_ID || creds.project_id;
+  if (!projectId) {
+    return null;
+  }
   return new TranslationServiceClient({
     projectId,
     credentials: {
@@ -37,9 +40,9 @@ export async function translateTexts({ source, target, texts }) {
     return null;
   }
 
-  const projectId = process.env.TRANSLATE_PROJECT_ID || "projects/-";
+  const projectId = process.env.TRANSLATE_PROJECT_ID;
   const request = {
-    parent: projectId.includes("/") ? projectId : `projects/${projectId}/locations/global`,
+    parent: `projects/${projectId}/locations/global`,
     contents: texts,
     mimeType: "text/plain",
     sourceLanguageCode: source,
