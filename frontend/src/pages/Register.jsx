@@ -67,7 +67,16 @@ export default function Register() {
       >
         {isSubmitting ? "Creando cuenta..." : "Registrar"}
       </button>
-      {result && <p className="text-sm text-slate-600">{result}</p>}
+      {result && (
+        <div className="text-sm text-slate-600 flex items-start gap-2">
+          <span
+            className={`mt-0.5 inline-flex h-2.5 w-2.5 rounded-full ${
+              result.includes("no se pudo") ? "bg-amber-500" : "bg-emerald-500"
+            }`}
+          />
+          <p>{result}</p>
+        </div>
+      )}
     </form>
   );
 }
