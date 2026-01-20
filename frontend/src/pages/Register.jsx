@@ -1,12 +1,34 @@
 import { useState } from "react";
 import { apiRequest } from "../lib/api.js";
 
-export default function Register() {
+export default function Register({ lang = "es" }) {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [result, setResult] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const copy = {
+    es: {
+      fullName: "Nombre completo",
+      namePlaceholder: "Nombre y apellido",
+      email: "Email",
+      emailPlaceholder: "correo@empresa.com",
+      password: "Contraseña",
+      button: "Registrar",
+      buttonLoading: "Creando cuenta..."
+    },
+    en: {
+      fullName: "Full name",
+      namePlaceholder: "Name and surname",
+      email: "Email",
+      emailPlaceholder: "email@company.com",
+      password: "Password",
+      button: "Create account",
+      buttonLoading: "Creating account..."
+    }
+  };
+  const t = copy[lang] || copy.es;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -34,25 +56,25 @@ export default function Register() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium text-slate-700">Nombre completo</label>
+        <label className="text-sm font-medium text-slate-700">{t.fullName}</label>
         <input
           className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
-          placeholder="Nombre y apellido"
+          placeholder={t.namePlaceholder}
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
         />
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium text-slate-700">Email</label>
+        <label className="text-sm font-medium text-slate-700">{t.email}</label>
         <input
           className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
-          placeholder="correo@empresa.com"
+          placeholder={t.emailPlaceholder}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium text-slate-700">Contraseña</label>
+        <label className="text-sm font-medium text-slate-700">{t.password}</label>
         <input
           type="password"
           className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
@@ -65,7 +87,7 @@ export default function Register() {
         className="w-full bg-swarcoBlue text-white py-2.5 rounded-lg font-semibold hover:bg-swarcoBlue/90 transition disabled:opacity-70"
         disabled={isSubmitting}
       >
-        {isSubmitting ? "Creando cuenta..." : "Registrar"}
+        {isSubmitting ? t.buttonLoading : t.button}
       </button>
       {result && (
         <div className="text-sm text-slate-600 flex items-start gap-2">

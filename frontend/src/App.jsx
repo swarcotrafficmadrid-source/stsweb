@@ -16,7 +16,36 @@ const pages = {
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [authView, setAuthView] = useState("login");
+  const [lang, setLang] = useState("es");
   const [page, setPage] = useState("dashboard");
+
+  const copy = {
+    es: {
+      access: "Acceso",
+      register: "Registro",
+      loginTitle: "Iniciar sesión",
+      registerTitle: "Crear cuenta",
+      loginDesc: "Usa tu email corporativo para acceder.",
+      registerDesc: "Completa tus datos para registrarte.",
+      welcome: "Bienvenido al portal de soporte SWARCO Traffic Spain.",
+      noAccount: "¿No tienes cuenta? Regístrate",
+      haveAccount: "Ya tengo cuenta",
+      langLabel: "ES"
+    },
+    en: {
+      access: "Access",
+      register: "Register",
+      loginTitle: "Sign in",
+      registerTitle: "Create account",
+      loginDesc: "Use your corporate email to access.",
+      registerDesc: "Complete your details to register.",
+      welcome: "Welcome to the SWARCO Traffic Spain support portal.",
+      noAccount: "No account? Create one",
+      haveAccount: "I already have an account",
+      langLabel: "EN"
+    }
+  };
+  const t = copy[lang] || copy.es;
 
   if (!token) {
     return (
@@ -38,29 +67,24 @@ export default function App() {
               </div>
             </div>
             <div className="p-8 md:p-10">
-              <div className="relative mb-6">
-                <div className="h-12 bg-swarcoBlue swarco-slope w-4/5 shadow" />
-                <img
-                  src="/logo.png"
-                  alt="SWARCO"
-                  className="absolute top-3 left-4 h-6"
-                />
-              </div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold text-swarcoOrange">
-                  {authView === "login" ? "Acceso" : "Registro"}
+                  {authView === "login" ? t.access : t.register}
                 </h2>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-swarcoBlue"
-                  aria-label="Cambiar idioma"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" stroke="currentColor" strokeWidth="1.5" />
-                  </svg>
-                  ES
-                </button>
+                <div className="relative">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-swarcoBlue"
+                    aria-label="Cambiar idioma"
+                    onClick={() => setLang((prev) => (prev === "es" ? "en" : "es"))}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
+                      <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" stroke="currentColor" strokeWidth="1.5" />
+                    </svg>
+                    {t.langLabel}
+                  </button>
+                </div>
               </div>
               <div className="md:hidden mb-6">
                 <img src="/logo.png" alt="SWARCO" className="h-9" />
@@ -68,49 +92,49 @@ export default function App() {
                 <p className="text-sm text-slate-500 mt-1">The better way, every day.</p>
               </div>
               <h3 className="text-2xl font-semibold text-slate-800 mb-2">
-                {authView === "login" ? "Iniciar sesión" : "Crear cuenta"}
+                {authView === "login" ? t.loginTitle : t.registerTitle}
               </h3>
               <p className="text-sm text-slate-500 mb-6">
                 {authView === "login"
-                  ? "Usa tu email corporativo para acceder."
-                  : "Completa tus datos para registrarte."}
+                  ? t.loginDesc
+                  : t.registerDesc}
               </p>
               {authView === "login" && (
                 <div className="mb-6">
                   <div className="h-1 w-12 rounded bg-swarcoOrange mb-3" />
                   <p className="text-sm text-slate-600">
-                    Bienvenido al portal de soporte SWARCO Traffic Spain.
+                    {t.welcome}
                   </p>
                 </div>
               )}
           {authView === "login" ? (
             <>
-              <Login onSuccess={(t) => { setToken(t); localStorage.setItem("token", t); }} />
+              <Login
+                onSuccess={(tokenValue) => { setToken(tokenValue); localStorage.setItem("token", tokenValue); }}
+                lang={lang}
+              />
               <div className="mt-6 text-center">
                 <button
                   className="text-sm text-swarcoBlue hover:text-swarcoBlue/80"
                   onClick={() => setAuthView("register")}
                 >
-                  ¿No tienes cuenta? Regístrate
+                  {t.noAccount}
                 </button>
               </div>
             </>
           ) : (
             <>
-              <Register onSuccess={() => setAuthView("login")} />
+              <Register lang={lang} />
               <div className="mt-6 text-center">
                 <button
                   className="text-sm text-swarcoBlue hover:text-swarcoBlue/80"
                   onClick={() => setAuthView("login")}
                 >
-                  Ya tengo cuenta
+                  {t.haveAccount}
                 </button>
               </div>
             </>
           )}
-              <div className="mt-8 text-xs text-slate-400 text-center">
-                www.swarco.com
-              </div>
             </div>
           </div>
         </div>
