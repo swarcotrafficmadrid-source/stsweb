@@ -3,8 +3,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        swarcoBlue: "#003B71",
-        swarcoOrange: "#F58220"
+        swarcoBlue: "#006BAB",
+        swarcoOrange: "#F29200"
       }
     }
   },
