@@ -13,6 +13,8 @@ const User = sequelize.define(
     emailVerificationToken: { type: DataTypes.STRING(128), allowNull: true },
     emailVerificationExpiresAt: { type: DataTypes.DATE, allowNull: true },
     emailWelcomeSentAt: { type: DataTypes.DATE, allowNull: true },
+    resetPasswordToken: { type: DataTypes.STRING(128), allowNull: true },
+    resetPasswordExpiresAt: { type: DataTypes.DATE, allowNull: true },
     rol: { type: DataTypes.STRING(32), allowNull: false, defaultValue: "Técnico" },
     activo: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true }
   },

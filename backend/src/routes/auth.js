@@ -119,4 +119,79 @@ router.get("/verify", async (req, res) => {
   return res.send("Cuenta verificada. Ya puedes iniciar sesión.");
 });
 
+router.post("/forgot", async (req, res) => {
+  const email = (req.body.email || "").trim();
+  if (!email) {
+    return res.status(400).json({ error: "Datos incompletos" });
+  }
+
+  const user = await User.findOne({ where: { email } });
+  if (!user) {
+    return res.json({ ok: true });
+  }
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const resetExpires = new Date(Date.now() + 1000 * 60 * 60);
+  await user.update({
+    resetPasswordToken: resetToken,
+    resetPasswordExpiresAt: resetExpires
+  });
+
+  const resetBase = process.env.RESET_BASE_URL || "http://localhost:8080";
+  const resetUrl = `${resetBase}/api/auth/reset?token=${resetToken}`;
+  await sendMail({
+    to: user.email,
+    subject: "Recupera tu contraseña - SWARCO Traffic Spain",
+    text: `Hola ${user.nombre},\n\nPara restablecer tu contraseña, entra aquí:\n${resetUrl}\n\nSi no solicitaste este cambio, ignora este mensaje.\n`,
+    html: `<p>Hola ${user.nombre},</p><p>Para restablecer tu contraseña, entra aquí:</p><p><a href="${resetUrl}">Restablecer contraseña</a></p><p>Si no solicitaste este cambio, ignora este mensaje.</p>`
+  });
+
+  return res.json({ ok: true });
+});
+
+router.get("/reset", async (req, res) => {
+  const token = (req.query.token || "").toString();
+  if (!token) {
+    return res.status(400).send("Token inválido");
+  }
+  return res.send(`
+    <html>
+      <head><meta charset="utf-8"><title>Restablecer contraseña</title></head>
+      <body style="font-family: Arial, sans-serif; padding: 24px;">
+        <h2>Restablecer contraseña</h2>
+        <form method="POST" action="/api/auth/reset">
+          <input type="hidden" name="token" value="${token}" />
+          <div style="margin-bottom: 12px;">
+            <label>Nueva contraseña</label><br/>
+            <input type="password" name="password" style="padding:8px; width: 280px;" required />
+          </div>
+          <button type="submit" style="padding:8px 16px;">Guardar</button>
+        </form>
+      </body>
+    </html>
+  `);
+});
+
+router.post("/reset", async (req, res) => {
+  const token = (req.body.token || "").toString();
+  const password = req.body.password;
+  if (!token || !password) {
+    return res.status(400).send("Datos incompletos");
+  }
+  const user = await User.findOne({ where: { resetPasswordToken: token } });
+  if (!user || !user.resetPasswordExpiresAt) {
+    return res.status(400).send("Token inválido");
+  }
+  if (user.resetPasswordExpiresAt.getTime() < Date.now()) {
+    return res.status(400).send("Token expirado");
+  }
+  const hash = await bcrypt.hash(password, 10);
+  await user.update({
+    passwordHash: hash,
+    resetPasswordToken: null,
+    resetPasswordExpiresAt: null
+  });
+  return res.send("Contraseña actualizada. Ya puedes iniciar sesión.");
+});
+
 export default router;
