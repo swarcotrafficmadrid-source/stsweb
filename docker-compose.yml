@@ -24,7 +24,7 @@ services:
       DB_PORT: 3306
       DB_NAME: swarco_ops
       DB_USER: swarco
-      DB_PASSWORD: swarco_password
+      DB_PASSWORD: L@croix/2026
       JWT_SECRET: supersecreto
     ports:
       - "8080:8080"
