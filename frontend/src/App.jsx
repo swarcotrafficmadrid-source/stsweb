@@ -13,10 +13,56 @@ const pages = {
   purchases: Purchases
 };
 
+function getBrowserLang() {
+  if (typeof navigator === "undefined") {
+    return "es";
+  }
+  const lang = navigator.language || "es";
+  return lang.split("-")[0].toLowerCase();
+}
+
+const LANGUAGES = [
+  { code: "es", name: "Español" },
+  { code: "en", name: "English" },
+  { code: "eu", name: "Euskara" },
+  { code: "fr", name: "Français" },
+  { code: "de", name: "Deutsch" },
+  { code: "it", name: "Italiano" },
+  { code: "pt", name: "Português" },
+  { code: "nl", name: "Nederlands" },
+  { code: "sv", name: "Svenska" },
+  { code: "no", name: "Norsk" },
+  { code: "da", name: "Dansk" },
+  { code: "fi", name: "Suomi" },
+  { code: "pl", name: "Polski" },
+  { code: "cs", name: "Čeština" },
+  { code: "sk", name: "Slovenčina" },
+  { code: "hu", name: "Magyar" },
+  { code: "ro", name: "Română" },
+  { code: "bg", name: "Български" },
+  { code: "el", name: "Ελληνικά" },
+  { code: "ru", name: "Русский" },
+  { code: "uk", name: "Українська" },
+  { code: "tr", name: "Türkçe" },
+  { code: "ar", name: "العربية" },
+  { code: "he", name: "עברית" },
+  { code: "hi", name: "हिन्दी" },
+  { code: "bn", name: "বাংলা" },
+  { code: "id", name: "Bahasa Indonesia" },
+  { code: "ms", name: "Bahasa Melayu" },
+  { code: "th", name: "ไทย" },
+  { code: "vi", name: "Tiếng Việt" },
+  { code: "zh", name: "中文" },
+  { code: "ja", name: "日本語" },
+  { code: "ko", name: "한국어" }
+];
+
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [authView, setAuthView] = useState("login");
-  const [lang, setLang] = useState("es");
+  const [lang, setLang] = useState(getBrowserLang());
+  const [langOpen, setLangOpen] = useState(false);
+  const [langQuery, setLangQuery] = useState("");
   const [page, setPage] = useState("dashboard");
 
   const copy = {
@@ -45,7 +91,12 @@ export default function App() {
       langLabel: "EN"
     }
   };
-  const t = copy[lang] || copy.es;
+  const t = copy[lang] || copy.en;
+  const filteredLanguages = LANGUAGES.filter((item) => {
+    const q = langQuery.trim().toLowerCase();
+    if (!q) return true;
+    return item.name.toLowerCase().includes(q) || item.code.toLowerCase().includes(q);
+  });
 
   if (!token) {
     return (
@@ -76,14 +127,49 @@ export default function App() {
                     type="button"
                     className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-swarcoBlue"
                     aria-label="Cambiar idioma"
-                    onClick={() => setLang((prev) => (prev === "es" ? "en" : "es"))}
+                    onClick={() => setLangOpen((prev) => !prev)}
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-                      <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" stroke="currentColor" strokeWidth="1.5" />
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 2a10 10 0 100 20 10 10 0 000-20z" stroke="currentColor" strokeWidth="1.5" />
+                      <path d="M2 12h20" stroke="currentColor" strokeWidth="1.5" />
+                      <path d="M12 2c3.5 3.5 3.5 16.5 0 20M12 2c-3.5 3.5-3.5 16.5 0 20" stroke="currentColor" strokeWidth="1.5" />
                     </svg>
-                    {t.langLabel}
+                    {lang.toUpperCase()}
                   </button>
+                  {langOpen && (
+                    <div className="absolute right-0 mt-3 w-64 rounded-xl border border-slate-200 bg-white shadow-xl p-3 z-20">
+                      <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-2 py-1.5 mb-2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-slate-400">
+                          <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.5" />
+                          <path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="1.5" />
+                        </svg>
+                        <input
+                          className="w-full text-sm outline-none"
+                          placeholder="Buscar idioma"
+                          value={langQuery}
+                          onChange={(e) => setLangQuery(e.target.value)}
+                        />
+                      </div>
+                      <div className="max-h-56 overflow-auto">
+                        {filteredLanguages.map((item) => (
+                          <button
+                            key={item.code}
+                            type="button"
+                            className={`w-full text-left text-sm px-2 py-1.5 rounded hover:bg-slate-100 ${
+                              item.code === lang ? "text-swarcoBlue font-semibold" : "text-slate-700"
+                            }`}
+                            onClick={() => {
+                              setLang(item.code);
+                              setLangOpen(false);
+                              setLangQuery("");
+                            }}
+                          >
+                            {item.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="md:hidden mb-6">
