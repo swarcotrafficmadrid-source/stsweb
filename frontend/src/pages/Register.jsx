@@ -30,6 +30,17 @@ export default function Register({ lang = "es" }) {
       buttonLoading: "Creating account...",
       successMail: "Account created successfully. You will receive an activation email shortly.",
       successNoMail: "Account created, but the activation email could not be sent. Please contact support."
+    },
+    it: {
+      fullName: "Nome completo",
+      namePlaceholder: "Nome e cognome",
+      email: "Email",
+      emailPlaceholder: "email@azienda.com",
+      password: "Password",
+      button: "Registrati",
+      buttonLoading: "Creazione account...",
+      successMail: "Account creato con successo. Riceverai a breve un'email di attivazione.",
+      successNoMail: "Account creato, ma l'email di attivazione non è stata inviata. Contatta il supporto."
     }
   };
   const t = copy[lang] || copy.es;

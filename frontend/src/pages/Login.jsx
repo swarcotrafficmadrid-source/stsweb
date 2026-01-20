@@ -21,6 +21,13 @@ export default function Login({ onSuccess, lang = "es" }) {
       password: "Password",
       button: "Sign in",
       buttonLoading: "Signing in..."
+    },
+    it: {
+      email: "Email",
+      emailHint: "Usa l'email con cui ti sei registrato.",
+      password: "Password",
+      button: "Accedi",
+      buttonLoading: "Accesso..."
     }
   };
   const t = copy[lang] || copy.es;

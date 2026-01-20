@@ -20,6 +20,13 @@ export default function Spares({ token, lang = "es" }) {
       placeholderDetails: "Details",
       send: "Send",
       ok: "Request sent."
+    },
+    it: {
+      title: "Richiesta Ricambi",
+      placeholderSpare: "Ricambio",
+      placeholderDetails: "Dettagli",
+      send: "Invia",
+      ok: "Richiesta inviata."
     }
   };
   const t = copy[lang] || copy.en;

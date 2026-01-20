@@ -32,6 +32,19 @@ export default function Failures({ token, lang = "es" }) {
       high: "High",
       send: "Send",
       ok: "Incident sent."
+    },
+    it: {
+      title: "Segnalazione Incidente",
+      labelTitle: "Titolo",
+      labelDesc: "Descrizione",
+      labelPriority: "Priorità",
+      placeholderTitle: "Titolo",
+      placeholderDesc: "Descrizione",
+      low: "Bassa",
+      medium: "Media",
+      high: "Alta",
+      send: "Invia",
+      ok: "Incidente inviato."
     }
   };
   const t = copy[lang] || copy.en;

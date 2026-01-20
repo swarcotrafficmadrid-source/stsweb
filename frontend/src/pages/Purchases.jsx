@@ -20,6 +20,13 @@ export default function Purchases({ token, lang = "es" }) {
       placeholderDetails: "Details",
       send: "Send",
       ok: "Request sent."
+    },
+    it: {
+      title: "Richiesta Acquisto",
+      placeholderEquipment: "Attrezzatura",
+      placeholderDetails: "Dettagli",
+      send: "Invia",
+      ok: "Richiesta inviata."
     }
   };
   const t = copy[lang] || copy.en;

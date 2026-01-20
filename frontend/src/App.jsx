@@ -107,6 +107,27 @@ export default function App() {
       noAccount: "No account? Create one",
       haveAccount: "I already have an account",
       langLabel: "EN"
+    },
+    it: {
+      portalTitle: "Portale SWARCO Traffic Spain",
+      access: "Accesso",
+      register: "Registrazione",
+      loginTitle: "Accedi",
+      registerTitle: "Crea account",
+      loginDesc: "Usa la tua email aziendale per accedere.",
+      registerDesc: "Completa i tuoi dati per registrarti.",
+      welcome: "Ciao! Siamo pronti ad aiutarti.",
+      sideIntro: "Accesso sicuro per incidenti, ricambi e acquisti.",
+      searchLang: "Cerca lingua",
+      headerTitle: "Portale SWARCO Traffic Spain",
+      logout: "Esci",
+      navDashboard: "Home",
+      navFailures: "Incidenti",
+      navSpares: "Ricambi",
+      navPurchases: "Acquisti",
+      noAccount: "Non hai un account? Registrati",
+      haveAccount: "Ho già un account",
+      langLabel: "IT"
     }
   };
   const t = copy[lang] || copy.en;

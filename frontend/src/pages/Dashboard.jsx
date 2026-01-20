@@ -7,6 +7,10 @@ export default function Dashboard({ lang = "es" }) {
     en: {
       title: "Welcome",
       body: "Use the top menu to create an incident or request spares and purchases."
+    },
+    it: {
+      title: "Benvenuto",
+      body: "Usa il menu in alto per creare un incidente o richiedere ricambi e acquisti."
     }
   };
   const t = copy[lang] || copy.en;
