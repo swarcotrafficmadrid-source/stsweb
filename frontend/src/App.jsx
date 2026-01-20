@@ -156,28 +156,6 @@ export default function App() {
                 backgroundPosition: "center"
               }}
             >
-              <div
-                className="absolute inset-0 opacity-10"
-                style={{
-                  backgroundImage:
-                    "repeating-linear-gradient(135deg, rgba(255,255,255,0.2) 0, rgba(255,255,255,0.2) 1px, transparent 1px, transparent 18px)"
-                }}
-              />
-              <div className="absolute inset-0 opacity-06">
-                <svg viewBox="0 0 800 600" className="w-full h-full">
-                  <g fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1">
-                    <path d="M40 420h720M80 360h640M120 300h560M160 240h480M200 180h400" />
-                    <path d="M120 460c80-140 180-210 300-210 120 0 220 70 300 210" />
-                    <circle cx="620" cy="180" r="40" />
-                  </g>
-                  <g fill="rgba(255,255,255,0.12)">
-                    <rect x="60" y="280" width="90" height="140" rx="6" />
-                    <rect x="170" y="240" width="120" height="180" rx="6" />
-                    <rect x="310" y="260" width="110" height="160" rx="6" />
-                    <rect x="440" y="220" width="130" height="200" rx="6" />
-                  </g>
-                </svg>
-              </div>
               <div>
                 <img src="/logo.png" alt="SWARCO" className="h-10 relative z-10" />
                 <div className="mt-6 h-1 w-12 rounded bg-swarcoOrange relative z-10" />
