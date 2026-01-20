@@ -18,7 +18,7 @@ export default function Register({ onSuccess }) {
         email,
         password
       });
-      setResult("Usuario creado. Ya puedes iniciar sesión.");
+      setResult("Usuario creado con éxito. En breve recibirás un correo con la activación de tu cuenta completada.");
       if (onSuccess) {
         onSuccess();
       }
