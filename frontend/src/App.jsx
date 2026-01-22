@@ -63,6 +63,12 @@ const LANGUAGES = [
 ];
 
 export default function App() {
+  const gateFlag = import.meta.env.VITE_STAGING_GATE_ENABLED;
+  const gateEnabled = gateFlag
+    ? gateFlag === "true"
+    : typeof window !== "undefined" && window.location.hostname.includes("swarcotrafficspain.com");
+  const gateUser = import.meta.env.VITE_STAGING_USER || "sat";
+  const gatePass = import.meta.env.VITE_STAGING_PASS || "swarco2026";
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [authView, setAuthView] = useState("login");
   const [lang, setLang] = useState(() => localStorage.getItem("lang") || getBrowserLang());
@@ -85,6 +91,14 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     return params.get("token") || "";
   });
+  const [gatePassed, setGatePassed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("staging_gate") === "1";
+  });
+  const [gateOpen, setGateOpen] = useState(false);
+  const [gateUserInput, setGateUserInput] = useState("");
+  const [gatePassInput, setGatePassInput] = useState("");
+  const [gateError, setGateError] = useState("");
   const isResetView = typeof window !== "undefined" && window.location.pathname.startsWith("/reset");
   const isActivateView = typeof window !== "undefined" && window.location.pathname.startsWith("/activate");
 
@@ -109,7 +123,14 @@ export default function App() {
       navAccount: "Mi cuenta",
       noAccount: "¿No tienes cuenta? Regístrate",
       haveAccount: "Ya tengo cuenta",
-      langLabel: "ES"
+      langLabel: "ES",
+      maintenanceTitle: "Página en proceso",
+      maintenanceBody: "Estamos terminando los últimos detalles. Si tienes acceso de prueba, entra con tu usuario y clave.",
+      maintenanceButton: "Acceso de pruebas",
+      maintenanceUser: "Usuario",
+      maintenancePass: "Clave",
+      maintenanceEnter: "Entrar",
+      maintenanceError: "Usuario o clave incorrectos."
     },
     en: {
       portalTitle: "Portal SWARCO Traffic Spain",
@@ -131,7 +152,14 @@ export default function App() {
       navAccount: "My account",
       noAccount: "No account? Create one",
       haveAccount: "I already have an account",
-      langLabel: "EN"
+      langLabel: "EN",
+      maintenanceTitle: "Page in progress",
+      maintenanceBody: "We are finishing the last details. If you have test access, sign in with your user and password.",
+      maintenanceButton: "Test access",
+      maintenanceUser: "User",
+      maintenancePass: "Password",
+      maintenanceEnter: "Enter",
+      maintenanceError: "Wrong user or password."
     },
     it: {
       portalTitle: "Portale SWARCO Traffic Spain",
@@ -153,7 +181,14 @@ export default function App() {
       navAccount: "Il mio account",
       noAccount: "Non hai un account? Registrati",
       haveAccount: "Ho già un account",
-      langLabel: "IT"
+      langLabel: "IT",
+      maintenanceTitle: "Pagina in lavorazione",
+      maintenanceBody: "Stiamo completando gli ultimi dettagli. Se hai accesso di prova, entra con utente e password.",
+      maintenanceButton: "Accesso di prova",
+      maintenanceUser: "Utente",
+      maintenancePass: "Password",
+      maintenanceEnter: "Entra",
+      maintenanceError: "Utente o password errati."
     }
   }), []);
   const t = useTranslatedMap({ base: copy, lang, cacheKey: "app" });
@@ -187,6 +222,90 @@ export default function App() {
     setPage("dashboard");
     setDashboardTab("home");
   };
+  const handleGateSubmit = (event) => {
+    event.preventDefault();
+    setGateError("");
+    if (gateUserInput.trim() === gateUser && gatePassInput === gatePass) {
+      localStorage.setItem("staging_gate", "1");
+      setGatePassed(true);
+      setGateOpen(false);
+      setGateUserInput("");
+      setGatePassInput("");
+      return;
+    }
+    setGateError(t.maintenanceError);
+  };
+
+  if (gateEnabled && !gatePassed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4">
+        <div className="w-full max-w-3xl bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
+          <div className="grid md:grid-cols-2">
+            <div
+              className="hidden md:flex flex-col justify-between p-10 text-white relative overflow-hidden"
+              style={{
+                backgroundImage:
+                  "linear-gradient(180deg, rgba(0,107,171,0.55) 0%, rgba(0,107,171,0.6) 100%), url('/hero.jpg')",
+                backgroundSize: "cover",
+                backgroundPosition: "center"
+              }}
+            >
+              <div>
+                <img src="/logo.png" alt="SWARCO" className="h-10 relative z-10" />
+                <div className="mt-6 h-1 w-12 rounded bg-swarcoOrange relative z-10" />
+                <h1 className="text-3xl font-semibold mt-4 relative z-10">{t.portalTitle}</h1>
+                <p className="text-white/90 mt-3 relative z-10">The better way, every day.</p>
+              </div>
+              <div className="text-xs text-white/70 relative z-10">
+                www.swarco.com
+              </div>
+            </div>
+            <div className="p-8 md:p-10">
+              <div className="md:hidden mb-6">
+                <img src="/logo.png" alt="SWARCO" className="h-9" />
+                <h1 className="text-2xl font-semibold text-swarcoBlue mt-3">{t.portalTitle}</h1>
+                <p className="text-sm text-slate-500 mt-1">The better way, every day.</p>
+              </div>
+              <h2 className="text-3xl font-semibold text-swarcoOrange mb-3">{t.maintenanceTitle}</h2>
+              <p className="text-sm text-slate-600 mb-6">{t.maintenanceBody}</p>
+              {!gateOpen ? (
+                <button
+                  className="w-full bg-swarcoBlue text-white py-2.5 rounded-full font-semibold hover:bg-swarcoBlue/90 transition"
+                  onClick={() => setGateOpen(true)}
+                >
+                  {t.maintenanceButton}
+                </button>
+              ) : (
+                <form className="space-y-4" onSubmit={handleGateSubmit}>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">{t.maintenanceUser}</label>
+                    <input
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
+                      value={gateUserInput}
+                      onChange={(event) => setGateUserInput(event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">{t.maintenancePass}</label>
+                    <input
+                      type="password"
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
+                      value={gatePassInput}
+                      onChange={(event) => setGatePassInput(event.target.value)}
+                    />
+                  </div>
+                  {gateError && <p className="text-sm text-red-600">{gateError}</p>}
+                  <button className="w-full bg-swarcoBlue text-white py-2.5 rounded-full font-semibold hover:bg-swarcoBlue/90 transition">
+                    {t.maintenanceEnter}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!token) {
     return (
