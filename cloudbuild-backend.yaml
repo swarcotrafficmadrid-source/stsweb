@@ -1,0 +1,15 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "-t"
+      - "europe-west1-docker.pkg.dev/ticketswarcotrafficspain/cloud-run-source-deploy/stsweb-backend:latest"
+      - "-f"
+      - "backend/Dockerfile"
+      - "backend"
+
+images:
+  - "europe-west1-docker.pkg.dev/ticketswarcotrafficspain/cloud-run-source-deploy/stsweb-backend:latest"
+
+options:
+  logging: "CLOUD_LOGGING_ONLY"
