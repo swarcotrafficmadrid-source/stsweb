@@ -66,7 +66,8 @@ export default function App() {
   const gateFlag = import.meta.env.VITE_STAGING_GATE_ENABLED;
   const gateEnabled = gateFlag
     ? gateFlag === "true"
-    : typeof window !== "undefined" && window.location.hostname.includes("swarcotrafficspain.com");
+    : typeof window !== "undefined" &&
+      !["localhost", "127.0.0.1"].includes(window.location.hostname);
   const gateUser = import.meta.env.VITE_STAGING_USER || "sat";
   const gatePass = import.meta.env.VITE_STAGING_PASS || "swarco2026";
   const [token, setToken] = useState(localStorage.getItem("token"));
