@@ -3,20 +3,32 @@ import jwt from "jsonwebtoken";
 import { Router } from "express";
 import { User } from "../models/index.js";
 import { sendMail } from "../utils/mailer.js";
+import { requireAuth } from "../middleware/auth.js";
 import crypto from "crypto";
 
 const router = Router();
 
 router.post("/register", async (req, res) => {
   const nombreRaw = (req.body.nombre || "").trim();
+  const apellidosRaw = (req.body.apellidos || "").trim();
   const emailRaw = (req.body.email || "").trim();
+  const empresaRaw = (req.body.empresa || "").trim();
+  const paisRaw = (req.body.pais || "").trim();
+  const telefonoRaw = (req.body.telefono || "").trim();
+  const cargoRaw = (req.body.cargo || "").trim();
   const password = req.body.password;
 
   const nombre = nombreRaw;
+  const apellidos = apellidosRaw;
   const email = emailRaw;
   const usuario = emailRaw;
+  const empresa = empresaRaw;
+  const pais = paisRaw;
+  const telefono = telefonoRaw;
+  const cargo = cargoRaw;
 
-  if (!nombre || !email || !password) {
+  const emailOk = /.+@.+\..+/.test(email);
+  if (!nombre || !apellidos || !email || !empresa || !pais || !telefono || !cargo || !password || !emailOk) {
     return res.status(400).json({ error: "Datos incompletos" });
   }
 
@@ -36,27 +48,40 @@ router.post("/register", async (req, res) => {
     const user = await User.create({
       usuario,
       nombre,
+      apellidos,
       email,
+      empresa,
+      pais,
+      telefono,
+      cargo,
       passwordHash: hash,
       emailVerified: false,
       emailVerificationToken: verificationToken,
       emailVerificationExpiresAt: verificationExpires
     });
 
-    const verifyBase = process.env.VERIFY_BASE_URL || "http://localhost:8080";
-    const verifyUrl = `${verifyBase}/api/auth/verify?token=${verificationToken}`;
-    const mailSent = await sendMail({
+    const verifyBase = process.env.VERIFY_BASE_URL || "http://localhost:3000";
+    const verifyUrl = `${verifyBase}/activate?token=${verificationToken}`;
+    const mailResult = await sendMail({
       to: user.email,
-      subject: "Activa tu cuenta en SWARCO Ops Portal",
-      text: `Hola ${user.nombre},\n\nActiva tu cuenta aquí:\n${verifyUrl}\n\nSi no solicitaste este registro, ignora este mensaje.\n`,
-      html: `<p>Hola ${user.nombre},</p><p>Activa tu cuenta aquí:</p><p><a href="${verifyUrl}">Activar cuenta</a></p><p>Si no solicitaste este registro, ignora este mensaje.</p>`
+      subject: "Activa tu cuenta en SWARCO Traffic Spain",
+      text: `Hola ${user.nombre},\n\nGracias por registrarte en el Portal SWARCO Traffic Spain.\n\nRevisa y valida tus datos aquí:\n${verifyUrl}\n\nSi no solicitaste este registro, ignora este mensaje.\n`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #485258;">
+          <h2 style="color: #006BAB; margin-bottom: 8px;">Portal SWARCO Traffic Spain</h2>
+          <p>Hola ${user.nombre},</p>
+          <p>Gracias por registrarte. Por favor revisa tus datos y valida tu cuenta:</p>
+          <p><a href="${verifyUrl}" style="background: #006BAB; color: white; padding: 10px 16px; text-decoration: none; border-radius: 999px; display: inline-block;">Revisar y activar cuenta</a></p>
+          <p style="font-size: 12px; color: #B5BEC2;">Si no solicitaste este registro, ignora este mensaje.</p>
+        </div>
+      `
     });
 
-    if (mailSent) {
+    if (mailResult?.ok) {
       await user.update({ emailWelcomeSentAt: new Date() });
     }
 
-    return res.json({ id: user.id, mailSent });
+    return res.json({ id: user.id, mailSent: mailResult?.ok, mailReason: mailResult?.reason || null });
   } catch (err) {
     return res.status(409).json({ error: "Usuario o email duplicado" });
   }
@@ -96,6 +121,57 @@ router.post("/login", async (req, res) => {
   });
 });
 
+router.get("/me", requireAuth, async (req, res) => {
+  const user = await User.findByPk(req.user.id);
+  if (!user) {
+    return res.status(404).json({ error: "Usuario no encontrado" });
+  }
+  return res.json({
+    id: user.id,
+    nombre: user.nombre,
+    apellidos: user.apellidos || "",
+    email: user.email,
+    empresa: user.empresa || "",
+    pais: user.pais || "",
+    telefono: user.telefono || "",
+    cargo: user.cargo || ""
+  });
+});
+
+router.put("/me", requireAuth, async (req, res) => {
+  const nombre = (req.body.nombre || "").trim();
+  const apellidos = (req.body.apellidos || "").trim();
+  const empresa = (req.body.empresa || "").trim();
+  const pais = (req.body.pais || "").trim();
+  const telefono = (req.body.telefono || "").trim();
+  const cargo = (req.body.cargo || "").trim();
+
+  if (!nombre || !apellidos || !empresa || !pais || !telefono || !cargo) {
+    return res.status(400).json({ error: "Datos incompletos" });
+  }
+
+  const user = await User.findByPk(req.user.id);
+  if (!user) {
+    return res.status(404).json({ error: "Usuario no encontrado" });
+  }
+
+  await user.update({ nombre, apellidos, empresa, pais, telefono, cargo });
+
+  return res.json({
+    ok: true,
+    user: {
+      id: user.id,
+      nombre: user.nombre,
+      apellidos: user.apellidos || "",
+      email: user.email,
+      empresa: user.empresa || "",
+      pais: user.pais || "",
+      telefono: user.telefono || "",
+      cargo: user.cargo || ""
+    }
+  });
+});
+
 router.get("/verify", async (req, res) => {
   const token = (req.query.token || "").toString();
   if (!token) {
@@ -117,6 +193,64 @@ router.get("/verify", async (req, res) => {
   });
 
   return res.send("Cuenta verificada. Ya puedes iniciar sesión.");
+});
+
+router.get("/verify-info", async (req, res) => {
+  const token = (req.query.token || "").toString();
+  if (!token) {
+    return res.status(400).json({ error: "Token inválido" });
+  }
+  const user = await User.findOne({ where: { emailVerificationToken: token } });
+  if (!user || !user.emailVerificationExpiresAt) {
+    return res.status(400).json({ error: "Token inválido" });
+  }
+  if (user.emailVerificationExpiresAt.getTime() < Date.now()) {
+    return res.status(400).json({ error: "Token expirado" });
+  }
+  return res.json({
+    nombre: user.nombre,
+    apellidos: user.apellidos || "",
+    email: user.email,
+    empresa: user.empresa || "",
+    pais: user.pais || "",
+    telefono: user.telefono || "",
+    cargo: user.cargo || ""
+  });
+});
+
+router.post("/verify-confirm", async (req, res) => {
+  const token = (req.body.token || "").toString();
+  const nombre = (req.body.nombre || "").trim();
+  const apellidos = (req.body.apellidos || "").trim();
+  const empresa = (req.body.empresa || "").trim();
+  const pais = (req.body.pais || "").trim();
+  const telefono = (req.body.telefono || "").trim();
+  const cargo = (req.body.cargo || "").trim();
+
+  if (!token || !nombre || !apellidos || !empresa || !pais || !telefono || !cargo) {
+    return res.status(400).json({ error: "Datos incompletos" });
+  }
+  const user = await User.findOne({ where: { emailVerificationToken: token } });
+  if (!user || !user.emailVerificationExpiresAt) {
+    return res.status(400).json({ error: "Token inválido" });
+  }
+  if (user.emailVerificationExpiresAt.getTime() < Date.now()) {
+    return res.status(400).json({ error: "Token expirado" });
+  }
+
+  await user.update({
+    nombre,
+    apellidos,
+    empresa,
+    pais,
+    telefono,
+    cargo,
+    emailVerified: true,
+    emailVerificationToken: null,
+    emailVerificationExpiresAt: null
+  });
+
+  return res.json({ ok: true });
 });
 
 router.post("/forgot", async (req, res) => {

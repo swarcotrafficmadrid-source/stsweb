@@ -24,7 +24,8 @@ export default function Login({ onSuccess, lang = "es" }) {
       resetDesc: "Te enviaremos un enlace para restablecerla.",
       resetButton: "Enviar enlace",
       resetLoading: "Enviando...",
-      resetOk: "Listo. Si el correo existe, recibirás un enlace."
+      resetOk: "Listo. Si el correo existe, recibirás un enlace.",
+      backLogin: "Volver al login"
     },
     en: {
       email: "Email",
@@ -37,7 +38,8 @@ export default function Login({ onSuccess, lang = "es" }) {
       resetDesc: "We will send you a reset link.",
       resetButton: "Send link",
       resetLoading: "Sending...",
-      resetOk: "Done. If the email exists, you will receive a link."
+      resetOk: "Done. If the email exists, you will receive a link.",
+      backLogin: "Back to login"
     },
     it: {
       email: "Email",
@@ -50,7 +52,8 @@ export default function Login({ onSuccess, lang = "es" }) {
       resetDesc: "Ti invieremo un link di ripristino.",
       resetButton: "Invia link",
       resetLoading: "Invio in corso...",
-      resetOk: "Fatto. Se l'email esiste, riceverai un link."
+      resetOk: "Fatto. Se l'email esiste, riceverai un link.",
+      backLogin: "Torna al login"
     }
   };
   const t = useTranslatedMap({ base: copy, lang, cacheKey: "login" });
@@ -85,39 +88,43 @@ export default function Login({ onSuccess, lang = "es" }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-slate-700">{t.email}</label>
-        <input
-          className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
-          placeholder="correo@empresa.com"
-          value={identifier}
-          onChange={(e) => setIdentifier(e.target.value)}
-        />
-        <p className="text-xs text-slate-400">{t.emailHint}</p>
-      </div>
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-slate-700">{t.password}</label>
-        <input
-          type="password"
-          className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button
-        className="w-full bg-swarcoBlue text-white py-2.5 rounded-full font-semibold hover:bg-swarcoBlue/90 transition disabled:opacity-70"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? t.buttonLoading : t.button}
-      </button>
+      {!showReset && (
+        <>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">{t.email}</label>
+            <input
+              className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
+              placeholder="correo@empresa.com"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+            />
+            <p className="text-xs text-slate-400">{t.emailHint}</p>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">{t.password}</label>
+            <input
+              type="password"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <button
+            className="w-full bg-swarcoBlue text-white py-2.5 rounded-full font-semibold hover:bg-swarcoBlue/90 transition disabled:opacity-70"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? t.buttonLoading : t.button}
+          </button>
+        </>
+      )}
       <button
         type="button"
         className="text-sm text-swarcoBlue hover:text-swarcoBlue/80"
         onClick={() => setShowReset((prev) => !prev)}
       >
-        {t.forgot}
+        {showReset ? t.backLogin : t.forgot}
       </button>
       {showReset && (
         <div className="border border-slate-200 rounded-lg p-3 space-y-3">

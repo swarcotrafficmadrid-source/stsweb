@@ -10,6 +10,7 @@ export default function Purchases({ token, lang = "es" }) {
   const copy = {
     es: {
       title: "Solicitud de Compras",
+      building: "Página en creación.",
       placeholderEquipment: "Equipo",
       placeholderDetails: "Detalles",
       send: "Enviar",
@@ -17,6 +18,7 @@ export default function Purchases({ token, lang = "es" }) {
     },
     en: {
       title: "Purchase Request",
+      building: "Page under construction.",
       placeholderEquipment: "Equipment",
       placeholderDetails: "Details",
       send: "Send",
@@ -24,6 +26,7 @@ export default function Purchases({ token, lang = "es" }) {
     },
     it: {
       title: "Richiesta Acquisto",
+      building: "Pagina in creazione.",
       placeholderEquipment: "Attrezzatura",
       placeholderDetails: "Dettagli",
       send: "Invia",
@@ -47,9 +50,10 @@ export default function Purchases({ token, lang = "es" }) {
   }
 
   return (
-    <div className="bg-white p-6 rounded shadow">
-      <h2 className="text-lg font-semibold text-swarcoBlue mb-4">{t.title}</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <h2 className="text-lg font-semibold text-swarcoBlue">{t.title}</h2>
+      <p className="text-sm text-slate-500 mt-1 mb-4">{t.building}</p>
+      <form onSubmit={handleSubmit} className="space-y-4 opacity-60 pointer-events-none">
         <input className="w-full border rounded px-3 py-2" placeholder={t.placeholderEquipment} value={equipo} onChange={(e) => setEquipo(e.target.value)} />
         <input type="number" className="w-full border rounded px-3 py-2" min="1" value={cantidad} onChange={(e) => setCantidad(Number(e.target.value))} />
         <textarea className="w-full border rounded px-3 py-2" rows="3" placeholder={t.placeholderDetails} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />

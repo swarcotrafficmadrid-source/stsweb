@@ -1,0 +1,12 @@
+.env
+.env.*
+node_modules
+dist
+coverage
+*.log
+
+# Secrets
+secrets/
+# Temp files
+tmp_i18n.json
+

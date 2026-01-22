@@ -1,18 +1,21 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
+import ActivateAccount from "./pages/ActivateAccount.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Failures from "./pages/Failures.jsx";
 import Spares from "./pages/Spares.jsx";
 import Purchases from "./pages/Purchases.jsx";
+import Assistance from "./pages/Assistance.jsx";
 import { useTranslatedMap } from "./lib/i18n.js";
 
 const pages = {
   dashboard: Dashboard,
   failures: Failures,
   spares: Spares,
-  purchases: Purchases
+  purchases: Purchases,
+  assistance: Assistance
 };
 
 function getBrowserLang() {
@@ -66,12 +69,24 @@ export default function App() {
   const [langOpen, setLangOpen] = useState(false);
   const [langQuery, setLangQuery] = useState("");
   const [page, setPage] = useState("dashboard");
+  const [dashboardTab, setDashboardTab] = useState(() => {
+    if (typeof window === "undefined") return "home";
+    const hash = window.location.hash.replace("#", "");
+    const allowed = ["home", "incidents", "spares", "purchases", "assistance", "account"];
+    return allowed.includes(hash) ? hash : "home";
+  });
   const [resetToken, setResetToken] = useState(() => {
     if (typeof window === "undefined") return "";
     const params = new URLSearchParams(window.location.search);
     return params.get("token") || "";
   });
+  const [activateToken, setActivateToken] = useState(() => {
+    if (typeof window === "undefined") return "";
+    const params = new URLSearchParams(window.location.search);
+    return params.get("token") || "";
+  });
   const isResetView = typeof window !== "undefined" && window.location.pathname.startsWith("/reset");
+  const isActivateView = typeof window !== "undefined" && window.location.pathname.startsWith("/activate");
 
   const copy = useMemo(() => ({
     es: {
@@ -91,6 +106,7 @@ export default function App() {
       navFailures: "Incidencias",
       navSpares: "Repuestos",
       navPurchases: "Compras",
+      navAccount: "Mi cuenta",
       noAccount: "¿No tienes cuenta? Regístrate",
       haveAccount: "Ya tengo cuenta",
       langLabel: "ES"
@@ -112,6 +128,7 @@ export default function App() {
       navFailures: "Incidents",
       navSpares: "Spares",
       navPurchases: "Purchases",
+      navAccount: "My account",
       noAccount: "No account? Create one",
       haveAccount: "I already have an account",
       langLabel: "EN"
@@ -133,6 +150,7 @@ export default function App() {
       navFailures: "Incidenti",
       navSpares: "Ricambi",
       navPurchases: "Acquisti",
+      navAccount: "Il mio account",
       noAccount: "Non hai un account? Registrati",
       haveAccount: "Ho già un account",
       langLabel: "IT"
@@ -147,6 +165,27 @@ export default function App() {
   const applyLang = (code) => {
     setLang(code);
     localStorage.setItem("lang", code);
+  };
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onHash = () => {
+      const hash = window.location.hash.replace("#", "");
+      const allowed = ["home", "incidents", "spares", "purchases", "assistance", "account"];
+      if (allowed.includes(hash)) {
+        setPage("dashboard");
+        setDashboardTab(hash);
+      }
+    };
+    onHash();
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  const handleAuthError = () => {
+    localStorage.removeItem("token");
+    setToken(null);
+    setAuthView("login");
+    setPage("dashboard");
+    setDashboardTab("home");
   };
 
   if (!token) {
@@ -234,7 +273,7 @@ export default function App() {
                 <h1 className="text-2xl font-semibold text-swarcoBlue mt-3">{t.portalTitle}</h1>
                 <p className="text-sm text-slate-500 mt-1">The better way, every day.</p>
               </div>
-              {!isResetView && (
+              {!isResetView && !isActivateView && (
                 <>
                   <h3 className="text-2xl font-semibold text-slate-800 mb-2">
                     {authView === "login" ? t.loginTitle : t.registerTitle}
@@ -263,6 +302,15 @@ export default function App() {
                     setResetToken("");
                   }}
                 />
+              ) : isActivateView ? (
+                <ActivateAccount
+                  token={activateToken}
+                  lang={lang}
+                  onBack={() => {
+                    window.history.pushState({}, "", "/");
+                    setActivateToken("");
+                  }}
+                />
               ) : authView === "login" ? (
                 <>
                   <Login
@@ -280,7 +328,10 @@ export default function App() {
                 </>
               ) : (
                 <>
-                  <Register lang={lang} />
+                  <Register
+                    lang={lang}
+                    onRegistered={() => setAuthView("login")}
+                  />
                   <div className="mt-6 text-center">
                     <button
                       className="text-sm text-swarcoBlue hover:text-swarcoBlue/80"
@@ -302,10 +353,24 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-swarcoBlue">{t.headerTitle}</h1>
-          <div className="flex items-center gap-4">
+      <header
+        className="relative border-b overflow-hidden"
+        style={{
+          backgroundImage:
+            "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.9) 100%), url('/hero.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center"
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-6 py-4 grid grid-cols-3 items-center gap-4">
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="SWARCO" className="h-8" />
+          </div>
+          <div className="text-center">
+            <h1 className="text-xl font-semibold text-swarcoBlue">{t.headerTitle}</h1>
+            <div className="mx-auto mt-2 h-1 w-12 rounded-full bg-swarcoOrange" />
+          </div>
+          <div className="flex items-center justify-end gap-6">
             <div className="relative">
               <button
                 type="button"
@@ -355,25 +420,48 @@ export default function App() {
                 </div>
               )}
             </div>
-            <button
-              className="text-sm text-gray-600"
-              onClick={() => { localStorage.removeItem("token"); setToken(null); }}
-            >
-              {t.logout}
-            </button>
+            <div className="flex flex-col items-end gap-2">
+              <button
+                className="text-sm text-gray-600"
+                onClick={() => { localStorage.removeItem("token"); setToken(null); }}
+              >
+                {t.logout}
+              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:text-swarcoBlue"
+                  onClick={() => { setPage("dashboard"); setDashboardTab("home"); }}
+                  aria-label={t.navDashboard}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-6H10v6H5a1 1 0 01-1-1v-9.5z" stroke="currentColor" strokeWidth="1.5" />
+                  </svg>
+                </button>
+                <button
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:text-swarcoBlue"
+                  onClick={() => { setPage("dashboard"); setDashboardTab("account"); }}
+                  aria-label={t.navAccount}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M4 20c1.6-3.5 5-5 8-5s6.4 1.5 8 5" stroke="currentColor" strokeWidth="1.5" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
-      <nav className="max-w-6xl mx-auto px-6 py-4 flex gap-4 text-sm">
-        <button onClick={() => setPage("dashboard")} className="text-swarcoBlue">{t.navDashboard}</button>
-        <button onClick={() => setPage("failures")} className="text-swarcoBlue">{t.navFailures}</button>
-        <button onClick={() => setPage("spares")} className="text-swarcoBlue">{t.navSpares}</button>
-        <button onClick={() => setPage("purchases")} className="text-swarcoBlue">{t.navPurchases}</button>
-      </nav>
-
       <main className="max-w-6xl mx-auto px-6 pb-10">
-        <PageComponent token={token} lang={lang} />
+        <PageComponent
+          token={token}
+          lang={lang}
+          activeTab={dashboardTab}
+          onTabChange={setDashboardTab}
+          onNavigate={setPage}
+          onAuthError={handleAuthError}
+        />
       </main>
     </div>
   );

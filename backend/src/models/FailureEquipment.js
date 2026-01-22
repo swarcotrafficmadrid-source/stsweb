@@ -1,13 +1,13 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 
-const FailureReport = sequelize.define(
-  "FailureReport",
+const FailureEquipment = sequelize.define(
+  "FailureEquipment",
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    userId: { type: DataTypes.INTEGER, allowNull: false },
-    titulo: { type: DataTypes.STRING(120), allowNull: false },
-    descripcion: { type: DataTypes.TEXT, allowNull: false },
+    failureId: { type: DataTypes.INTEGER, allowNull: false },
+    title: { type: DataTypes.STRING(120), allowNull: true },
+    description: { type: DataTypes.TEXT, allowNull: true },
     company: { type: DataTypes.STRING(80), allowNull: true },
     refCode: { type: DataTypes.STRING(20), allowNull: true },
     serial: { type: DataTypes.STRING(20), allowNull: true },
@@ -18,14 +18,12 @@ const FailureReport = sequelize.define(
     locationProvince: { type: DataTypes.STRING(80), allowNull: true },
     locationStation: { type: DataTypes.STRING(120), allowNull: true },
     photosCount: { type: DataTypes.INTEGER, allowNull: true },
-    videoName: { type: DataTypes.STRING(120), allowNull: true },
-    prioridad: { type: DataTypes.STRING(20), allowNull: false, defaultValue: "Media" },
-    estado: { type: DataTypes.STRING(20), allowNull: false, defaultValue: "Abierto" }
+    videoName: { type: DataTypes.STRING(120), allowNull: true }
   },
   {
-    tableName: "fallas",
+    tableName: "fallas_equipos",
     timestamps: true
   }
 );
 
-export default FailureReport;
+export default FailureEquipment;

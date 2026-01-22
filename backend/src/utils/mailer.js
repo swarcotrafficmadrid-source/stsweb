@@ -40,13 +40,28 @@ function parseServiceAccount() {
   }
 }
 
+function getMailReason(err) {
+  const msg = (err?.message || "").toLowerCase();
+  const code = (err?.code || "").toString().toUpperCase();
+  if (code.includes("ECONN") || code.includes("ETIMEDOUT") || code.includes("ENOTFOUND") || code.includes("ESOCKET")) {
+    return "conexion";
+  }
+  if (msg.includes("invalid") || msg.includes("recipient") || msg.includes("mailbox") || msg.includes("address")) {
+    return "correo";
+  }
+  if (msg.includes("timeout") || msg.includes("timed out")) {
+    return "conexion";
+  }
+  return "error";
+}
+
 async function sendViaGmailApi({ to, subject, text, html }) {
   const serviceAccount = parseServiceAccount();
   const impersonate = process.env.GMAIL_IMPERSONATE;
   const from = process.env.GMAIL_FROM || impersonate;
 
   if (!serviceAccount || !impersonate || !from) {
-    return false;
+    return { ok: false, reason: "conexion" };
   }
 
   const auth = new google.auth.JWT({
@@ -82,10 +97,10 @@ async function sendViaGmailApi({ to, subject, text, html }) {
       userId: "me",
       requestBody: { raw: encodedMessage }
     });
-    return true;
+    return { ok: true };
   } catch (err) {
     console.error("Gmail API error:", err.message);
-    return false;
+    return { ok: false, reason: getMailReason(err) };
   }
 }
 
@@ -97,31 +112,31 @@ export async function sendMail({ to, subject, text, html }) {
 
   const transporter = getTransporter();
   if (!transporter) {
-    return false;
+    return { ok: false, reason: "conexion" };
   }
 
   const from = process.env.SMTP_FROM || process.env.SMTP_USER;
   if (!from) {
-    return false;
+    return { ok: false, reason: "conexion" };
   }
 
   const timeoutMs = 6000;
   const timeoutPromise = new Promise((resolve) => {
-    setTimeout(() => resolve(false), timeoutMs);
+    setTimeout(() => resolve({ ok: false, reason: "conexion" }), timeoutMs);
   });
 
   try {
     const sendPromise = transporter
       .sendMail({ from, to, subject, text, html })
-      .then(() => true)
+      .then(() => ({ ok: true }))
       .catch((err) => {
         console.error("SMTP error:", err.message);
-        return false;
+        return { ok: false, reason: getMailReason(err) };
       });
 
     return await Promise.race([sendPromise, timeoutPromise]);
   } catch (err) {
     console.error("SMTP error:", err.message);
-    return false;
+    return { ok: false, reason: getMailReason(err) };
   }
 }
