@@ -81,7 +81,7 @@ export default function Failures({ token, lang = "es" }) {
       newButton: "Ir a incidencias",
       reviewTitle: "Revisión del ticket",
       reviewDesc: "Verifica los datos antes de enviar.",
-      reviewButton: "Revisar ticket",
+      reviewButton: "Aceptar",
       sendTicket: "Enviar ticket",
       editTicket: "Editar",
       incidentTitleLabel: "Pequeña descripción de la incidencia",
@@ -143,7 +143,7 @@ export default function Failures({ token, lang = "es" }) {
       newButton: "Go to incidents",
       reviewTitle: "Ticket review",
       reviewDesc: "Check the details before sending.",
-      reviewButton: "Review ticket",
+      reviewButton: "Accept",
       sendTicket: "Send ticket",
       editTicket: "Edit",
       incidentTitleLabel: "Short incident description",
@@ -205,7 +205,7 @@ export default function Failures({ token, lang = "es" }) {
       newButton: "Vai alle segnalazioni",
       reviewTitle: "Revisione ticket",
       reviewDesc: "Controlla i dati prima di inviare.",
-      reviewButton: "Rivedi ticket",
+      reviewButton: "Accetta",
       sendTicket: "Invia ticket",
       editTicket: "Modifica",
       incidentTitleLabel: "Breve descrizione dell'incidente",
@@ -487,7 +487,22 @@ export default function Failures({ token, lang = "es" }) {
             value={incidentTitle}
             onChange={(e) => setIncidentTitle(e.target.value)}
           />
-          <p className="text-xs text-slate-400">{t.incidentTitleHelp}</p>
+          <p className={`text-xs ${errors.incidentTitle ? "text-swarcoOrange" : "text-slate-400"}`}>
+            {errors.incidentTitle || t.incidentTitleHelp}
+          </p>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm text-slate-600">{t.incidentGeneralLabel}</label>
+          <textarea
+            className={`w-full border rounded-lg px-3 py-2.5 ${errors.incidentGeneral ? "border-swarcoOrange" : "border-slate-300"}`}
+            rows="3"
+            placeholder={t.placeholderDesc}
+            value={incidentGeneralDesc}
+            onChange={(e) => setIncidentGeneralDesc(e.target.value)}
+          />
+          <p className={`text-xs ${errors.incidentGeneral ? "text-swarcoOrange" : "text-slate-400"}`}>
+            {errors.incidentGeneral || t.incidentTitleHelp}
+          </p>
         </div>
         {equipments.map((eq, index) => (
           <div key={`equipment-${index}`} className="rounded-xl border border-slate-200 p-4">
