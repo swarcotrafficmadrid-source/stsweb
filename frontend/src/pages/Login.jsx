@@ -66,13 +66,19 @@ export default function Login({ onSuccess, lang = "es" }) {
   const t = useTranslatedMap({ base: copy, lang, cacheKey: "login" });
 
   async function handleSubmit(e) {
+    console.log("🔥 HANDLE SUBMIT CALLED!", e);
     e.preventDefault();
+    console.log("📧 Identifier:", identifier);
+    console.log("🔒 Password:", password ? "***" : "empty");
     setError("");
     setIsSubmitting(true);
     try {
+      console.log("🌐 Making API request...");
       const data = await apiRequest("/api/auth/login", "POST", { identifier, password });
+      console.log("✅ Login success!", data);
       onSuccess(data.token);
     } catch (err) {
+      console.error("❌ Login error:", err);
       setError(err.message);
     } finally {
       setIsSubmitting(false);
