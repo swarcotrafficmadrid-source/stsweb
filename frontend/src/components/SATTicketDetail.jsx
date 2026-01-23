@@ -126,11 +126,26 @@ export default function SATTicketDetail({ token, lang, ticket: initialTicket, on
           <h2 className="text-2xl font-bold text-swarcoBlue">{getTicketNumber()}</h2>
           <p className="text-slate-600 text-sm">{typeLabels[ticket.type]}</p>
         </div>
-        {currentStatus && (
-          <span className={`px-4 py-2 rounded-full text-sm font-medium ${statusLabels[currentStatus.status].color}`}>
-            {statusLabels[currentStatus.status].name}
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              const API_URL = import.meta.env.VITE_API_URL || "https://stsweb-backend-964379250608.europe-west1.run.app";
+              window.open(`${API_URL}/api/sat/ticket/${ticket.type}/${ticket.id}/pdf?token=${token}`, "_blank");
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-swarcoOrange hover:bg-swarcoOrange/90 text-white rounded-lg transition-colors"
+            title="Descargar PDF"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span className="hidden sm:inline">Descargar PDF</span>
+          </button>
+          {currentStatus && (
+            <span className={`px-4 py-2 rounded-full text-sm font-medium ${statusLabels[currentStatus.status].color}`}>
+              {statusLabels[currentStatus.status].name}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
