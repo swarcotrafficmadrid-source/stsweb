@@ -327,7 +327,7 @@ export default function App() {
                     </div>
                   </div>
                   {gateError && <p className="text-sm text-red-600">{gateError}</p>}
-                  <button className="w-full bg-swarcoBlue text-white py-2.5 rounded-full font-semibold hover:bg-swarcoBlue/90 transition">
+                  <button type="submit" className="w-full bg-swarcoBlue text-white py-2.5 rounded-full font-semibold hover:bg-swarcoBlue/90 transition">
                     {t.maintenanceEnter}
                   </button>
                 </form>
