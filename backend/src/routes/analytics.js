@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { requireAuth, requireSAT } from "../middleware/auth.js";
+import { requireAuth } from "../middleware/auth.js";
+import { requireSAT } from "../middleware/requireSAT.js";
 import { 
   FailureReport, 
   SpareRequest, 

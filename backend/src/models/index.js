@@ -9,8 +9,8 @@ import PurchaseEquipment from "./PurchaseEquipment.js";
 import AssistanceRequest from "./AssistanceRequest.js";
 import TicketStatus from "./TicketStatus.js";
 import TicketComment from "./TicketComment.js";
-import Webhook from "./Webhook.js";
-import ApiKey from "./ApiKey.js";
+import WebhookModel from "./Webhook.js";
+import ApiKeyModel from "./ApiKey.js";
 
 User.hasMany(FailureReport, { foreignKey: "userId" });
 FailureReport.hasMany(FailureEquipment, { foreignKey: "failureId" });
@@ -32,6 +32,9 @@ AssistanceRequest.belongsTo(User, { foreignKey: "userId" });
 TicketStatus.belongsTo(User, { as: "ChangedByUser", foreignKey: "changedBy" });
 TicketStatus.belongsTo(User, { as: "AssignedToUser", foreignKey: "assignedTo" });
 TicketComment.belongsTo(User, { foreignKey: "userId" });
+
+const Webhook = WebhookModel(sequelize);
+const ApiKey = ApiKeyModel(sequelize);
 
 export {
   sequelize,
