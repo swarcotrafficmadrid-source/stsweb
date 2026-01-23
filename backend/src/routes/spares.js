@@ -2,6 +2,8 @@ import { Router } from "express";
 import { SpareRequest, SpareItem } from "../models/index.js";
 import { requireAuth } from "../middleware/auth.js";
 import { sendMail } from "../utils/mailer.js";
+import { webhookTicketCreated } from "../utils/webhooks.js";
+import * as models from "../models/index.js";
 
 const router = Router();
 
@@ -38,7 +40,8 @@ router.post("/", requireAuth, async (req, res) => {
       refCode: spare.refCode || "",
       serial: spare.serial || "",
       cantidad: spare.cantidad || 1,
-      photosCount: spare.photosCount || 0
+      photosCount: spare.photosCount || 0,
+      photoUrls: spare.photoUrls || null
     });
   }
 
@@ -56,6 +59,7 @@ Repuesto ${idx + 1}:
 - Serial: ${s.serial || "-"}
 - Cantidad: ${s.cantidad || 1}
 - Descripción: ${s.description || "-"}
+${s.photosCount > 0 ? `- Fotos adjuntas: ${s.photosCount}` : ""}
     `).join("\n");
 
     await sendMail({
@@ -87,6 +91,7 @@ ${sparesText}`,
             <p><strong>Serial:</strong> ${s.serial || "-"}</p>
             <p><strong>Cantidad:</strong> ${s.cantidad || 1}</p>
             <p><strong>Descripción:</strong> ${s.description || "-"}</p>
+            ${s.photosCount > 0 ? `<p><strong>Fotos adjuntas:</strong> ${s.photosCount}</p>` : ""}
           </div>
         `).join("")}
       `
@@ -94,6 +99,11 @@ ${sparesText}`,
   } catch (err) {
     console.error("Error sending spare request email:", err);
   }
+
+  // Disparar webhook
+  webhookTicketCreated({ ...spareRequest.toJSON(), type: "spare", requestNumber }, models).catch(err => 
+    console.error("Error webhook:", err)
+  );
 
   return res.json({ id: spareRequest.id, requestNumber });
 });

@@ -4,7 +4,8 @@ import {
   FailureEquipment, 
   SpareRequest, 
   SpareItem,
-  PurchaseRequest, 
+  PurchaseRequest,
+  PurchaseEquipment,
   AssistanceRequest,
   TicketStatus,
   TicketComment,
@@ -14,6 +15,8 @@ import { requireAuth } from "../middleware/auth.js";
 import { requireSAT, requireSATAdmin } from "../middleware/requireSAT.js";
 import { sendMail } from "../utils/mailer.js";
 import { generateTicketPDF } from "../utils/pdfGenerator.js";
+import { webhookStatusChanged } from "../utils/webhooks.js";
+import * as models from "../models/index.js";
 
 const router = Router();
 
@@ -149,7 +152,8 @@ router.get("/ticket/:type/:id", requireAuth, requireSAT, async (req, res) => {
       case "purchase":
         ticket = await PurchaseRequest.findByPk(id, {
           include: [
-            { model: User, attributes: ["id", "nombre", "apellidos", "email", "empresa", "telefono"] }
+            { model: User, attributes: ["id", "nombre", "apellidos", "email", "empresa", "telefono"] },
+            { model: PurchaseEquipment }
           ]
         });
         break;
@@ -275,6 +279,11 @@ Equipo SWARCO Traffic Spain`,
         `
       }).catch(err => console.error("Error sending status update email:", err));
     }
+
+    // Disparar webhook de cambio de estado
+    webhookStatusChanged(parseInt(id), type, null, status, models).catch(err => 
+      console.error("Error webhook:", err)
+    );
 
     res.json({ success: true, status: newStatus });
   } catch (err) {
@@ -403,7 +412,8 @@ router.get("/ticket/:type/:id/pdf", requireAuth, requireSAT, async (req, res) =>
       case "purchase":
         ticket = await PurchaseRequest.findByPk(id, {
           include: [
-            { model: User, attributes: ["id", "nombre", "apellidos", "email", "empresa", "telefono"] }
+            { model: User, attributes: ["id", "nombre", "apellidos", "email", "empresa", "telefono"] },
+            { model: PurchaseEquipment }
           ]
         });
         break;

@@ -13,6 +13,10 @@ import errorReportRoutes from "./routes/errorReport.js";
 import satRoutes from "./routes/sat.js";
 import adminRoutes from "./routes/admin.js";
 import clientRoutes from "./routes/client.js";
+import uploadRoutes from "./routes/upload.js";
+import webhookRoutes from "./routes/webhooks.js";
+import analyticsRoutes from "./routes/analytics.js";
+import publicApiRoutes from "./routes/publicApi.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { authLimiter, apiLimiter } from "./middleware/rateLimiter.js";
 import { sanitizeBody } from "./middleware/validator.js";
@@ -45,6 +49,10 @@ app.use("/api/error-report", errorReportRoutes);
 app.use("/api/sat", apiLimiter, satRoutes);
 app.use("/api/client", apiLimiter, clientRoutes);
 app.use("/api/admin", adminRoutes); // Sin rate limiting para admin ops
+app.use("/api/upload", apiLimiter, uploadRoutes);
+app.use("/api/webhooks", apiLimiter, webhookRoutes);
+app.use("/api/analytics", apiLimiter, analyticsRoutes);
+app.use("/api/public", publicApiRoutes); // API pública (autenticación por API Key)
 
 // Error handler global (debe ir al final)
 app.use(errorHandler);

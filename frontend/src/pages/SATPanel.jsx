@@ -4,9 +4,11 @@ import { useTranslatedMap } from "../lib/i18n.js";
 import SATTicketList from "../components/SATTicketList.jsx";
 import SATTicketDetail from "../components/SATTicketDetail.jsx";
 import SATDashboard from "../components/SATDashboard.jsx";
+import AnalyticsDashboard from "../components/AnalyticsDashboard.jsx";
+import WebhooksPanel from "../components/WebhooksPanel.jsx";
 
 export default function SATPanel({ token, user, lang = "es" }) {
-  const [view, setView] = useState("dashboard"); // dashboard, tickets, ticket-detail
+  const [view, setView] = useState("dashboard"); // dashboard, tickets, ticket-detail, analytics, webhooks
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [filter, setFilter] = useState({ type: "", status: "" });
 
@@ -15,6 +17,9 @@ export default function SATPanel({ token, user, lang = "es" }) {
       title: "Panel SAT - SWARCO Traffic Spain",
       dashboard: "Dashboard",
       allTickets: "Todos los Tickets",
+      analytics: "Analytics",
+      webhooks: "Webhooks",
+      apiDocs: "API REST",
       failures: "Incidencias",
       spares: "Repuestos",
       purchases: "Compras",
@@ -25,6 +30,9 @@ export default function SATPanel({ token, user, lang = "es" }) {
       title: "SAT Panel - SWARCO Traffic Spain",
       dashboard: "Dashboard",
       allTickets: "All Tickets",
+      analytics: "Analytics",
+      webhooks: "Webhooks",
+      apiDocs: "REST API",
       failures: "Failures",
       spares: "Spares",
       purchases: "Purchases",
@@ -92,6 +100,26 @@ export default function SATPanel({ token, user, lang = "es" }) {
               >
                 {t.allTickets}
               </button>
+              <button
+                onClick={() => setView("analytics")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  view === "analytics"
+                    ? "bg-swarcoBlue text-white"
+                    : "text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                {t.analytics}
+              </button>
+              <button
+                onClick={() => setView("webhooks")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  view === "webhooks"
+                    ? "bg-swarcoBlue text-white"
+                    : "text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                {t.webhooks}
+              </button>
             </nav>
           </div>
         </div>
@@ -127,6 +155,14 @@ export default function SATPanel({ token, user, lang = "es" }) {
             ticket={selectedTicket}
             onBack={() => setView("tickets")}
           />
+        )}
+
+        {view === "analytics" && (
+          <AnalyticsDashboard token={token} lang={lang} />
+        )}
+
+        {view === "webhooks" && (
+          <WebhooksPanel token={token} lang={lang} />
         )}
       </main>
     </div>

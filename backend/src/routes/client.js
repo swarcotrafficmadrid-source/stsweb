@@ -1,8 +1,11 @@
 import { Router } from "express";
 import { 
-  FailureReport, 
-  SpareRequest, 
-  PurchaseRequest, 
+  FailureReport,
+  FailureEquipment,
+  SpareRequest,
+  SpareItem,
+  PurchaseRequest,
+  PurchaseEquipment,
   AssistanceRequest,
   TicketStatus,
   TicketComment,
@@ -22,13 +25,22 @@ router.get("/ticket/:type/:id/timeline", requireAuth, async (req, res) => {
     // Verificar que el ticket pertenezca al usuario
     switch (type) {
       case "failure":
-        ticket = await FailureReport.findOne({ where: { id, userId: req.user.id } });
+        ticket = await FailureReport.findOne({ 
+          where: { id, userId: req.user.id },
+          include: [{ model: FailureEquipment }]
+        });
         break;
       case "spare":
-        ticket = await SpareRequest.findOne({ where: { id, userId: req.user.id } });
+        ticket = await SpareRequest.findOne({ 
+          where: { id, userId: req.user.id },
+          include: [{ model: SpareItem }]
+        });
         break;
       case "purchase":
-        ticket = await PurchaseRequest.findOne({ where: { id, userId: req.user.id } });
+        ticket = await PurchaseRequest.findOne({ 
+          where: { id, userId: req.user.id },
+          include: [{ model: PurchaseEquipment }]
+        });
         break;
       case "assistance":
         ticket = await AssistanceRequest.findOne({ where: { id, userId: req.user.id } });
@@ -56,9 +68,30 @@ router.get("/ticket/:type/:id/timeline", requireAuth, async (req, res) => {
       ]
     });
 
+    // Preparar URLs de fotos según el tipo
+    let photoUrls = [];
+    let videoUrl = null;
+
+    if (type === "failure" && ticket.failure_equipments) {
+      photoUrls = ticket.failure_equipments.flatMap(eq => eq.photoUrls || []);
+      const videos = ticket.failure_equipments.map(eq => eq.videoUrl).filter(Boolean);
+      videoUrl = videos.length > 0 ? videos[0] : null;
+    } else if (type === "spare" && ticket.spare_items) {
+      photoUrls = ticket.spare_items.flatMap(item => item.photoUrls || []);
+    } else if (type === "purchase" && ticket.PurchaseEquipments) {
+      photoUrls = ticket.PurchaseEquipments.flatMap(eq => eq.photoUrls || []);
+    } else if (type === "assistance" && ticket.photoUrls) {
+      photoUrls = ticket.photoUrls;
+    }
+
     res.json({
       statusHistory,
-      comments
+      comments,
+      ticket: {
+        ...ticket.toJSON(),
+        photoUrls,
+        videoUrl
+      }
     });
   } catch (err) {
     console.error("Error fetching timeline:", err);

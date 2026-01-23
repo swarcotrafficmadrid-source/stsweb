@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiRequest } from "../lib/api.js";
+import PhotoGallery from "./PhotoGallery.jsx";
 
 export default function ClientTicketTimeline({ token, ticketId, ticketType, lang = "es" }) {
   const [loading, setLoading] = useState(true);
@@ -7,6 +8,7 @@ export default function ClientTicketTimeline({ token, ticketId, ticketType, lang
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [ticket, setTicket] = useState(null);
 
   useEffect(() => {
     loadTimeline();
@@ -23,6 +25,7 @@ export default function ClientTicketTimeline({ token, ticketId, ticketType, lang
       );
       setTimeline(data.statusHistory || []);
       setComments(data.comments || []);
+      setTicket(data.ticket || null);
     } catch (err) {
       console.error("Error loading timeline:", err);
     } finally {
@@ -125,6 +128,18 @@ export default function ClientTicketTimeline({ token, ticketId, ticketType, lang
           ))}
         </div>
       </div>
+
+      {/* Archivos Adjuntos */}
+      {ticket && (
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <h3 className="text-lg font-semibold text-slate-700 mb-4">Archivos Adjuntos</h3>
+          <PhotoGallery
+            photos={ticket.photoUrls || []}
+            videos={ticket.videoUrl ? [ticket.videoUrl] : []}
+            lang={lang}
+          />
+        </div>
+      )}
 
       {/* Comentarios */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">

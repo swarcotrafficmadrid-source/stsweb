@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api.js";
 import { useTranslatedMap } from "../lib/i18n.js";
+import FileUploader from "../components/FileUploader.jsx";
 
 export default function Purchases({ token, lang = "es" }) {
   const [requestTitle, setRequestTitle] = useState("");
   const [proyecto, setProyecto] = useState("");
   const [pais, setPais] = useState("");
-  const [equipments, setEquipments] = useState([{ nombre: "", cantidad: 1, descripcion: "" }]);
+  const [equipments, setEquipments] = useState([{ nombre: "", cantidad: 1, descripcion: "", uploadedPhotos: [] }]);
   const [createdRequest, setCreatedRequest] = useState(null);
   const [reviewing, setReviewing] = useState(false);
   const [errors, setErrors] = useState({});
@@ -22,6 +23,9 @@ export default function Purchases({ token, lang = "es" }) {
       nombreLabel: "Nombre del equipo",
       cantidadLabel: "Cantidad",
       descripcionLabel: "Descripción",
+      photosLabel: "Fotos del equipo",
+      photosHelp: "Máximo 4 fotos",
+      photosTooMany: "Máximo 4 fotos",
       proyectoLabel: "Proyecto",
       paisLabel: "País",
       labelTitle: "Pequeña descripción de la solicitud",
@@ -53,6 +57,9 @@ export default function Purchases({ token, lang = "es" }) {
       nombreLabel: "Equipment name",
       cantidadLabel: "Quantity",
       descripcionLabel: "Description",
+      photosLabel: "Equipment photos",
+      photosHelp: "Up to 4 photos",
+      photosTooMany: "Maximum 4 photos",
       proyectoLabel: "Project",
       paisLabel: "Country",
       labelTitle: "Short request description",
@@ -74,6 +81,40 @@ export default function Purchases({ token, lang = "es" }) {
       editRequest: "Edit",
       required: "Required field",
       validationError: "Check the highlighted fields."
+    },
+    it: {
+      title: "Richiesta di Acquisto",
+      subtitle: "Completa i dati dell'attrezzatura che desideri acquistare.",
+      equipmentTitle: "Attrezzatura",
+      addEquipment: "Aggiungi altra attrezzatura",
+      removeEquipment: "Rimuovi attrezzatura",
+      nombreLabel: "Nome dell'attrezzatura",
+      cantidadLabel: "Quantità",
+      descripcionLabel: "Descrizione",
+      photosLabel: "Foto dell'attrezzatura",
+      photosHelp: "Massimo 4 foto",
+      photosTooMany: "Massimo 4 foto",
+      proyectoLabel: "Progetto",
+      paisLabel: "Paese",
+      labelTitle: "Breve descrizione della richiesta",
+      labelTitleHelp: "Oggetto dell'email",
+      placeholderTitle: "Titolo",
+      placeholderDesc: "Descrizione",
+      send: "Invia",
+      ok: "Richiesta inviata.",
+      requestCreatedTitle: "Richiesta creata",
+      requestNumberLabel: "Numero richiesta",
+      summaryTitle: "Riepilogo",
+      backHome: "Torna all'inizio",
+      createAnother: "Crea un'altra richiesta",
+      newButton: "Nuova richiesta",
+      reviewTitle: "Revisione della richiesta",
+      reviewDesc: "Verifica i dati prima di inviare.",
+      reviewButton: "Accetta",
+      sendRequest: "Invia richiesta",
+      editRequest: "Modifica",
+      required: "Campo obbligatorio",
+      validationError: "Controlla i campi evidenziati."
     }
   };
   const t = useTranslatedMap({ base: copy, lang, cacheKey: "purchases" });
@@ -90,6 +131,12 @@ export default function Purchases({ token, lang = "es" }) {
 
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
+  }
+
+  function handleEquipmentPhotosUploaded(index, files) {
+    setEquipments((prev) =>
+      prev.map((item, idx) => (idx === index ? { ...item, uploadedPhotos: files } : item))
+    );
   }
 
   async function handleSubmit(e) {
@@ -110,7 +157,9 @@ export default function Purchases({ token, lang = "es" }) {
           equipments: equipments.map(eq => ({
             nombre: eq.nombre.trim(),
             cantidad: eq.cantidad || 1,
-            descripcion: eq.descripcion?.trim() || ""
+            descripcion: eq.descripcion?.trim() || "",
+            photosCount: (eq.uploadedPhotos || []).length,
+            photoUrls: (eq.uploadedPhotos || []).map(f => f.url)
           }))
         },
         token
@@ -126,7 +175,7 @@ export default function Purchases({ token, lang = "es" }) {
       setRequestTitle("");
       setProyecto("");
       setPais("");
-      setEquipments([{ nombre: "", cantidad: 1, descripcion: "" }]);
+      setEquipments([{ nombre: "", cantidad: 1, descripcion: "", uploadedPhotos: [] }]);
       setErrors({});
       setReviewing(false);
     } catch (err) {
@@ -140,7 +189,7 @@ export default function Purchases({ token, lang = "es" }) {
     setRequestTitle("");
     setProyecto("");
     setPais("");
-    setEquipments([{ nombre: "", cantidad: 1, descripcion: "" }]);
+    setEquipments([{ nombre: "", cantidad: 1, descripcion: "", uploadedPhotos: [] }]);
     setErrors({});
     setReviewing(false);
   }
@@ -300,6 +349,27 @@ export default function Purchases({ token, lang = "es" }) {
                   }}
                 />
               </div>
+              <div className="space-y-2">
+                <label className="text-sm text-slate-600 flex items-center gap-2">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-swarcoBlue">
+                    <path d="M4 6h16v12H4z" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M8 14l3-3 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    <circle cx="9" cy="9" r="1.5" fill="currentColor" />
+                  </svg>
+                  {t.photosLabel}
+                </label>
+                <FileUploader
+                  token={token}
+                  folder="purchases"
+                  acceptedTypes="image/*"
+                  maxFiles={4}
+                  maxSize={5}
+                  onUploadComplete={(files) => handleEquipmentPhotosUploaded(index, files)}
+                  onUploadError={(error) => setMessage(error)}
+                  lang={lang}
+                />
+                <p className="text-xs text-slate-400">{t.photosHelp}</p>
+              </div>
             </div>
           </div>
         ))}
@@ -329,7 +399,7 @@ export default function Purchases({ token, lang = "es" }) {
                 type="button"
                 className="border border-slate-300 text-slate-700 px-4 py-2 rounded-full hover:border-swarcoOrange/60"
                 onClick={() => {
-                  setEquipments((prev) => ([...prev, { nombre: "", cantidad: 1, descripcion: "" }]));
+                  setEquipments((prev) => ([...prev, { nombre: "", cantidad: 1, descripcion: "", uploadedPhotos: [] }]));
                 }}
               >
                 {t.addEquipment}

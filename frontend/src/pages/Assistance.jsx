@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api.js";
 import { useTranslatedMap } from "../lib/i18n.js";
+import FileUploader from "../components/FileUploader.jsx";
 
 export default function Assistance({ token, lang = "es" }) {
   const [assistanceType, setAssistanceType] = useState("remota");
@@ -8,6 +9,7 @@ export default function Assistance({ token, lang = "es" }) {
   const [hora, setHora] = useState("");
   const [lugar, setLugar] = useState("");
   const [descripcionFalla, setDescripcionFalla] = useState("");
+  const [uploadedPhotos, setUploadedPhotos] = useState([]);
   const [createdRequest, setCreatedRequest] = useState(null);
   const [reviewing, setReviewing] = useState(false);
   const [errors, setErrors] = useState({});
@@ -28,6 +30,9 @@ export default function Assistance({ token, lang = "es" }) {
       descripcionHelp: "Explica qué necesitas que revisemos",
       placeholderDesc: "Describe la falla o problema",
       placeholderLugar: "Dirección o ubicación",
+      photosLabel: "Fotos de la falla",
+      photosHelp: "Máximo 4 fotos",
+      photosTooMany: "Máximo 4 fotos",
       send: "Enviar",
       ok: "Solicitud enviada.",
       requestCreatedTitle: "Solicitud creada",
@@ -61,6 +66,9 @@ export default function Assistance({ token, lang = "es" }) {
       descripcionHelp: "Explain what needs to be reviewed",
       placeholderDesc: "Describe the issue or problem",
       placeholderLugar: "Address or location",
+      photosLabel: "Issue photos",
+      photosHelp: "Up to 4 photos",
+      photosTooMany: "Maximum 4 photos",
       send: "Send",
       ok: "Request sent.",
       requestCreatedTitle: "Request created",
@@ -79,6 +87,42 @@ export default function Assistance({ token, lang = "es" }) {
       horaHelp: "Schedule: 8:00 - 15:00 (every 30 min)",
       selectHora: "Select time",
       selectFecha: "Select date"
+    },
+    it: {
+      title: "Richiesta di Assistenza",
+      subtitle: "Seleziona il tipo di assistenza di cui hai bisogno.",
+      typeLabel: "Tipo di assistenza",
+      typeRemota: "Remota",
+      typeTelefonica: "Telefonica",
+      typeVisita: "Visita in loco",
+      fechaLabel: "Data",
+      horaLabel: "Ora",
+      lugarLabel: "Luogo della visita",
+      descripcionLabel: "Descrizione del problema",
+      descripcionHelp: "Spiega cosa dobbiamo verificare",
+      placeholderDesc: "Descrivi il problema",
+      placeholderLugar: "Indirizzo o ubicazione",
+      photosLabel: "Foto del problema",
+      photosHelp: "Massimo 4 foto",
+      photosTooMany: "Massimo 4 foto",
+      send: "Invia",
+      ok: "Richiesta inviata.",
+      requestCreatedTitle: "Richiesta creata",
+      requestNumberLabel: "Numero richiesta",
+      summaryTitle: "Riepilogo",
+      backHome: "Torna all'inizio",
+      createAnother: "Crea un'altra richiesta",
+      newButton: "Nuova richiesta",
+      reviewTitle: "Revisione della richiesta",
+      reviewDesc: "Verifica i dati prima di inviare.",
+      reviewButton: "Accetta",
+      sendRequest: "Invia richiesta",
+      editRequest: "Modifica",
+      required: "Campo obbligatorio",
+      validationError: "Controlla i campi evidenziati.",
+      horaHelp: "Orario: 8:00 - 15:00 (ogni 30 min)",
+      selectHora: "Seleziona ora",
+      selectFecha: "Seleziona data"
     }
   };
   const t = useTranslatedMap({ base: copy, lang, cacheKey: "assistance" });
@@ -89,6 +133,10 @@ export default function Assistance({ token, lang = "es" }) {
     "11:00", "11:30", "12:00", "12:30", "13:00", "13:30",
     "14:00", "14:30", "15:00"
   ];
+
+  function handlePhotosUploaded(files) {
+    setUploadedPhotos(files);
+  }
 
   function validateForm() {
     const nextErrors = {};
@@ -116,6 +164,8 @@ export default function Assistance({ token, lang = "es" }) {
       return;
     }
     try {
+      const photoUrls = uploadedPhotos.map(f => f.url);
+      
       const data = await apiRequest(
         "/api/assistance",
         "POST",
@@ -124,7 +174,9 @@ export default function Assistance({ token, lang = "es" }) {
           fecha: fecha || null,
           hora: hora || null,
           lugar: lugar.trim() || null,
-          descripcionFalla: descripcionFalla.trim()
+          descripcionFalla: descripcionFalla.trim(),
+          photosCount: photoUrls.length,
+          photoUrls: photoUrls.length > 0 ? photoUrls : null
         },
         token
       );
@@ -142,6 +194,7 @@ export default function Assistance({ token, lang = "es" }) {
       setHora("");
       setLugar("");
       setDescripcionFalla("");
+      setUploadedPhotos([]);
       setErrors({});
       setReviewing(false);
     } catch (err) {
@@ -157,6 +210,7 @@ export default function Assistance({ token, lang = "es" }) {
     setHora("");
     setLugar("");
     setDescripcionFalla("");
+    setUploadedPhotos([]);
     setErrors({});
     setReviewing(false);
   }
@@ -332,6 +386,28 @@ export default function Assistance({ token, lang = "es" }) {
           <p className={`text-xs ${errors.descripcionFalla ? "text-swarcoOrange" : "text-slate-400"}`}>
             {errors.descripcionFalla || t.descripcionHelp}
           </p>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm text-slate-600 flex items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-swarcoBlue">
+              <path d="M4 6h16v12H4z" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M8 14l3-3 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <circle cx="9" cy="9" r="1.5" fill="currentColor" />
+            </svg>
+            {t.photosLabel}
+          </label>
+          <FileUploader
+            token={token}
+            folder="assistance"
+            acceptedTypes="image/*"
+            maxFiles={4}
+            maxSize={5}
+            onUploadComplete={handlePhotosUploaded}
+            onUploadError={(error) => setMessage(error)}
+            lang={lang}
+          />
+          <p className="text-xs text-slate-400">{t.photosHelp}</p>
         </div>
 
         {reviewing && (

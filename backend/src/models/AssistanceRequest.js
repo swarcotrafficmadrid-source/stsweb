@@ -32,6 +32,17 @@ const AssistanceRequest = sequelize.define("assistance_request", {
     type: DataTypes.TEXT,
     allowNull: false,
     field: "descripcion_falla"
+  },
+  photosCount: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: 0,
+    field: "photos_count"
+  },
+  photoUrls: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    field: "photo_urls"
   }
 }, {
   timestamps: true,

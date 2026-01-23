@@ -1,7 +1,9 @@
 import { Router } from "express";
-import { PurchaseRequest } from "../models/index.js";
+import { PurchaseRequest, PurchaseEquipment } from "../models/index.js";
 import { requireAuth } from "../middleware/auth.js";
 import { sendMail } from "../utils/mailer.js";
+import { webhookTicketCreated } from "../utils/webhooks.js";
+import * as models from "../models/index.js";
 
 const router = Router();
 
@@ -25,6 +27,18 @@ router.post("/", requireAuth, async (req, res) => {
     descripcion: `Proyecto: ${proyecto} | País: ${pais} | ${titulo}`
   });
 
+  // Crear registros individuales de equipos
+  for (const eq of equipments) {
+    await PurchaseEquipment.create({
+      purchaseRequestId: purchaseRequest.id,
+      nombre: eq.nombre.trim(),
+      cantidad: eq.cantidad || 1,
+      descripcion: eq.descripcion?.trim() || null,
+      photosCount: eq.photosCount || 0,
+      photoUrls: eq.photoUrls || null
+    });
+  }
+
   const requestNumber = `COM-${String(purchaseRequest.id).padStart(6, "0")}`;
   
   // Email a soporte
@@ -34,6 +48,7 @@ Equipo ${idx + 1}:
 - Nombre: ${eq.nombre}
 - Cantidad: ${eq.cantidad}
 ${eq.descripcion ? `- Descripción: ${eq.descripcion}` : ""}
+${eq.photosCount > 0 ? `- Fotos adjuntas: ${eq.photosCount}` : ""}
     `).join("\n");
 
     await sendMail({
@@ -63,6 +78,7 @@ ${equipmentsText}`,
             <p><strong>Nombre:</strong> ${eq.nombre}</p>
             <p><strong>Cantidad:</strong> ${eq.cantidad}</p>
             ${eq.descripcion ? `<p><strong>Descripción:</strong> ${eq.descripcion}</p>` : ""}
+            ${eq.photosCount > 0 ? `<p><strong>Fotos adjuntas:</strong> ${eq.photosCount}</p>` : ""}
           </div>
         `).join("")}
       `
@@ -97,6 +113,11 @@ Equipo SWARCO Traffic Spain`,
   } catch (err) {
     console.error("Error sending purchase request email:", err);
   }
+
+  // Disparar webhook
+  webhookTicketCreated({ ...purchaseRequest.toJSON(), type: "purchase", requestNumber }, models).catch(err => 
+    console.error("Error webhook:", err)
+  );
 
   return res.json({ id: purchaseRequest.id, requestNumber });
 });

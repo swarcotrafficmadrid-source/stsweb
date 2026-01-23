@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api.js";
 import { useTranslatedMap } from "../lib/i18n.js";
+import FileUploader from "../components/FileUploader.jsx";
 
 export default function Failures({ token, lang = "es" }) {
   const [prioridad, setPrioridad] = useState("Media");
@@ -19,11 +20,8 @@ export default function Failures({ token, lang = "es" }) {
       locationPk: "",
       locationProvince: "",
       locationStation: "",
-      photos: [],
-      photoPreviews: [],
-      video: null,
-      videoDuration: 0,
-      videoPreview: ""
+      uploadedPhotos: [],
+      uploadedVideo: null
     }
   ]);
   const [createdTicket, setCreatedTicket] = useState(null);
@@ -220,14 +218,17 @@ export default function Failures({ token, lang = "es" }) {
   const t = useTranslatedMap({ base: copy, lang, cacheKey: "failures" });
 
 
-  useEffect(() => {
-    return () => {
-      equipments.forEach((eq) => {
-        (eq.photoPreviews || []).forEach((url) => URL.revokeObjectURL(url));
-        if (eq.videoPreview) URL.revokeObjectURL(eq.videoPreview);
-      });
-    };
-  }, [equipments]);
+  function handleEquipmentPhotosUploaded(index, files) {
+    setEquipments((prev) =>
+      prev.map((item, idx) => (idx === index ? { ...item, uploadedPhotos: files } : item))
+    );
+  }
+
+  function handleEquipmentVideoUploaded(index, files) {
+    setEquipments((prev) =>
+      prev.map((item, idx) => (idx === index ? { ...item, uploadedVideo: files[0] || null } : item))
+    );
+  }
 
   function validateForm() {
     const nextErrors = {};
@@ -240,52 +241,12 @@ export default function Failures({ token, lang = "es" }) {
       if (!serialValue) nextErrors[`equipment-${index}-serial`] = t.required;
       else if (!serialOk) nextErrors[`equipment-${index}-serial`] = t.serialInvalid;
       if (!eq.description?.trim()) nextErrors[`equipment-${index}-desc`] = t.required;
-      if ((eq.photos || []).length > 4) nextErrors[`equipment-${index}-photos`] = t.photosTooMany;
-      if (eq.video && (eq.videoDuration || 0) > 60) nextErrors[`equipment-${index}-video`] = t.videoTooLong;
     });
     if (!incidentTitle.trim()) nextErrors.incidentTitle = t.required;
     if (!incidentGeneralDesc.trim()) nextErrors.incidentGeneral = t.required;
 
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
-  }
-
-  function handleEquipmentPhotosChange(index, event) {
-    const files = Array.from(event.target.files || []);
-    setEquipments((prev) =>
-      prev.map((item, idx) => {
-        if (idx !== index) return item;
-        const prevUrls = item.photoPreviews || [];
-        prevUrls.forEach((url) => URL.revokeObjectURL(url));
-        const limited = files.slice(0, 4);
-        const previews = limited.map((file) => URL.createObjectURL(file));
-        return { ...item, photos: limited, photoPreviews: previews };
-      })
-    );
-  }
-
-  function handleEquipmentVideoChange(index, event) {
-    const file = event.target.files?.[0] || null;
-    setEquipments((prev) =>
-      prev.map((item, idx) => {
-        if (idx !== index) return item;
-        if (item.videoPreview) URL.revokeObjectURL(item.videoPreview);
-        const preview = file ? URL.createObjectURL(file) : "";
-        return { ...item, video: file, videoDuration: 0, videoPreview: preview };
-      })
-    );
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    const videoEl = document.createElement("video");
-    videoEl.preload = "metadata";
-    videoEl.onloadedmetadata = () => {
-      URL.revokeObjectURL(url);
-      const duration = videoEl.duration || 0;
-      setEquipments((prev) =>
-        prev.map((item, idx) => (idx === index ? { ...item, videoDuration: duration } : item))
-      );
-    };
-    videoEl.src = url;
   }
 
   async function handleSubmit(e) {
@@ -315,8 +276,10 @@ export default function Failures({ token, lang = "es" }) {
         locationPk: eq.locationType === "trafico" ? eq.locationPk.trim() : "",
         locationProvince: eq.locationType === "transporte" ? eq.locationProvince.trim() : "",
         locationStation: eq.locationType === "transporte" ? eq.locationStation.trim() : "",
-        photosCount: (eq.photos || []).length,
-        videoName: eq.video ? eq.video.name : null
+        photosCount: (eq.uploadedPhotos || []).length,
+        photoUrls: (eq.uploadedPhotos || []).map(f => f.url),
+        videoUrl: eq.uploadedVideo ? eq.uploadedVideo.url : null,
+        videoName: eq.uploadedVideo ? eq.uploadedVideo.originalName : null
       }));
       const reportTitle = incidentTitle.trim();
       const reportDescription = payloadEquipments
@@ -364,11 +327,8 @@ export default function Failures({ token, lang = "es" }) {
           locationPk: "",
           locationProvince: "",
           locationStation: "",
-          photos: [],
-          photoPreviews: [],
-          video: null,
-          videoDuration: 0,
-          videoPreview: ""
+          uploadedPhotos: [],
+          uploadedVideo: null
         }
       ]);
       setIncidentTitle("");
@@ -396,11 +356,8 @@ export default function Failures({ token, lang = "es" }) {
         locationPk: "",
         locationProvince: "",
         locationStation: "",
-        photos: [],
-        photoPreviews: [],
-        video: null,
-        videoDuration: 0,
-        videoPreview: ""
+        uploadedPhotos: [],
+        uploadedVideo: null
       }
     ]);
     setIncidentTitle("");
@@ -698,25 +655,17 @@ export default function Failures({ token, lang = "es" }) {
                     </svg>
                     {t.photosLabel}
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className={`w-full border rounded-lg px-3 py-2.5 ${
-                      errors[`equipment-${index}-photos`] ? "border-swarcoOrange" : "border-slate-300"
-                    }`}
-                    onChange={(e) => handleEquipmentPhotosChange(index, e)}
+                  <FileUploader
+                    token={token}
+                    folder="failures"
+                    acceptedTypes="image/*"
+                    maxFiles={4}
+                    maxSize={5}
+                    onUploadComplete={(files) => handleEquipmentPhotosUploaded(index, files)}
+                    onUploadError={(error) => setMessage(error)}
+                    lang={lang}
                   />
-                  <p className={`text-xs ${errors[`equipment-${index}-photos`] ? "text-swarcoOrange" : "text-slate-400"}`}>
-                    {errors[`equipment-${index}-photos`] || t.photosHelp}
-                  </p>
-                  {eq.photoPreviews?.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {eq.photoPreviews.map((src, photoIndex) => (
-                        <img key={src} src={src} alt={`foto-${index + 1}-${photoIndex + 1}`} className="h-16 w-20 rounded border border-slate-200 object-cover" />
-                      ))}
-                    </div>
-                  )}
+                  <p className="text-xs text-slate-400">{t.photosHelp}</p>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm text-slate-600 flex items-center gap-2">
@@ -726,17 +675,17 @@ export default function Failures({ token, lang = "es" }) {
                     </svg>
                     {t.videoLabel}
                   </label>
-                  <input
-                    type="file"
-                    accept="video/*"
-                    className={`w-full border rounded-lg px-3 py-2.5 ${
-                      errors[`equipment-${index}-video`] ? "border-swarcoOrange" : "border-slate-300"
-                    }`}
-                    onChange={(e) => handleEquipmentVideoChange(index, e)}
+                  <FileUploader
+                    token={token}
+                    folder="failures"
+                    acceptedTypes="video/*"
+                    maxFiles={1}
+                    maxSize={50}
+                    onUploadComplete={(files) => handleEquipmentVideoUploaded(index, files)}
+                    onUploadError={(error) => setMessage(error)}
+                    lang={lang}
                   />
-                  <p className={`text-xs ${errors[`equipment-${index}-video`] ? "text-swarcoOrange" : "text-slate-400"}`}>
-                    {errors[`equipment-${index}-video`] || t.videoHelp}
-                  </p>
+                  <p className="text-xs text-slate-400">{t.videoHelp}</p>
                 </div>
               </div>
             </div>
@@ -795,11 +744,8 @@ export default function Failures({ token, lang = "es" }) {
                       locationPk: "",
                       locationProvince: "",
                       locationStation: "",
-                      photos: [],
-                      photoPreviews: [],
-                      video: null,
-                      videoDuration: 0,
-                      videoPreview: ""
+                      uploadedPhotos: [],
+                      uploadedVideo: null
                     }
                   ]));
                 }}

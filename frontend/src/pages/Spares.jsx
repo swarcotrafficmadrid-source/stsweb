@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api.js";
 import { useTranslatedMap } from "../lib/i18n.js";
+import FileUploader from "../components/FileUploader.jsx";
 
 export default function Spares({ token, lang = "es" }) {
   const [requestTitle, setRequestTitle] = useState("");
@@ -15,8 +16,7 @@ export default function Spares({ token, lang = "es" }) {
       serial: "",
       cantidad: 1,
       description: "",
-      photos: [],
-      photoPreviews: []
+      uploadedPhotos: []
     }
   ]);
   const [createdRequest, setCreatedRequest] = useState(null);
@@ -128,14 +128,6 @@ export default function Spares({ token, lang = "es" }) {
   };
   const t = useTranslatedMap({ base: copy, lang, cacheKey: "spares" });
 
-  useEffect(() => {
-    return () => {
-      spares.forEach((spare) => {
-        (spare.photoPreviews || []).forEach((url) => URL.revokeObjectURL(url));
-      });
-    };
-  }, [spares]);
-
   function validateForm() {
     const nextErrors = {};
     spares.forEach((spare, index) => {
@@ -150,7 +142,6 @@ export default function Spares({ token, lang = "es" }) {
       if (!spare.proyecto?.trim()) nextErrors[`spare-${index}-proyecto`] = t.required;
       if (!spare.pais?.trim()) nextErrors[`spare-${index}-pais`] = t.required;
       if (!spare.provincia?.trim()) nextErrors[`spare-${index}-provincia`] = t.required;
-      if ((spare.photos || []).length > 4) nextErrors[`spare-${index}-photos`] = t.photosTooMany;
     });
     if (!requestTitle.trim()) nextErrors.requestTitle = t.required;
     if (!requestGeneralDesc.trim()) nextErrors.requestGeneral = t.required;
@@ -159,17 +150,9 @@ export default function Spares({ token, lang = "es" }) {
     return Object.keys(nextErrors).length === 0;
   }
 
-  function handleSparePhotosChange(index, event) {
-    const files = Array.from(event.target.files || []);
+  function handleSparePhotosUploaded(index, files) {
     setSpares((prev) =>
-      prev.map((item, idx) => {
-        if (idx !== index) return item;
-        const prevUrls = item.photoPreviews || [];
-        prevUrls.forEach((url) => URL.revokeObjectURL(url));
-        const limited = files.slice(0, 4);
-        const previews = limited.map((file) => URL.createObjectURL(file));
-        return { ...item, photos: limited, photoPreviews: previews };
-      })
+      prev.map((item, idx) => (idx === index ? { ...item, uploadedPhotos: files } : item))
     );
   }
 
@@ -198,7 +181,8 @@ export default function Spares({ token, lang = "es" }) {
         refCode: spare.refCode.trim(),
         serial: spare.serial.trim(),
         cantidad: spare.cantidad || 1,
-        photosCount: (spare.photos || []).length
+        photosCount: (spare.uploadedPhotos || []).length,
+        photoUrls: (spare.uploadedPhotos || []).map(f => f.url)
       }));
       const data = await apiRequest(
         "/api/spares",
@@ -235,8 +219,7 @@ export default function Spares({ token, lang = "es" }) {
           serial: "",
           cantidad: 1,
           description: "",
-          photos: [],
-          photoPreviews: []
+          uploadedPhotos: []
         }
       ]);
       setRequestTitle("");
@@ -261,8 +244,7 @@ export default function Spares({ token, lang = "es" }) {
         serial: "",
         cantidad: 1,
         description: "",
-        photos: [],
-        photoPreviews: []
+        uploadedPhotos: []
       }
     ]);
     setRequestTitle("");
@@ -546,25 +528,17 @@ export default function Spares({ token, lang = "es" }) {
                   </svg>
                   {t.photosLabel}
                 </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className={`w-full border rounded-lg px-3 py-2.5 ${
-                    errors[`spare-${index}-photos`] ? "border-swarcoOrange" : "border-slate-300"
-                  }`}
-                  onChange={(e) => handleSparePhotosChange(index, e)}
+                <FileUploader
+                  token={token}
+                  folder="spares"
+                  acceptedTypes="image/*"
+                  maxFiles={4}
+                  maxSize={5}
+                  onUploadComplete={(files) => handleSparePhotosUploaded(index, files)}
+                  onUploadError={(error) => setMessage(error)}
+                  lang={lang}
                 />
-                <p className={`text-xs ${errors[`spare-${index}-photos`] ? "text-swarcoOrange" : "text-slate-400"}`}>
-                  {errors[`spare-${index}-photos`] || t.photosHelp}
-                </p>
-                {spare.photoPreviews?.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {spare.photoPreviews.map((src, photoIndex) => (
-                      <img key={src} src={src} alt={`foto-${index + 1}-${photoIndex + 1}`} className="h-16 w-20 rounded border border-slate-200 object-cover" />
-                    ))}
-                  </div>
-                )}
+                <p className="text-xs text-slate-400">{t.photosHelp}</p>
               </div>
             </div>
           </div>
@@ -614,8 +588,7 @@ export default function Spares({ token, lang = "es" }) {
                       serial: "",
                       cantidad: 1,
                       description: "",
-                      photos: [],
-                      photoPreviews: []
+                      uploadedPhotos: []
                     }
                   ]));
                 }}

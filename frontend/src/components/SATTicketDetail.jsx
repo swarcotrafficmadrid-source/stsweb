@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiRequest } from "../lib/api.js";
+import PhotoGallery from "./PhotoGallery.jsx";
 
 export default function SATTicketDetail({ token, lang, ticket: initialTicket, onBack }) {
   const [ticket, setTicket] = useState(null);
@@ -207,6 +208,55 @@ export default function SATTicketDetail({ token, lang, ticket: initialTicket, on
                 ))}
               </div>
             )}
+            {ticket.type === "purchase" && ticket.PurchaseEquipments && (
+              <div className="space-y-4">
+                {ticket.PurchaseEquipments.map((eq, idx) => (
+                  <div key={idx} className="border-l-4 border-green-500 pl-4">
+                    <p className="font-medium mb-2">Equipo {idx + 1}</p>
+                    <div className="text-sm space-y-1">
+                      <p><strong>Nombre:</strong> {eq.nombre}</p>
+                      <p><strong>Cantidad:</strong> {eq.cantidad}</p>
+                      {eq.descripcion && <p><strong>Descripción:</strong> {eq.descripcion}</p>}
+                      {eq.photosCount > 0 && <p><strong>Fotos:</strong> {eq.photosCount}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {ticket.type === "assistance" && (
+              <div className="space-y-2 text-sm">
+                <p><strong>Tipo:</strong> {ticket.tipo}</p>
+                {ticket.fecha && <p><strong>Fecha:</strong> {ticket.fecha}</p>}
+                {ticket.hora && <p><strong>Hora:</strong> {ticket.hora}</p>}
+                {ticket.lugar && <p><strong>Lugar:</strong> {ticket.lugar}</p>}
+                <p><strong>Descripción:</strong> {ticket.descripcionFalla}</p>
+                {ticket.photosCount > 0 && <p><strong>Fotos adjuntas:</strong> {ticket.photosCount}</p>}
+              </div>
+            )}
+          </div>
+
+          {/* Archivos Adjuntos */}
+          <div className="bg-white rounded-xl border border-slate-200 p-6">
+            <h3 className="text-lg font-semibold text-slate-700 mb-4">Archivos Adjuntos</h3>
+            <PhotoGallery
+              photos={
+                ticket.type === "failure" && ticket.failure_equipments
+                  ? ticket.failure_equipments.flatMap(eq => eq.photoUrls || [])
+                  : ticket.type === "spare" && ticket.spare_items
+                  ? ticket.spare_items.flatMap(item => item.photoUrls || [])
+                  : ticket.type === "purchase" && ticket.PurchaseEquipments
+                  ? ticket.PurchaseEquipments.flatMap(eq => eq.photoUrls || [])
+                  : ticket.type === "assistance" && ticket.photoUrls
+                  ? ticket.photoUrls
+                  : []
+              }
+              videos={
+                ticket.type === "failure" && ticket.failure_equipments
+                  ? ticket.failure_equipments.map(eq => eq.videoUrl).filter(Boolean)
+                  : []
+              }
+              lang={lang}
+            />
           </div>
 
           {/* Timeline de Estados */}

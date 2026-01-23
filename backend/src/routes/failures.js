@@ -3,6 +3,8 @@ import { FailureReport, FailureEquipment } from "../models/index.js";
 import { requireAuth } from "../middleware/auth.js";
 import { rateLimit } from "../middleware/rateLimit.js";
 import { sendMail } from "../utils/mailer.js";
+import { webhookTicketCreated } from "../utils/webhooks.js";
+import * as models from "../models/index.js";
 
 const router = Router();
 
@@ -101,7 +103,9 @@ router.post("/", requireAuth, rateLimit({ windowMs: 86_400_000, max: 10 }), asyn
       locationProvince: safeLocationType === "transporte" ? safeProvince || null : null,
       locationStation: safeLocationType === "transporte" ? safeStation || null : null,
       photosCount: safePhotosCount,
-      videoName: safeVideoName || null
+      videoName: safeVideoName || null,
+      photoUrls: raw.photoUrls || null,
+      videoUrl: raw.videoUrl || null
     });
   }
 
@@ -146,6 +150,12 @@ router.post("/", requireAuth, rateLimit({ windowMs: 86_400_000, max: 10 }), asyn
   } catch {
     // No bloquear si falla el correo a soporte.
   }
+
+  // Disparar webhook
+  webhookTicketCreated({ ...item.toJSON(), type: "failure", requestNumber: ticketNumber }, models).catch(err => 
+    console.error("Error webhook:", err)
+  );
+
   return res.json({ ...item.toJSON(), ticketNumber });
 });
 

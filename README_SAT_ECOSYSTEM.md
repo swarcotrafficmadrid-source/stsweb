@@ -12,23 +12,27 @@ Plataforma completa de gestión de Servicio de Asistencia Técnica (SAT) que con
 - ✅ Registro y autenticación segura (JWT)
 - ✅ Multi-idioma (ES, EN, IT, FR, DE, PT, etc.)
 - ✅ 4 tipos de solicitudes:
-  - **Incidencias** - Reportar fallos en equipos
-  - **Repuestos** - Solicitar piezas de repuesto
-  - **Compras** - Solicitar nuevos equipos
-  - **Asistencias** - Programar asistencias (remota, telefónica, visita)
-- ✅ Timeline visual del estado de cada ticket
-- ✅ Sistema de mensajes bidireccional con SAT
+  - **Incidencias** - Reportar fallos en equipos + 📸 Fotos (máx 4) + 🎥 Video (máx 50MB)
+  - **Repuestos** - Solicitar piezas de repuesto + 📸 Fotos (máx 4)
+  - **Compras** - Solicitar nuevos equipos + 📸 Fotos por equipo (máx 4)
+  - **Asistencias** - Programar asistencias + 📸 Fotos (máx 4)
+- ✅ **Upload real de archivos** a Google Cloud Storage
+- ✅ **Timeline visual** del estado de TODOS los tipos de tickets
+- ✅ **Sistema de mensajes bidireccional** con SAT (todos los tipos)
+- ✅ **Galería de fotos** en cada ticket
 - ✅ Seguimiento en tiempo real
 
 ### 🎫 Panel SAT Interno
 - ✅ Dashboard con estadísticas en tiempo real
-- ✅ Vista unificada de todos los tickets
+- ✅ Vista unificada de todos los tickets (4 tipos)
 - ✅ Filtros por tipo y estado
 - ✅ Gestión de estados:
   - Pendiente → Asignado → En progreso → Esperando → Resuelto → Cerrado
 - ✅ Sistema de comentarios (internos y públicos)
 - ✅ Timeline completo de cada ticket
 - ✅ Asignación de técnicos
+- ✅ **Galería de fotos/videos** con lightbox
+- ✅ **Descargar archivos** adjuntos
 - ✅ Generación de PDFs profesionales
 
 ### 📄 Generación de PDFs
@@ -37,7 +41,19 @@ Plataforma completa de gestión de Servicio de Asistencia Técnica (SAT) que con
 - ✅ Dirección: C/ Francisco Gervás, 12, Alcobendas
 - ✅ Timeline completo del ticket
 - ✅ Historial de comentarios
+- ✅ Referencia a archivos adjuntos
 - ✅ Formato profesional A4
+
+### 📦 Sistema de Archivos
+- ✅ **Google Cloud Storage** integrado
+- ✅ Upload de fotos (JPEG, PNG, GIF, WEBP)
+- ✅ Upload de videos (MP4, WEBM, MOV)
+- ✅ URLs firmadas con expiración (7 días)
+- ✅ Validación de tipos y tamaños
+- ✅ Rate limiting (20 uploads/min)
+- ✅ Progress bars en tiempo real
+- ✅ Galería con lightbox
+- ✅ Limpieza automática (> 90 días)
 
 ### 🔐 Seguridad y Robustez
 - ✅ Rate limiting (protección contra ataques)
@@ -319,16 +335,19 @@ GMAIL_SERVICE_ACCOUNT_JSON=base64_json
 
 ## 🎉 Estado del Proyecto
 
-**✅ COMPLETADO - ECOSISTEMA SAT FULL-STACK**
+**✅ COMPLETADO - ECOSISTEMA SAT FULL-STACK + ARCHIVOS**
 
 | Funcionalidad | Estado |
 |---------------|--------|
 | Portal Cliente | ✅ 100% |
 | Panel SAT | ✅ 100% |
-| Timeline | ✅ 100% |
+| Timeline | ✅ 100% (4 tipos) |
 | PDFs | ✅ 100% |
-| Comentarios | ✅ 100% |
+| Comentarios | ✅ 100% (4 tipos) |
 | Emails | ✅ 100% |
+| **Sistema de Archivos** | ✅ **100%** |
+| **Upload Fotos/Videos** | ✅ **100%** |
+| **Galería con Lightbox** | ✅ **100%** |
 | Seguridad | ✅ 100% |
 | Admin Tools | ✅ 100% |
 | Multi-idioma | ✅ 100% |
@@ -345,16 +364,39 @@ GMAIL_SERVICE_ACCOUNT_JSON=base64_json
 
 ---
 
+## 📚 Documentación Adicional
+
+- 📦 **STORAGE_SETUP.md** - Configuración detallada de Google Cloud Storage
+- 🚀 **QUICK_START.md** - Setup en 30 minutos paso a paso
+- 📊 **IMPLEMENTATION_STATUS.md** - Estado completo de implementación
+- ✅ **TESTING_CHECKLIST.md** - Lista de pruebas funcionales
+- 🚀 **DEPLOYMENT_INFO.md** - Información de deployment
+
+## 🔧 Scripts Útiles
+
+```bash
+# Verificar sistema
+npm run verify
+
+# Migrar base de datos
+npm run migrate
+
+# Crear usuario SAT
+npm run create-sat-user email@swarco.com Password123! Nombre Apellidos sat_admin
+```
+
 ## 🚀 Próximas Funcionalidades (Roadmap)
 
-### Fase 5 (Opcional)
+### Fase 6 (Opcional)
 - 📱 App móvil para técnicos
-- 📷 Escaneo de códigos QR
+- 📷 Escaneo de códigos QR en fotos
 - 📍 Geolocalización de visitas
 - 🔗 Integración con Jira/ERP
 - 📊 Webhooks personalizados
 - 📈 Analytics avanzados
 - 🤖 Chatbot de soporte
+- 🗜️ Compresión automática de imágenes
+- 🖼️ Generación de thumbnails
 
 ---
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../lib/api.js";
 import { useTranslatedMap } from "../lib/i18n.js";
+import ClientTicketTimeline from "../components/ClientTicketTimeline.jsx";
 
 const COUNTRIES = [
   { code: "ES", name: "España", nameEs: "España", dial: "+34" },
@@ -36,6 +37,7 @@ export default function Dashboard({ token, lang = "es", activeTab = "home", onTa
   const [showPurchases, setShowPurchases] = useState(false);
   const [incidentQuery, setIncidentQuery] = useState("");
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [assistance, setAssistance] = useState([]);
 
   const [nombre, setNombre] = useState("");
   const [apellidos, setApellidos] = useState("");
@@ -81,6 +83,7 @@ export default function Dashboard({ token, lang = "es", activeTab = "home", onTa
       ticketStatusTitle: "Estado del ticket",
       ticketStatusHint: "Aquí podrás ver el progreso del ticket cuando esté disponible.",
       ticketSelectHint: "Selecciona un ticket para ver su progreso.",
+      backToList: "Volver a la lista",
       titleLabel: "Título",
       spareLabel: "Repuesto",
       equipmentLabel: "Equipo",
@@ -93,7 +96,8 @@ export default function Dashboard({ token, lang = "es", activeTab = "home", onTa
       delivered: "Entregados",
       show: "Ver detalles",
       hide: "Ocultar detalles",
-      total: "Total"
+      total: "Total",
+      backToList: "Volver a la lista"
     },
     en: {
       welcome: "Welcome",
@@ -222,14 +226,16 @@ export default function Dashboard({ token, lang = "es", activeTab = "home", onTa
         const tel = (me.telefono || "").replace(/^\+\d+\s*/, "");
         setTelefono(tel);
         setCargo(me.cargo || "");
-        const [inc, rep, pur] = await Promise.all([
+        const [inc, rep, pur, ass] = await Promise.all([
           apiRequest("/api/failures", "GET", null, token),
           apiRequest("/api/spares", "GET", null, token),
-          apiRequest("/api/purchases", "GET", null, token)
+          apiRequest("/api/purchases", "GET", null, token),
+          apiRequest("/api/assistance", "GET", null, token)
         ]);
         setIncidents(inc || []);
         setSpares(rep || []);
         setPurchases(pur || []);
+        setAssistance(ass || []);
         setLoadError("");
       } catch (err) {
         const msg = err?.message || "";
@@ -721,8 +727,12 @@ export default function Dashboard({ token, lang = "es", activeTab = "home", onTa
                             </thead>
                             <tbody>
                               {purchasesRequested.map((item) => (
-                                <tr key={item.id} className="border-t border-slate-100">
-                                  <td className="py-2">{item.id}</td>
+                                <tr 
+                                  key={item.id} 
+                                  className="border-t border-slate-100 cursor-pointer hover:bg-slate-50"
+                                  onClick={() => setSelectedTicket({ ...item, type: "purchase" })}
+                                >
+                                  <td className="py-2">COM-{String(item.id).padStart(6, "0")}</td>
                                   <td className="py-2">{item.equipo}</td>
                                   <td className="py-2">{item.estado || "Pendiente"}</td>
                                   <td className="py-2">{new Date(item.createdAt).toLocaleDateString()}</td>
@@ -765,6 +775,27 @@ export default function Dashboard({ token, lang = "es", activeTab = "home", onTa
                   </div>
                 )}
               </div>
+
+              {/* Timeline para purchases */}
+              {selectedTicket && selectedTicket.type === "purchase" && (
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+                  <button
+                    onClick={() => setSelectedTicket(null)}
+                    className="mb-4 text-sm text-swarcoBlue hover:text-swarcoBlue/80 flex items-center gap-2"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {t.backToList}
+                  </button>
+                  <ClientTicketTimeline
+                    token={token}
+                    ticketId={selectedTicket.id}
+                    ticketType="purchase"
+                    lang={lang}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -818,17 +849,31 @@ export default function Dashboard({ token, lang = "es", activeTab = "home", onTa
               </table>
             </div>
           )}
-          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <h4 className="text-sm font-semibold text-slate-700">{t.ticketStatusTitle}</h4>
-            {selectedTicket ? (
-              <p className="text-sm text-slate-600 mt-1">
-                {getTicketNumber(selectedTicket.id)} · {selectedTicket.titulo}
-              </p>
-            ) : (
+          {selectedTicket ? (
+            <div className="mt-4">
+              <button
+                onClick={() => setSelectedTicket(null)}
+                className="mb-4 text-sm text-swarcoBlue hover:text-swarcoBlue/80 flex items-center gap-2"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {t.backToList}
+              </button>
+              <ClientTicketTimeline
+                token={token}
+                ticketId={selectedTicket.id}
+                ticketType="failure"
+                lang={lang}
+              />
+            </div>
+          ) : (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <h4 className="text-sm font-semibold text-slate-700">{t.ticketStatusTitle}</h4>
               <p className="text-sm text-slate-500 mt-1">{t.ticketSelectHint}</p>
-            )}
-            <p className="text-xs text-slate-400 mt-2">{t.ticketStatusHint}</p>
-          </div>
+              <p className="text-xs text-slate-400 mt-2">{t.ticketStatusHint}</p>
+            </div>
+          )}
         </div>
       ) : tab === "assistance" ? (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -842,7 +887,55 @@ export default function Dashboard({ token, lang = "es", activeTab = "home", onTa
               {t.ctaAssistance}
             </button>
           </div>
-          <p className="text-sm text-slate-500">{t.assistanceEmpty}</p>
+          {assistance.length === 0 ? (
+            <p className="text-sm text-slate-500">{t.assistanceEmpty}</p>
+          ) : (
+            <div className="overflow-auto">
+              <table className="w-full text-sm">
+                <thead className="text-slate-500">
+                  <tr>
+                    <th className="text-left py-2">{t.ticketLabel}</th>
+                    <th className="text-left py-2">{t.titleLabel}</th>
+                    <th className="text-left py-2">{t.status}</th>
+                    <th className="text-left py-2">{t.createdAt}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assistance.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="border-t border-slate-100 cursor-pointer hover:bg-slate-50"
+                      onClick={() => setSelectedTicket({ ...item, type: "assistance" })}
+                    >
+                      <td className="py-2">ASI-{String(item.id).padStart(6, "0")}</td>
+                      <td className="py-2">{item.tipo}</td>
+                      <td className="py-2">Pendiente</td>
+                      <td className="py-2">{new Date(item.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {selectedTicket && selectedTicket.type === "assistance" && (
+            <div className="mt-4">
+              <button
+                onClick={() => setSelectedTicket(null)}
+                className="mb-4 text-sm text-swarcoBlue hover:text-swarcoBlue/80 flex items-center gap-2"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {t.backToList}
+              </button>
+              <ClientTicketTimeline
+                token={token}
+                ticketId={selectedTicket.id}
+                ticketType="assistance"
+                lang={lang}
+              />
+            </div>
+          )}
         </div>
       ) : tab === "spares" ? (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -871,9 +964,13 @@ export default function Dashboard({ token, lang = "es", activeTab = "home", onTa
                 </thead>
                 <tbody>
                   {spares.map((item) => (
-                    <tr key={item.id} className="border-t border-slate-100">
-                      <td className="py-2">{item.id}</td>
-                      <td className="py-2">{item.repuesto}</td>
+                    <tr 
+                      key={item.id} 
+                      className="border-t border-slate-100 cursor-pointer hover:bg-slate-50"
+                      onClick={() => setSelectedTicket({ ...item, type: "spare" })}
+                    >
+                      <td className="py-2">REP-{String(item.id).padStart(6, "0")}</td>
+                      <td className="py-2">{item.titulo || "-"}</td>
                       <td className="py-2">{item.estado || "Pendiente"}</td>
                       <td className="py-2">{new Date(item.createdAt).toLocaleDateString()}</td>
                     </tr>

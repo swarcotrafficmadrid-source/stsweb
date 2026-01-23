@@ -18,7 +18,9 @@ const FailureEquipment = sequelize.define(
     locationProvince: { type: DataTypes.STRING(80), allowNull: true },
     locationStation: { type: DataTypes.STRING(120), allowNull: true },
     photosCount: { type: DataTypes.INTEGER, allowNull: true },
-    videoName: { type: DataTypes.STRING(120), allowNull: true }
+    videoName: { type: DataTypes.STRING(120), allowNull: true },
+    photoUrls: { type: DataTypes.JSON, allowNull: true },
+    videoUrl: { type: DataTypes.STRING(500), allowNull: true }
   },
   {
     tableName: "fallas_equipos",
