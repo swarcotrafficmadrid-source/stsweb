@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.js";
 import failuresRoutes from "./routes/failures.js";
 import sparesRoutes from "./routes/spares.js";
 import purchasesRoutes from "./routes/purchases.js";
+import assistanceRoutes from "./routes/assistance.js";
 import i18nRoutes from "./routes/i18n.js";
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/failures", failuresRoutes);
 app.use("/api/spares", sparesRoutes);
 app.use("/api/purchases", purchasesRoutes);
+app.use("/api/assistance", assistanceRoutes);
 app.use("/api/i18n", i18nRoutes);
 
 const port = process.env.PORT || 8080;
