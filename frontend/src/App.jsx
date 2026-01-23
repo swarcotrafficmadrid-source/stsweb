@@ -99,6 +99,7 @@ export default function App() {
   const [gateOpen, setGateOpen] = useState(false);
   const [gateUserInput, setGateUserInput] = useState("");
   const [gatePassInput, setGatePassInput] = useState("");
+  const [gatePassVisible, setGatePassVisible] = useState(false);
   const [gateError, setGateError] = useState("");
   const isResetView = typeof window !== "undefined" && window.location.pathname.startsWith("/reset");
   const isActivateView = typeof window !== "undefined" && window.location.pathname.startsWith("/activate");
@@ -131,7 +132,9 @@ export default function App() {
       maintenanceUser: "Usuario",
       maintenancePass: "Clave",
       maintenanceEnter: "Entrar",
-      maintenanceError: "Usuario o clave incorrectos."
+      maintenanceError: "Usuario o clave incorrectos.",
+      showPassword: "Mostrar",
+      hidePassword: "Ocultar"
     },
     en: {
       portalTitle: "Portal SWARCO Traffic Spain",
@@ -160,7 +163,9 @@ export default function App() {
       maintenanceUser: "User",
       maintenancePass: "Password",
       maintenanceEnter: "Enter",
-      maintenanceError: "Wrong user or password."
+      maintenanceError: "Wrong user or password.",
+      showPassword: "Show",
+      hidePassword: "Hide"
     },
     it: {
       portalTitle: "Portale SWARCO Traffic Spain",
@@ -189,7 +194,9 @@ export default function App() {
       maintenanceUser: "Utente",
       maintenancePass: "Password",
       maintenanceEnter: "Entra",
-      maintenanceError: "Utente o password errati."
+      maintenanceError: "Utente o password errati.",
+      showPassword: "Mostra",
+      hidePassword: "Nascondi"
     }
   }), []);
   const t = useTranslatedMap({ base: copy, lang, cacheKey: "app" });
@@ -288,12 +295,34 @@ export default function App() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">{t.maintenancePass}</label>
-                    <input
-                      type="password"
-                      className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
-                      value={gatePassInput}
-                      onChange={(event) => setGatePassInput(event.target.value)}
-                    />
+                    <div className="relative">
+                      <input
+                        type={gatePassVisible ? "text" : "password"}
+                        className="w-full border border-slate-300 rounded-lg px-3 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
+                        value={gatePassInput}
+                        onChange={(event) => setGatePassInput(event.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-2.5 text-slate-500 hover:text-swarcoBlue"
+                        onClick={() => setGatePassVisible((prev) => !prev)}
+                        aria-label={gatePassVisible ? t.hidePassword : t.showPassword}
+                      >
+                        {gatePassVisible ? (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" stroke="currentColor" strokeWidth="1.5" />
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
+                          </svg>
+                        ) : (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 3l18 18" stroke="currentColor" strokeWidth="1.5" />
+                            <path d="M10.58 10.58A3 3 0 0012 15a3 3 0 002.42-4.42" stroke="currentColor" strokeWidth="1.5" />
+                            <path d="M9.88 5.06A10.47 10.47 0 0112 5c6.5 0 10 7 10 7a18.36 18.36 0 01-4.43 5.2" stroke="currentColor" strokeWidth="1.5" />
+                            <path d="M6.1 6.1A18.07 18.07 0 002 12s3.5 6 10 6a10.8 10.8 0 004.05-.76" stroke="currentColor" strokeWidth="1.5" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
                   </div>
                   {gateError && <p className="text-sm text-red-600">{gateError}</p>}
                   <button className="w-full bg-swarcoBlue text-white py-2.5 rounded-full font-semibold hover:bg-swarcoBlue/90 transition">

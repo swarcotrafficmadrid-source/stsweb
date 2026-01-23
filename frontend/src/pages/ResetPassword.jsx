@@ -8,6 +8,8 @@ export default function ResetPassword({ token, lang = "es", onBack }) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword2, setShowPassword2] = useState(false);
 
   const copy = {
     es: {
@@ -19,7 +21,9 @@ export default function ResetPassword({ token, lang = "es", onBack }) {
       loading: "Guardando...",
       mismatch: "Las contraseñas no coinciden.",
       done: "Contraseña actualizada. Ya puedes iniciar sesión.",
-      back: "Volver a login"
+      back: "Volver a login",
+      showPassword: "Mostrar",
+      hidePassword: "Ocultar"
     },
     en: {
       title: "Reset password",
@@ -30,7 +34,9 @@ export default function ResetPassword({ token, lang = "es", onBack }) {
       loading: "Saving...",
       mismatch: "Passwords do not match.",
       done: "Password updated. You can sign in now.",
-      back: "Back to login"
+      back: "Back to login",
+      showPassword: "Show",
+      hidePassword: "Hide"
     },
     it: {
       title: "Reimposta password",
@@ -41,7 +47,9 @@ export default function ResetPassword({ token, lang = "es", onBack }) {
       loading: "Salvataggio...",
       mismatch: "Le password non coincidono.",
       done: "Password aggiornata. Ora puoi accedere.",
-      back: "Torna al login"
+      back: "Torna al login",
+      showPassword: "Mostra",
+      hidePassword: "Nascondi"
     }
   };
   const t = useTranslatedMap({ base: copy, lang, cacheKey: "reset" });
@@ -71,23 +79,67 @@ export default function ResetPassword({ token, lang = "es", onBack }) {
       <p className="text-sm text-slate-500">{t.desc}</p>
       <div className="space-y-2">
         <label className="text-sm font-medium text-slate-700">{t.pass}</label>
-        <input
-          type="password"
-          className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button
+            type="button"
+            className="absolute right-3 top-2.5 text-slate-500 hover:text-swarcoBlue"
+            onClick={() => setShowPassword((prev) => !prev)}
+            aria-label={showPassword ? t.hidePassword : t.showPassword}
+          >
+            {showPassword ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M3 3l18 18" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M10.58 10.58A3 3 0 0012 15a3 3 0 002.42-4.42" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M9.88 5.06A10.47 10.47 0 0112 5c6.5 0 10 7 10 7a18.36 18.36 0 01-4.43 5.2" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M6.1 6.1A18.07 18.07 0 002 12s3.5 6 10 6a10.8 10.8 0 004.05-.76" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium text-slate-700">{t.pass2}</label>
-        <input
-          type="password"
-          className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
-          placeholder="••••••••"
-          value={password2}
-          onChange={(e) => setPassword2(e.target.value)}
-        />
+        <div className="relative">
+          <input
+            type={showPassword2 ? "text" : "password"}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-swarcoBlue/30 focus:border-swarcoBlue"
+            placeholder="••••••••"
+            value={password2}
+            onChange={(e) => setPassword2(e.target.value)}
+          />
+          <button
+            type="button"
+            className="absolute right-3 top-2.5 text-slate-500 hover:text-swarcoBlue"
+            onClick={() => setShowPassword2((prev) => !prev)}
+            aria-label={showPassword2 ? t.hidePassword : t.showPassword}
+          >
+            {showPassword2 ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M3 3l18 18" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M10.58 10.58A3 3 0 0012 15a3 3 0 002.42-4.42" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M9.88 5.06A10.47 10.47 0 0112 5c6.5 0 10 7 10 7a18.36 18.36 0 01-4.43 5.2" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M6.1 6.1A18.07 18.07 0 002 12s3.5 6 10 6a10.8 10.8 0 004.05-.76" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       {message && <p className="text-sm text-emerald-600">{message}</p>}
