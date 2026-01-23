@@ -8,6 +8,7 @@ import Failures from "./pages/Failures.jsx";
 import Spares from "./pages/Spares.jsx";
 import Purchases from "./pages/Purchases.jsx";
 import Assistance from "./pages/Assistance.jsx";
+import SATPanel from "./pages/SATPanel.jsx";
 import { useTranslatedMap } from "./lib/i18n.js";
 
 const pages = {
@@ -15,7 +16,8 @@ const pages = {
   failures: Failures,
   spares: Spares,
   purchases: Purchases,
-  assistance: Assistance
+  assistance: Assistance,
+  sat: SATPanel
 };
 
 function getBrowserLang() {
