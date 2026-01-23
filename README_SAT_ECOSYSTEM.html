@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ecosistema SAT - SWARCO Traffic Spain</title>
+  <style>
+    @media print {
+      body { margin: 0; }
+      .no-print { display: none; }
+      .page-break { page-break-before: always; }
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background: #f9fafb;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #006BAB 0%, #004d7a 100%);
+      color: white;
+      padding: 40px;
+      border-radius: 16px;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+    
+    .header .subtitle {
+      font-size: 1.5em;
+      color: #F29200;
+      margin-bottom: 10px;
+    }
+    
+    .header .tagline {
+      font-size: 1.1em;
+      opacity: 0.9;
+      font-style: italic;
+    }
+    
+    .print-btn {
+      background: #F29200;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 20px 0;
+      display: block;
+      width: 100%;
+      max-width: 300px;
+      margin: 20px auto;
+    }
+    
+    .print-btn:hover {
+      background: #d17f00;
+    }
+    
+    .content {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    h2 {
+      color: #006BAB;
+      font-size: 1.8em;
+      margin: 30px 0 15px 0;
+      border-bottom: 3px solid #F29200;
+      padding-bottom: 10px;
+    }
+    
+    h3 {
+      color: #F29200;
+      font-size: 1.3em;
+      margin: 20px 0 10px 0;
+    }
+    
+    h4 {
+      color: #006BAB;
+      font-size: 1.1em;
+      margin: 15px 0 8px 0;
+    }
+    
+    ul {
+      margin: 10px 0 20px 20px;
+    }
+    
+    li {
+      margin: 8px 0;
+    }
+    
+    .highlight {
+      background: #fff3cd;
+      padding: 20px;
+      border-left: 4px solid #F29200;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    
+    .success {
+      background: #d4edda;
+      padding: 20px;
+      border-left: 4px solid #28a745;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    
+    code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+    
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    
+    th {
+      background: #006BAB;
+      color: white;
+    }
+    
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: bold;
+    }
+    
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-assigned { background: #cce5ff; color: #004085; }
+    .status-progress { background: #e2d5f5; color: #5a126b; }
+    .status-waiting { background: #ffe5cc; color: #8a4000; }
+    .status-resolved { background: #d4edda; color: #155724; }
+    .status-closed { background: #e2e3e5; color: #383d41; }
+    
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 20px;
+      color: #666;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🚀 Ecosistema Integral SAT</h1>
+    <div class="subtitle">SWARCO Traffic Spain</div>
+    <div class="tagline">"The better way, every day."</div>
+  </div>
+
+  <button class="print-btn no-print" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
+
+  <div class="content">
+    
+    <h2>📋 Descripción General</h2>
+    <p>Plataforma completa de gestión de Servicio de Asistencia Técnica (SAT) que conecta a <strong>clientes</strong>, <strong>personal de oficina (SAT)</strong> y <strong>técnicos de campo</strong> para la gestión eficiente de incidencias, repuestos, compras y asistencias técnicas.</p>
+
+    <div class="success">
+      <strong>✅ Estado: ECOSISTEMA COMPLETO - 100% OPERATIVO</strong>
+    </div>
+
+    <h2>✨ Características Principales</h2>
+
+    <h3>👥 Portal del Cliente</h3>
+    <ul>
+      <li>✅ Registro y autenticación segura (JWT)</li>
+      <li>✅ Multi-idioma (ES, EN, IT, FR, DE, PT, etc.)</li>
+      <li>✅ 4 tipos de solicitudes:
+        <ul>
+          <li><strong>Incidencias</strong> - Reportar fallos en equipos</li>
+          <li><strong>Repuestos</strong> - Solicitar piezas de repuesto</li>
+          <li><strong>Compras</strong> - Solicitar nuevos equipos</li>
+          <li><strong>Asistencias</strong> - Programar asistencias (remota, telefónica, visita)</li>
+        </ul>
+      </li>
+      <li>✅ Timeline visual del estado de cada ticket</li>
+      <li>✅ Sistema de mensajes bidireccional con SAT</li>
+      <li>✅ Seguimiento en tiempo real</li>
+    </ul>
+
+    <h3>🎫 Panel SAT Interno</h3>
+    <ul>
+      <li>✅ Dashboard con estadísticas en tiempo real</li>
+      <li>✅ Vista unificada de todos los tickets</li>
+      <li>✅ Filtros por tipo y estado</li>
+      <li>✅ Gestión de estados: Pendiente → Asignado → En progreso → Esperando → Resuelto → Cerrado</li>
+      <li>✅ Sistema de comentarios (internos y públicos)</li>
+      <li>✅ Timeline completo de cada ticket</li>
+      <li>✅ Asignación de técnicos</li>
+      <li>✅ Generación de PDFs profesionales</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <h3>📄 Generación de PDFs</h3>
+    <ul>
+      <li>✅ Informes técnicos con branding SWARCO</li>
+      <li>✅ Logo y datos fiscales (NIF: A87304655)</li>
+      <li>✅ Dirección: C/ Francisco Gervás, 12, Alcobendas</li>
+      <li>✅ Timeline completo del ticket</li>
+      <li>✅ Historial de comentarios</li>
+      <li>✅ Formato profesional A4</li>
+    </ul>
+
+    <h3>🔐 Seguridad y Robustez</h3>
+    <ul>
+      <li>✅ Rate limiting (protección contra ataques)</li>
+      <li>✅ Headers de seguridad HTTP</li>
+      <li>✅ Validación y sanitización de inputs</li>
+      <li>✅ Error reporting automático a <code>sfr.support@swarco.com</code></li>
+      <li>✅ Error boundary en frontend</li>
+      <li>✅ Retry automático en fallos de red</li>
+      <li>✅ Sistema de roles (client, sat_admin, sat_technician)</li>
+    </ul>
+
+    <h2>🎯 Tipos de Usuarios</h2>
+
+    <table>
+      <tr>
+        <th>Tipo</th>
+        <th>Rol</th>
+        <th>Permisos</th>
+      </tr>
+      <tr>
+        <td><strong>Cliente</strong></td>
+        <td><code>client</code></td>
+        <td>Crear tickets, ver sus tickets, comentar, ver timeline</td>
+      </tr>
+      <tr>
+        <td><strong>Admin SAT</strong></td>
+        <td><code>sat_admin</code></td>
+        <td>Ver todos los tickets, cambiar estados, asignar técnicos, PDFs, estadísticas</td>
+      </tr>
+      <tr>
+        <td><strong>Técnico SAT</strong></td>
+        <td><code>sat_technician</code></td>
+        <td>Ver tickets asignados, actualizar estados, comentar, PDFs</td>
+      </tr>
+    </table>
+
+    <h2>🚀 Cómo Empezar</h2>
+
+    <div class="highlight">
+      <h3>1️⃣ Crear Usuario SAT (Admin)</h3>
+      <p>Ejecuta este comando en tu terminal (reemplaza los valores):</p>
+      <pre><code>curl -X POST https://stsweb-backend-964379250608.europe-west1.run.app/api/admin/create-sat-user \
+  -H "Content-Type: application/json" \
+  -d '{
+    "adminKey": "CHANGE_THIS_IN_PRODUCTION",
+    "email": "tu-email@swarco.com",
+    "password": "TuPassword123!",
+    "nombre": "Tu Nombre",
+    "apellidos": "Tus Apellidos",
+    "role": "sat_admin"
+  }'</code></pre>
+    </div>
+
+    <div class="highlight">
+      <h3>2️⃣ Acceder al Panel SAT</h3>
+      <ol>
+        <li>Ve a: <strong>https://staging.swarcotrafficspain.com</strong></li>
+        <li>Inicia sesión con el email y password del paso 1</li>
+        <li>Navega a: <strong>#sat</strong> o agrega <code>/sat</code> en la URL</li>
+        <li>¡Listo! Verás el dashboard completo</li>
+      </ol>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>📊 Estados de Tickets</h2>
+
+    <table>
+      <tr>
+        <th>Estado</th>
+        <th>Descripción</th>
+        <th>Badge</th>
+      </tr>
+      <tr>
+        <td>Pendiente</td>
+        <td>Ticket recién creado</td>
+        <td><span class="status-badge status-pending">⏳ Pendiente</span></td>
+      </tr>
+      <tr>
+        <td>Asignado</td>
+        <td>Asignado a un técnico</td>
+        <td><span class="status-badge status-assigned">👤 Asignado</span></td>
+      </tr>
+      <tr>
+        <td>En progreso</td>
+        <td>Técnico trabajando</td>
+        <td><span class="status-badge status-progress">🔄 En progreso</span></td>
+      </tr>
+      <tr>
+        <td>Esperando</td>
+        <td>Esperando respuesta/repuestos</td>
+        <td><span class="status-badge status-waiting">⏸️ Esperando</span></td>
+      </tr>
+      <tr>
+        <td>Resuelto</td>
+        <td>Problema solucionado</td>
+        <td><span class="status-badge status-resolved">✅ Resuelto</span></td>
+      </tr>
+      <tr>
+        <td>Cerrado</td>
+        <td>Ticket finalizado</td>
+        <td><span class="status-badge status-closed">🔒 Cerrado</span></td>
+      </tr>
+    </table>
+
+    <h2>🔢 Números de Ticket</h2>
+    <ul>
+      <li><strong>INC-XXXXXX</strong> - Incidencias (fallos en equipos)</li>
+      <li><strong>REP-XXXXXX</strong> - Repuestos (solicitud de piezas)</li>
+      <li><strong>COM-XXXXXX</strong> - Compras (nuevos equipos)</li>
+      <li><strong>ASI-XXXXXX</strong> - Asistencias (remota, telefónica, visita)</li>
+    </ul>
+    <p><em>Formato: 6 dígitos con ceros a la izquierda (ej: INC-000001)</em></p>
+
+    <h2>📱 URLs Importantes</h2>
+    <table>
+      <tr>
+        <th>Servicio</th>
+        <th>URL</th>
+      </tr>
+      <tr>
+        <td>Portal Web</td>
+        <td><a href="https://staging.swarcotrafficspain.com">https://staging.swarcotrafficspain.com</a></td>
+      </tr>
+      <tr>
+        <td>Panel SAT</td>
+        <td><a href="https://staging.swarcotrafficspain.com/#sat">https://staging.swarcotrafficspain.com/#sat</a></td>
+      </tr>
+      <tr>
+        <td>Backend API</td>
+        <td>https://stsweb-backend-964379250608.europe-west1.run.app</td>
+      </tr>
+    </table>
+
+    <div class="page-break"></div>
+
+    <h2>🎨 Branding SWARCO</h2>
+
+    <h3>Colores Corporativos</h3>
+    <ul>
+      <li><strong>Azul SWARCO:</strong> <code>#006BAB</code> <span style="display:inline-block;width:20px;height:20px;background:#006BAB;border:1px solid #ccc;vertical-align:middle;"></span></li>
+      <li><strong>Naranja SWARCO:</strong> <code>#F29200</code> <span style="display:inline-block;width:20px;height:20px;background:#F29200;border:1px solid #ccc;vertical-align:middle;"></span></li>
+    </ul>
+
+    <h3>Eslogan Oficial</h3>
+    <p style="font-size:1.2em;font-style:italic;color:#006BAB;text-align:center;padding:20px;background:#f9f9f9;border-radius:8px;">
+      "The better way, every day."
+      <br><small style="color:#666;">(NO traducir en la aplicación)</small>
+    </p>
+
+    <h3>Datos Fiscales</h3>
+    <ul>
+      <li><strong>Empresa:</strong> SWARCO TRAFFIC SPAIN SA</li>
+      <li><strong>NIF:</strong> A87304655</li>
+      <li><strong>Dirección:</strong> C/ Francisco Gervás, 12 - 28108 Alcobendas, Madrid</li>
+    </ul>
+
+    <h2>📧 Notificaciones Automáticas</h2>
+    <p>Los emails se envían automáticamente en:</p>
+    <ul>
+      <li>✅ <strong>Nuevo ticket</strong> → Cliente y SAT</li>
+      <li>✅ <strong>Cambio de estado</strong> → Cliente</li>
+      <li>✅ <strong>Nuevo comentario SAT</strong> → Cliente</li>
+      <li>✅ <strong>Nuevo comentario cliente</strong> → SAT</li>
+      <li>✅ <strong>Error del sistema</strong> → <code>sfr.support@swarco.com</code></li>
+    </ul>
+
+    <h2>📈 Funcionalidades Implementadas</h2>
+    <table>
+      <tr>
+        <th>Funcionalidad</th>
+        <th>Estado</th>
+      </tr>
+      <tr><td>Portal Cliente</td><td>✅ 100%</td></tr>
+      <tr><td>Panel SAT</td><td>✅ 100%</td></tr>
+      <tr><td>Timeline</td><td>✅ 100%</td></tr>
+      <tr><td>PDFs</td><td>✅ 100%</td></tr>
+      <tr><td>Comentarios</td><td>✅ 100%</td></tr>
+      <tr><td>Emails</td><td>✅ 100%</td></tr>
+      <tr><td>Seguridad</td><td>✅ 100%</td></tr>
+      <tr><td>Admin Tools</td><td>✅ 100%</td></tr>
+      <tr><td>Multi-idioma</td><td>✅ 100%</td></tr>
+    </table>
+
+    <h2>🚀 Próximas Funcionalidades (Roadmap - Opcional)</h2>
+    <ul>
+      <li>📱 App móvil para técnicos</li>
+      <li>📷 Escaneo de códigos QR</li>
+      <li>📍 Geolocalización de visitas</li>
+      <li>🔗 Integración con Jira/ERP</li>
+      <li>📊 Webhooks personalizados</li>
+      <li>📈 Analytics avanzados</li>
+      <li>🤖 Chatbot de soporte</li>
+    </ul>
+
+    <div class="success" style="margin-top:40px;">
+      <h3 style="margin-bottom:10px;">🎉 ¡Ecosistema SAT Completamente Operativo!</h3>
+      <p>Todas las funcionalidades están implementadas y desplegadas. El sistema está listo para gestionar tickets de manera profesional y eficiente.</p>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <p><strong>Desarrollado con ❤️ por el equipo SWARCO Traffic Spain</strong></p>
+    <p><em>"The better way, every day."</em></p>
+    <p style="margin-top:20px;font-size:0.9em;color:#999;">Documento generado: 2026 | Ecosistema SAT v1.0</p>
+  </div>
+
+</body>
+</html>
