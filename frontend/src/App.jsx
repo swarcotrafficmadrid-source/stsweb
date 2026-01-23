@@ -64,6 +64,16 @@ const LANGUAGES = [
   { code: "ko", name: "한국어" }
 ];
 
+// Función para decodificar JWT y obtener el payload
+function decodeJWT(token) {
+  try {
+    const payload = token.split('.')[1];
+    return JSON.parse(atob(payload));
+  } catch {
+    return null;
+  }
+}
+
 export default function App() {
   const gateFlag = import.meta.env.VITE_STAGING_GATE_ENABLED;
   const gateEnabled = gateFlag
@@ -77,7 +87,11 @@ export default function App() {
   const [lang, setLang] = useState(() => localStorage.getItem("lang") || getBrowserLang());
   const [langOpen, setLangOpen] = useState(false);
   const [langQuery, setLangQuery] = useState("");
-  const [page, setPage] = useState("dashboard");
+  const [page, setPage] = useState(() => {
+    if (typeof window === "undefined") return "dashboard";
+    const hash = window.location.hash.replace("#", "");
+    return hash === "sat" ? "sat" : "dashboard";
+  });
   const [dashboardTab, setDashboardTab] = useState(() => {
     if (typeof window === "undefined") return "home";
     const hash = window.location.hash.replace("#", "");
@@ -105,6 +119,15 @@ export default function App() {
   const [gateError, setGateError] = useState("");
   const isResetView = typeof window !== "undefined" && window.location.pathname.startsWith("/reset");
   const isActivateView = typeof window !== "undefined" && window.location.pathname.startsWith("/activate");
+
+  // Obtener el userRole del token JWT
+  const userRole = useMemo(() => {
+    if (!token) return null;
+    const decoded = decodeJWT(token);
+    return decoded?.userRole || null;
+  }, [token]);
+
+  const isSATUser = userRole === "sat_admin" || userRole === "sat_technician";
 
   const copy = useMemo(() => ({
     es: {
@@ -588,6 +611,21 @@ export default function App() {
                     <path d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-6H10v6H5a1 1 0 01-1-1v-9.5z" stroke="currentColor" strokeWidth="1.5" />
                   </svg>
                 </button>
+                {isSATUser && (
+                  <button
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:text-swarcoBlue"
+                    onClick={() => setPage("sat")}
+                    aria-label="Panel SAT"
+                    title="Panel SAT"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+                      <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+                      <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+                      <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+                    </svg>
+                  </button>
+                )}
                 <button
                   className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:text-swarcoBlue"
                   onClick={() => { setPage("dashboard"); setDashboardTab("account"); }}
