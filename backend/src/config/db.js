@@ -14,7 +14,7 @@ const sequelize = new Sequelize(
   {
     host,
     port,
-    dialect: "mariadb",
+    dialect: "mysql",
     logging: false,
     ...(socketPath ? { dialectOptions: { socketPath } } : {})
   }
