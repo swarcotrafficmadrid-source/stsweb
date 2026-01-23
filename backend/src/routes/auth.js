@@ -64,16 +64,70 @@ router.post("/register", async (req, res) => {
     const verifyUrl = `${verifyBase}/activate?token=${verificationToken}`;
     const mailResult = await sendMail({
       to: user.email,
-      subject: "Activa tu cuenta en SWARCO Traffic Spain",
-      text: `Hola ${user.nombre},\n\nGracias por registrarte en el Portal SWARCO Traffic Spain.\n\nRevisa y valida tus datos aquí:\n${verifyUrl}\n\nSi no solicitaste este registro, ignora este mensaje.\n`,
+      subject: "Confirma tu registro - Portal SWARCO Traffic Spain",
+      text: `Hola ${user.nombre},\n\nGracias por registrarte en el Portal SWARCO Traffic Spain.\n\nPara activar tu cuenta, haz clic en el siguiente enlace:\n${verifyUrl}\n\nEste enlace es válido por 24 horas.\n\nSi no solicitaste este registro, puedes ignorar este correo.\n\nSaludos,\nEquipo SWARCO Traffic Spain\nwww.swarco.com`,
       html: `
-        <div style="font-family: Arial, sans-serif; color: #485258;">
-          <h2 style="color: #006BAB; margin-bottom: 8px;">Portal SWARCO Traffic Spain</h2>
-          <p>Hola ${user.nombre},</p>
-          <p>Gracias por registrarte. Por favor revisa tus datos y valida tu cuenta:</p>
-          <p><a href="${verifyUrl}" style="background: #006BAB; color: white; padding: 10px 16px; text-decoration: none; border-radius: 999px; display: inline-block;">Revisar y activar cuenta</a></p>
-          <p style="font-size: 12px; color: #B5BEC2;">Si no solicitaste este registro, ignora este mensaje.</p>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px 0;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <!-- Header -->
+                  <tr>
+                    <td style="background-color: #006BAB; padding: 30px 40px; text-align: center;">
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">Portal SWARCO Traffic Spain</h1>
+                      <p style="margin: 8px 0 0 0; color: #ffffff; font-size: 14px; opacity: 0.9;">The better way, every day.</p>
+                    </td>
+                  </tr>
+                  <!-- Body -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      <p style="margin: 0 0 20px 0; color: #333333; font-size: 16px; line-height: 1.5;">Hola <strong>${user.nombre}</strong>,</p>
+                      <p style="margin: 0 0 20px 0; color: #555555; font-size: 15px; line-height: 1.6;">
+                        Gracias por registrarte en nuestro portal de soporte. Para completar tu registro y activar tu cuenta, por favor confirma tu correo electrónico.
+                      </p>
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td align="center" style="padding: 20px 0;">
+                            <a href="${verifyUrl}" style="background-color: #006BAB; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 50px; font-size: 16px; font-weight: 600; display: inline-block;">Confirmar mi cuenta</a>
+                          </td>
+                        </tr>
+                      </table>
+                      <p style="margin: 20px 0 0 0; color: #777777; font-size: 14px; line-height: 1.5;">
+                        Este enlace es válido por <strong>24 horas</strong>.
+                      </p>
+                      <p style="margin: 20px 0 0 0; color: #777777; font-size: 13px; line-height: 1.5;">
+                        Si no puedes hacer clic en el botón, copia y pega este enlace en tu navegador:<br>
+                        <a href="${verifyUrl}" style="color: #006BAB; word-break: break-all;">${verifyUrl}</a>
+                      </p>
+                    </td>
+                  </tr>
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background-color: #f8f9fa; padding: 30px 40px; text-align: center; border-top: 1px solid #e0e0e0;">
+                      <p style="margin: 0 0 8px 0; color: #999999; font-size: 12px;">
+                        Si no solicitaste este registro, puedes ignorar este correo de forma segura.
+                      </p>
+                      <p style="margin: 8px 0; color: #666666; font-size: 13px; font-weight: 600;">
+                        SWARCO Traffic Spain
+                      </p>
+                      <p style="margin: 0; color: #999999; font-size: 12px;">
+                        <a href="https://www.swarco.com" style="color: #006BAB; text-decoration: none;">www.swarco.com</a>
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `
     });
 
@@ -275,9 +329,71 @@ router.post("/forgot", async (req, res) => {
   const resetUrl = `${resetBase}?token=${resetToken}`;
   await sendMail({
     to: user.email,
-    subject: "Recupera tu contraseña - SWARCO Traffic Spain",
-    text: `Hola ${user.nombre},\n\nPara restablecer tu contraseña, entra aquí:\n${resetUrl}\n\nSi no solicitaste este cambio, ignora este mensaje.\n`,
-    html: `<p>Hola ${user.nombre},</p><p>Para restablecer tu contraseña, entra aquí:</p><p><a href="${resetUrl}">Restablecer contraseña</a></p><p>Si no solicitaste este cambio, ignora este mensaje.</p>`
+    subject: "Recuperación de contraseña - Portal SWARCO Traffic Spain",
+    text: `Hola ${user.nombre},\n\nHemos recibido una solicitud para restablecer la contraseña de tu cuenta.\n\nPara crear una nueva contraseña, haz clic en el siguiente enlace:\n${resetUrl}\n\nEste enlace es válido por 1 hora.\n\nSi no solicitaste este cambio, puedes ignorar este correo y tu contraseña permanecerá sin cambios.\n\nSaludos,\nEquipo SWARCO Traffic Spain\nwww.swarco.com`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px 0;">
+          <tr>
+            <td align="center">
+              <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <!-- Header -->
+                <tr>
+                  <td style="background-color: #006BAB; padding: 30px 40px; text-align: center;">
+                    <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">Portal SWARCO Traffic Spain</h1>
+                    <p style="margin: 8px 0 0 0; color: #ffffff; font-size: 14px; opacity: 0.9;">The better way, every day.</p>
+                  </td>
+                </tr>
+                <!-- Body -->
+                <tr>
+                  <td style="padding: 40px;">
+                    <p style="margin: 0 0 20px 0; color: #333333; font-size: 16px; line-height: 1.5;">Hola <strong>${user.nombre}</strong>,</p>
+                    <p style="margin: 0 0 20px 0; color: #555555; font-size: 15px; line-height: 1.6;">
+                      Hemos recibido una solicitud para restablecer la contraseña de tu cuenta.
+                    </p>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td align="center" style="padding: 20px 0;">
+                          <a href="${resetUrl}" style="background-color: #006BAB; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 50px; font-size: 16px; font-weight: 600; display: inline-block;">Restablecer contraseña</a>
+                        </td>
+                      </tr>
+                    </table>
+                    <p style="margin: 20px 0 0 0; color: #777777; font-size: 14px; line-height: 1.5;">
+                      Este enlace es válido por <strong>1 hora</strong>.
+                    </p>
+                    <p style="margin: 20px 0 0 0; color: #777777; font-size: 13px; line-height: 1.5;">
+                      Si no puedes hacer clic en el botón, copia y pega este enlace en tu navegador:<br>
+                      <a href="${resetUrl}" style="color: #006BAB; word-break: break-all;">${resetUrl}</a>
+                    </p>
+                  </td>
+                </tr>
+                <!-- Footer -->
+                <tr>
+                  <td style="background-color: #f8f9fa; padding: 30px 40px; text-align: center; border-top: 1px solid #e0e0e0;">
+                    <p style="margin: 0 0 8px 0; color: #999999; font-size: 12px;">
+                      Si no solicitaste este cambio, puedes ignorar este correo y tu contraseña permanecerá sin cambios.
+                    </p>
+                    <p style="margin: 8px 0; color: #666666; font-size: 13px; font-weight: 600;">
+                      SWARCO Traffic Spain
+                    </p>
+                    <p style="margin: 0; color: #999999; font-size: 12px;">
+                      <a href="https://www.swarco.com" style="color: #006BAB; text-decoration: none;">www.swarco.com</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `
   });
 
   return res.json({ ok: true });

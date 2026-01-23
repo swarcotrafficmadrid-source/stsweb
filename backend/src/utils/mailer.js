@@ -76,8 +76,9 @@ async function sendViaGmailApi({ to, subject, text, html }) {
   const isHtml = Boolean(html);
   const contentType = isHtml ? "text/html" : "text/plain";
 
+  const fromName = "SWARCO Traffic Spain";
   const rawMessage = [
-    `From: ${from}`,
+    `From: ${fromName} <${from}>`,
     `To: ${to}`,
     `Subject: ${subject}`,
     "MIME-Version: 1.0",
@@ -115,10 +116,12 @@ export async function sendMail({ to, subject, text, html }) {
     return { ok: false, reason: "conexion" };
   }
 
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
-  if (!from) {
+  const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER;
+  if (!fromEmail) {
     return { ok: false, reason: "conexion" };
   }
+
+  const from = `SWARCO Traffic Spain <${fromEmail}>`;
 
   const timeoutMs = 6000;
   const timeoutPromise = new Promise((resolve) => {
