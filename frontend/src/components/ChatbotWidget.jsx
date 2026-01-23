@@ -6,7 +6,10 @@ export default function ChatbotWidget({ token, lang = "es" }) {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lastMessageTime, setLastMessageTime] = useState(0);
   const messagesEndRef = useRef(null);
+  
+  const MESSAGE_COOLDOWN = 1000; // 1 segundo entre mensajes
 
   const copy = {
     es: {
@@ -56,6 +59,13 @@ export default function ChatbotWidget({ token, lang = "es" }) {
     e?.preventDefault();
     
     if (!inputMessage.trim() || loading) return;
+    
+    // Rate limiting del lado del cliente
+    const now = Date.now();
+    if (now - lastMessageTime < MESSAGE_COOLDOWN) {
+      return; // Ignorar mensaje muy rápido (spam)
+    }
+    setLastMessageTime(now);
 
     const userMessage = {
       id: Date.now(),

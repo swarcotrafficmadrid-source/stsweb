@@ -4,6 +4,9 @@ import axios from 'axios';
 
 const API_URL = 'https://stsweb-backend-964379250608.europe-west1.run.app';
 
+// Configurar timeout
+axios.defaults.timeout = 15000;
+
 export default function DashboardScreen({ route, navigation }) {
   const { token, user } = route.params;
   const [tickets, setTickets] = useState([]);

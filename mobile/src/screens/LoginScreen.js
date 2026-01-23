@@ -5,6 +5,10 @@ import axios from 'axios';
 
 const API_URL = 'https://stsweb-backend-964379250608.europe-west1.run.app';
 
+// Configurar axios con timeout global
+axios.defaults.timeout = 15000; // 15 segundos
+axios.defaults.timeoutErrorMessage = 'La solicitud tardó demasiado. Verifica tu conexión.';
+
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

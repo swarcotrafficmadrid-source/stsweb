@@ -83,7 +83,14 @@ export default function App() {
       !["localhost", "127.0.0.1"].includes(window.location.hostname);
   const gateUser = import.meta.env.VITE_STAGING_USER || "sat";
   const gatePass = import.meta.env.VITE_STAGING_PASS || "swarco2026";
-  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [token, setToken] = useState(() => {
+    try {
+      return localStorage.getItem("token");
+    } catch (e) {
+      console.warn("localStorage no disponible, usando sessionStorage");
+      return sessionStorage.getItem("token");
+    }
+  });
   const [authView, setAuthView] = useState("login");
   const [lang, setLang] = useState(() => localStorage.getItem("lang") || getBrowserLang());
   const [langOpen, setLangOpen] = useState(false);
@@ -497,7 +504,14 @@ export default function App() {
               ) : authView === "login" ? (
                 <>
                   <Login
-                    onSuccess={(tokenValue) => { setToken(tokenValue); localStorage.setItem("token", tokenValue); }}
+                    onSuccess={(tokenValue) => { 
+                      setToken(tokenValue); 
+                      try {
+                        localStorage.setItem("token", tokenValue);
+                      } catch (e) {
+                        sessionStorage.setItem("token", tokenValue);
+                      }
+                    }}
                     lang={lang}
                   />
                   <div className="mt-6">

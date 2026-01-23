@@ -1,0 +1,15 @@
+{
+  "name": "swarco-sat-portal",
+  "version": "3.0.0",
+  "private": true,
+  "scripts": {
+    "stress-test": "k6 run stress-test.js",
+    "stress-test:spike": "k6 run --stages '0:0s,200:10s,0:30s' stress-test.js",
+    "stress-test:soak": "k6 run --vus 50 --duration 1h stress-test.js",
+    "stress-test:break": "k6 run --vus 500 --duration 10m stress-test.js"
+  },
+  "description": "Portal SAT SWARCO Traffic Spain - Sistema completo de gestión de tickets",
+  "keywords": ["swarco", "sat", "tickets", "portal"],
+  "author": "SWARCO Traffic Spain",
+  "license": "PROPRIETARY"
+}

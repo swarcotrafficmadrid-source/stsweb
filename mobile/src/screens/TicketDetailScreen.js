@@ -4,6 +4,9 @@ import axios from 'axios';
 
 const API_URL = 'https://stsweb-backend-964379250608.europe-west1.run.app';
 
+// Configurar timeout
+axios.defaults.timeout = 15000;
+
 export default function TicketDetailScreen({ route, navigation }) {
   const { ticket, token } = route.params;
   const [comments, setComments] = useState([]);

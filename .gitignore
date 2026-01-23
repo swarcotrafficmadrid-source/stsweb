@@ -8,6 +8,8 @@ coverage
 # Secrets
 secrets/
 CREDENTIALS_SAFE.md
+frontend/.env
+backend/.env
 # Temp files
 tmp_i18n.json
 

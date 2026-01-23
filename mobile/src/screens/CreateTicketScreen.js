@@ -4,6 +4,9 @@ import axios from 'axios';
 
 const API_URL = 'https://stsweb-backend-964379250608.europe-west1.run.app';
 
+// Configurar timeout
+axios.defaults.timeout = 20000; // 20s para crear tickets
+
 export default function CreateTicketScreen({ route, navigation }) {
   const { token } = route.params;
   const [ticketType, setTicketType] = useState('failure'); // failure, spare, purchase, assistance

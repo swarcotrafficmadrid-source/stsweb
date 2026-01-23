@@ -63,7 +63,7 @@ export default function TicketsMap({ tickets = [], onTicketClick, lang = "es" })
             width="100%"
             height="100%"
             frameBorder="0"
-            src={`https://www.google.com/maps/embed/v1/view?key=AIzaSyBFw0Qyda5XUrriSA1CqC7cWdDacm0E1TE&center=${centerLat},${centerLng}&zoom=10`}
+            src={`https://www.google.com/maps/embed/v1/view?key=${import.meta.env.VITE_GOOGLE_MAPS_KEY || 'AIzaSyBFw0Qyda5XUrriSA1CqC7cWdDacm0E1TE'}&center=${centerLat},${centerLng}&zoom=10`}
             allowFullScreen
           />
         )}
