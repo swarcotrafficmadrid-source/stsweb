@@ -1,0 +1,36 @@
+steps:
+  # Build the frontend Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'europe-west1-docker.pkg.dev/ticketswarcotrafficspain/cloud-run-source-deploy/stsweb:latest'
+      - '-f'
+      - 'frontend/Dockerfile'
+      - './frontend'
+
+  # Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'europe-west1-docker.pkg.dev/ticketswarcotrafficspain/cloud-run-source-deploy/stsweb:latest'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'stsweb'
+      - '--image'
+      - 'europe-west1-docker.pkg.dev/ticketswarcotrafficspain/cloud-run-source-deploy/stsweb:latest'
+      - '--region'
+      - 'europe-west1'
+      - '--platform'
+      - 'managed'
+
+images:
+  - 'europe-west1-docker.pkg.dev/ticketswarcotrafficspain/cloud-run-source-deploy/stsweb:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
