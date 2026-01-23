@@ -21,7 +21,7 @@ const User = sequelize.define(
     resetPasswordToken: { type: DataTypes.STRING(128), allowNull: true },
     resetPasswordExpiresAt: { type: DataTypes.DATE, allowNull: true },
     rol: { type: DataTypes.STRING(32), allowNull: false, defaultValue: "Técnico" },
-    userRole: { type: DataTypes.ENUM("client", "sat_admin", "sat_technician"), allowNull: false, defaultValue: "client", comment: "Role del sistema: client, sat_admin, sat_technician" },
+    userRole: { type: DataTypes.ENUM("client", "sat_admin", "sat_technician"), allowNull: false, defaultValue: "client", field: "user_role", comment: "Role del sistema: client, sat_admin, sat_technician" },
     activo: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true }
   },
   {
