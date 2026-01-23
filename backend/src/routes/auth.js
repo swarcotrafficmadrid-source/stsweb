@@ -164,14 +164,14 @@ router.post("/login", async (req, res) => {
   }
 
   const token = jwt.sign(
-    { id: user.id, email: user.email, rol: user.rol, userRole: user.userRole },
+    { id: user.id, email: user.email, nombre: user.nombre, apellidos: user.apellidos, rol: user.rol, userRole: user.userRole },
     process.env.JWT_SECRET,
     { expiresIn: "8h" }
   );
 
   return res.json({
     token,
-    user: { id: user.id, email: user.email, usuario: user.usuario, rol: user.rol, userRole: user.userRole }
+    user: { id: user.id, email: user.email, usuario: user.usuario, nombre: user.nombre, apellidos: user.apellidos, rol: user.rol, userRole: user.userRole }
   });
 });
 

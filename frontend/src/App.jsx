@@ -120,13 +120,21 @@ export default function App() {
   const isResetView = typeof window !== "undefined" && window.location.pathname.startsWith("/reset");
   const isActivateView = typeof window !== "undefined" && window.location.pathname.startsWith("/activate");
 
-  // Obtener el userRole del token JWT
-  const userRole = useMemo(() => {
+  // Obtener el userRole y user data del token JWT
+  const userData = useMemo(() => {
     if (!token) return null;
     const decoded = decodeJWT(token);
-    return decoded?.userRole || null;
+    return decoded ? {
+      id: decoded.id,
+      email: decoded.email,
+      nombre: decoded.nombre,
+      apellidos: decoded.apellidos,
+      userRole: decoded.userRole,
+      rol: decoded.rol
+    } : null;
   }, [token]);
 
+  const userRole = userData?.userRole || null;
   const isSATUser = userRole === "sat_admin" || userRole === "sat_technician";
 
   const copy = useMemo(() => ({
@@ -645,6 +653,7 @@ export default function App() {
       <main className="max-w-6xl mx-auto px-6 pb-10">
         <PageComponent
           token={token}
+          user={userData}
           lang={lang}
           activeTab={dashboardTab}
           onTabChange={setDashboardTab}
