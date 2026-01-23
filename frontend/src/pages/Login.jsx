@@ -147,6 +147,7 @@ export default function Login({ onSuccess, lang = "es" }) {
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button
+            type="submit"
             className="w-full bg-swarcoBlue text-white py-2.5 rounded-full font-semibold hover:bg-swarcoBlue/90 transition disabled:opacity-70"
             disabled={isSubmitting}
           >
