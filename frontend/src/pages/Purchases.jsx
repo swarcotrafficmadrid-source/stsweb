@@ -3,61 +3,367 @@ import { apiRequest } from "../lib/api.js";
 import { useTranslatedMap } from "../lib/i18n.js";
 
 export default function Purchases({ token, lang = "es" }) {
-  const [equipo, setEquipo] = useState("");
-  const [cantidad, setCantidad] = useState(1);
-  const [descripcion, setDescripcion] = useState("");
+  const [requestTitle, setRequestTitle] = useState("");
+  const [proyecto, setProyecto] = useState("");
+  const [pais, setPais] = useState("");
+  const [equipments, setEquipments] = useState([{ nombre: "", cantidad: 1, descripcion: "" }]);
+  const [createdRequest, setCreatedRequest] = useState(null);
+  const [reviewing, setReviewing] = useState(false);
+  const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
+
   const copy = {
     es: {
-      title: "Solicitud de Compras",
-      building: "Página en creación.",
-      placeholderEquipment: "Equipo",
-      placeholderDetails: "Detalles",
+      title: "Solicitud de Compra",
+      subtitle: "Completa los datos de los equipos que deseas comprar.",
+      equipmentTitle: "Equipo",
+      addEquipment: "Agregar otro equipo",
+      removeEquipment: "Quitar equipo",
+      nombreLabel: "Nombre del equipo",
+      cantidadLabel: "Cantidad",
+      descripcionLabel: "Descripción",
+      proyectoLabel: "Proyecto",
+      paisLabel: "País",
+      labelTitle: "Pequeña descripción de la solicitud",
+      labelTitleHelp: "Encabezado del correo",
+      placeholderTitle: "Título",
+      placeholderDesc: "Descripción",
       send: "Enviar",
-      ok: "Solicitud enviada."
+      ok: "Solicitud enviada.",
+      requestCreatedTitle: "Solicitud creada",
+      requestNumberLabel: "Número de solicitud",
+      summaryTitle: "Resumen",
+      backHome: "Volver al inicio",
+      createAnother: "Crear otra solicitud",
+      newButton: "Nueva solicitud",
+      reviewTitle: "Revisión de la solicitud",
+      reviewDesc: "Verifica los datos antes de enviar.",
+      reviewButton: "Aceptar",
+      sendRequest: "Enviar solicitud",
+      editRequest: "Editar",
+      required: "Campo obligatorio",
+      validationError: "Revisa los campos marcados."
     },
     en: {
       title: "Purchase Request",
-      building: "Page under construction.",
-      placeholderEquipment: "Equipment",
-      placeholderDetails: "Details",
+      subtitle: "Complete the details of the equipment you want to purchase.",
+      equipmentTitle: "Equipment",
+      addEquipment: "Add another equipment",
+      removeEquipment: "Remove equipment",
+      nombreLabel: "Equipment name",
+      cantidadLabel: "Quantity",
+      descripcionLabel: "Description",
+      proyectoLabel: "Project",
+      paisLabel: "Country",
+      labelTitle: "Short request description",
+      labelTitleHelp: "Email subject",
+      placeholderTitle: "Title",
+      placeholderDesc: "Description",
       send: "Send",
-      ok: "Request sent."
-    },
-    it: {
-      title: "Richiesta Acquisto",
-      building: "Pagina in creazione.",
-      placeholderEquipment: "Attrezzatura",
-      placeholderDetails: "Dettagli",
-      send: "Invia",
-      ok: "Richiesta inviata."
+      ok: "Request sent.",
+      requestCreatedTitle: "Request created",
+      requestNumberLabel: "Request number",
+      summaryTitle: "Summary",
+      backHome: "Back to home",
+      createAnother: "Create another request",
+      newButton: "New request",
+      reviewTitle: "Request review",
+      reviewDesc: "Check the details before sending.",
+      reviewButton: "Accept",
+      sendRequest: "Send request",
+      editRequest: "Edit",
+      required: "Required field",
+      validationError: "Check the highlighted fields."
     }
   };
   const t = useTranslatedMap({ base: copy, lang, cacheKey: "purchases" });
 
+  function validateForm() {
+    const nextErrors = {};
+    equipments.forEach((eq, index) => {
+      if (!eq.nombre?.trim()) nextErrors[`equipment-${index}-nombre`] = t.required;
+      if (!eq.cantidad || eq.cantidad < 1) nextErrors[`equipment-${index}-cantidad`] = t.required;
+    });
+    if (!requestTitle.trim()) nextErrors.requestTitle = t.required;
+    if (!proyecto.trim()) nextErrors.proyecto = t.required;
+    if (!pais.trim()) nextErrors.pais = t.required;
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setMessage("");
+    if (!validateForm()) {
+      setMessage(t.validationError);
+      return;
+    }
     try {
-      await apiRequest("/api/purchases", "POST", { equipo, cantidad, descripcion }, token);
+      const data = await apiRequest(
+        "/api/purchases",
+        "POST",
+        {
+          titulo: requestTitle.trim(),
+          proyecto: proyecto.trim(),
+          pais: pais.trim(),
+          equipments: equipments.map(eq => ({
+            nombre: eq.nombre.trim(),
+            cantidad: eq.cantidad || 1,
+            descripcion: eq.descripcion?.trim() || ""
+          }))
+        },
+        token
+      );
       setMessage(t.ok);
-      setEquipo("");
-      setCantidad(1);
-      setDescripcion("");
+      setCreatedRequest({
+        number: data.requestNumber || `COM-${String(data.id || "").padStart(6, "0")}`,
+        titulo: requestTitle.trim(),
+        proyecto: proyecto.trim(),
+        pais: pais.trim(),
+        equipmentCount: equipments.length
+      });
+      setRequestTitle("");
+      setProyecto("");
+      setPais("");
+      setEquipments([{ nombre: "", cantidad: 1, descripcion: "" }]);
+      setErrors({});
+      setReviewing(false);
     } catch (err) {
       setMessage(err.message);
     }
   }
 
+  function resetForm() {
+    setMessage("");
+    setCreatedRequest(null);
+    setRequestTitle("");
+    setProyecto("");
+    setPais("");
+    setEquipments([{ nombre: "", cantidad: 1, descripcion: "" }]);
+    setErrors({});
+    setReviewing(false);
+  }
+
+  if (createdRequest) {
+    return (
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <h2 className="text-lg font-semibold text-swarcoBlue">{t.requestCreatedTitle}</h2>
+        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm text-slate-500">{t.requestNumberLabel}</p>
+          <p className="text-2xl font-semibold text-swarcoBlue">{createdRequest.number}</p>
+        </div>
+        <div className="mt-4">
+          <h3 className="text-sm font-semibold text-slate-600">{t.summaryTitle}</h3>
+          <div className="mt-2 space-y-1 text-sm text-slate-600">
+            <div><strong>{t.labelTitle}:</strong> {createdRequest.titulo}</div>
+            <div><strong>{t.proyectoLabel}:</strong> {createdRequest.proyecto}</div>
+            <div><strong>{t.paisLabel}:</strong> {createdRequest.pais}</div>
+            <div><strong>{t.equipmentTitle}:</strong> {createdRequest.equipmentCount}</div>
+          </div>
+        </div>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            type="button"
+            className="bg-swarcoBlue text-white px-5 py-2.5 rounded-full"
+            onClick={resetForm}
+          >
+            {t.createAnother}
+          </button>
+          <button
+            type="button"
+            className="border border-slate-300 text-slate-700 px-5 py-2.5 rounded-full hover:border-swarcoOrange/60"
+            onClick={() => { window.location.href = "/"; }}
+          >
+            {t.backHome}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-      <h2 className="text-lg font-semibold text-swarcoBlue">{t.title}</h2>
-      <p className="text-sm text-slate-500 mt-1 mb-4">{t.building}</p>
-      <form onSubmit={handleSubmit} className="space-y-4 opacity-60 pointer-events-none">
-        <input className="w-full border rounded px-3 py-2" placeholder={t.placeholderEquipment} value={equipo} onChange={(e) => setEquipo(e.target.value)} />
-        <input type="number" className="w-full border rounded px-3 py-2" min="1" value={cantidad} onChange={(e) => setCantidad(Number(e.target.value))} />
-        <textarea className="w-full border rounded px-3 py-2" rows="3" placeholder={t.placeholderDetails} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
-        <button className="bg-swarcoBlue text-white px-4 py-2 rounded">{t.send}</button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-swarcoBlue">{t.title}</h2>
+          <div className="mt-2 h-1 w-10 rounded-full bg-swarcoOrange" />
+        </div>
+        <button
+          type="button"
+          className="border border-slate-300 text-slate-700 px-4 py-2 rounded-full hover:border-swarcoOrange/60"
+          onClick={resetForm}
+        >
+          {t.newButton}
+        </button>
+      </div>
+      <p className="text-sm text-slate-500 mt-3 mb-4">{t.subtitle}</p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm text-slate-600">{t.labelTitle}</label>
+          <input
+            className={`w-full border rounded-lg px-3 py-2.5 ${errors.requestTitle ? "border-swarcoOrange" : "border-slate-300"}`}
+            placeholder={t.placeholderTitle}
+            value={requestTitle}
+            onChange={(e) => setRequestTitle(e.target.value)}
+          />
+          <p className={`text-xs ${errors.requestTitle ? "text-swarcoOrange" : "text-slate-400"}`}>
+            {errors.requestTitle || t.labelTitleHelp}
+          </p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-sm text-slate-600">{t.proyectoLabel}</label>
+            <input
+              className={`w-full border rounded-lg px-3 py-2.5 ${errors.proyecto ? "border-swarcoOrange" : "border-slate-300"}`}
+              placeholder={t.proyectoLabel}
+              value={proyecto}
+              onChange={(e) => setProyecto(e.target.value)}
+            />
+            <p className={`text-xs ${errors.proyecto ? "text-swarcoOrange" : "text-slate-400"}`}>
+              {errors.proyecto || t.required}
+            </p>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm text-slate-600">{t.paisLabel}</label>
+            <input
+              className={`w-full border rounded-lg px-3 py-2.5 ${errors.pais ? "border-swarcoOrange" : "border-slate-300"}`}
+              placeholder={t.paisLabel}
+              value={pais}
+              onChange={(e) => setPais(e.target.value)}
+            />
+            <p className={`text-xs ${errors.pais ? "text-swarcoOrange" : "text-slate-400"}`}>
+              {errors.pais || t.required}
+            </p>
+          </div>
+        </div>
+        {equipments.map((eq, index) => (
+          <div key={`equipment-${index}`} className="rounded-xl border border-slate-200 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <h3 className="text-sm font-semibold text-slate-700">
+                {t.equipmentTitle} {index + 1}
+              </h3>
+              {equipments.length > 1 && (
+                <button
+                  type="button"
+                  className="text-sm text-slate-500 hover:text-swarcoOrange"
+                  onClick={() => {
+                    setEquipments((prev) => prev.filter((_, idx) => idx !== index));
+                  }}
+                >
+                  {t.removeEquipment}
+                </button>
+              )}
+            </div>
+            <div className="space-y-3">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm text-slate-600">{t.nombreLabel}</label>
+                  <input
+                    className={`w-full border rounded-lg px-3 py-2.5 ${
+                      errors[`equipment-${index}-nombre`] ? "border-swarcoOrange" : "border-slate-300"
+                    }`}
+                    placeholder={t.nombreLabel}
+                    value={eq.nombre}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setEquipments((prev) => prev.map((item, idx) => (idx === index ? { ...item, nombre: value } : item)));
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-slate-600">{t.cantidadLabel}</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className={`w-full border rounded-lg px-3 py-2.5 ${
+                      errors[`equipment-${index}-cantidad`] ? "border-swarcoOrange" : "border-slate-300"
+                    }`}
+                    value={eq.cantidad}
+                    onChange={(e) => {
+                      const value = Number(e.target.value) || 1;
+                      setEquipments((prev) => prev.map((item, idx) => (idx === index ? { ...item, cantidad: value } : item)));
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-slate-600">{t.descripcionLabel}</label>
+                <textarea
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2.5"
+                  rows="2"
+                  placeholder={t.placeholderDesc}
+                  value={eq.descripcion || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setEquipments((prev) => prev.map((item, idx) => (idx === index ? { ...item, descripcion: value } : item)));
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+        {reviewing && (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <h3 className="text-sm font-semibold text-slate-700">{t.reviewTitle}</h3>
+            <p className="text-xs text-slate-500 mt-1">{t.reviewDesc}</p>
+            <div className="mt-3 space-y-2 text-sm text-slate-600">
+              <div><strong>{t.labelTitle}:</strong> {requestTitle || "-"}</div>
+              <div><strong>{t.proyectoLabel}:</strong> {proyecto || "-"}</div>
+              <div><strong>{t.paisLabel}:</strong> {pais || "-"}</div>
+              {equipments.map((eq, index) => (
+                <div key={`review-${index}`} className="rounded-lg border border-slate-200 bg-white p-3">
+                  <div className="text-xs text-slate-500 mb-1">{t.equipmentTitle} {index + 1}</div>
+                  <div><strong>{t.nombreLabel}:</strong> {eq.nombre || "-"}</div>
+                  <div><strong>{t.cantidadLabel}:</strong> {eq.cantidad || 1}</div>
+                  {eq.descripcion && <div><strong>{t.descripcionLabel}:</strong> {eq.descripcion}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-3">
+          {!reviewing ? (
+            <>
+              <button
+                type="button"
+                className="border border-slate-300 text-slate-700 px-4 py-2 rounded-full hover:border-swarcoOrange/60"
+                onClick={() => {
+                  setEquipments((prev) => ([...prev, { nombre: "", cantidad: 1, descripcion: "" }]));
+                }}
+              >
+                {t.addEquipment}
+              </button>
+              <button
+                type="button"
+                className="bg-swarcoOrange text-white px-4 py-2 rounded-full hover:bg-swarcoOrange/90"
+                onClick={() => {
+                  setMessage("");
+                  if (validateForm()) {
+                    setReviewing(true);
+                  } else {
+                    setMessage(t.validationError);
+                  }
+                }}
+              >
+                {t.reviewButton}
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="bg-swarcoBlue text-white px-4 py-2 rounded-full" type="submit">
+                {t.sendRequest}
+              </button>
+              <button
+                type="button"
+                className="border border-slate-300 text-slate-700 px-4 py-2 rounded-full hover:border-swarcoOrange/60"
+                onClick={() => setReviewing(false)}
+              >
+                {t.editRequest}
+              </button>
+            </>
+          )}
+        </div>
         {message && <p className="text-sm text-gray-700">{message}</p>}
       </form>
     </div>
