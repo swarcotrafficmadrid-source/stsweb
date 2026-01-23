@@ -13,6 +13,7 @@ import {
 import { requireAuth } from "../middleware/auth.js";
 import { requireSAT, requireSATAdmin } from "../middleware/requireSAT.js";
 import { sendMail } from "../utils/mailer.js";
+import { generateTicketPDF } from "../utils/pdfGenerator.js";
 
 const router = Router();
 
@@ -373,6 +374,90 @@ router.get("/technicians", requireAuth, requireSATAdmin, async (req, res) => {
   } catch (err) {
     console.error("Error fetching technicians:", err);
     res.status(500).json({ error: "Error al obtener técnicos" });
+  }
+});
+
+// Generar PDF de un ticket
+router.get("/ticket/:type/:id/pdf", requireAuth, requireSAT, async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    let ticket;
+
+    switch (type) {
+      case "failure":
+        ticket = await FailureReport.findByPk(id, {
+          include: [
+            { model: User, attributes: ["id", "nombre", "apellidos", "email", "empresa", "telefono"] },
+            { model: FailureEquipment }
+          ]
+        });
+        break;
+      case "spare":
+        ticket = await SpareRequest.findByPk(id, {
+          include: [
+            { model: User, attributes: ["id", "nombre", "apellidos", "email", "empresa", "telefono"] },
+            { model: SpareItem }
+          ]
+        });
+        break;
+      case "purchase":
+        ticket = await PurchaseRequest.findByPk(id, {
+          include: [
+            { model: User, attributes: ["id", "nombre", "apellidos", "email", "empresa", "telefono"] }
+          ]
+        });
+        break;
+      case "assistance":
+        ticket = await AssistanceRequest.findByPk(id, {
+          include: [
+            { model: User, attributes: ["id", "nombre", "apellidos", "email", "empresa", "telefono"] }
+          ]
+        });
+        break;
+      default:
+        return res.status(400).json({ error: "Tipo de ticket inválido" });
+    }
+
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket no encontrado" });
+    }
+
+    // Obtener historial de estados
+    const statusHistory = await TicketStatus.findAll({
+      where: { ticketId: id, ticketType: type },
+      order: [["createdAt", "ASC"]],
+      include: [
+        { model: User, as: "ChangedByUser", attributes: ["nombre", "apellidos"] }
+      ]
+    });
+
+    // Obtener comentarios (solo los no internos para el PDF)
+    const comments = await TicketComment.findAll({
+      where: { ticketId: id, ticketType: type, isInternal: false },
+      order: [["createdAt", "ASC"]],
+      include: [
+        { model: User, attributes: ["nombre", "apellidos"] }
+      ]
+    });
+
+    // Generar PDF
+    const pdfBuffer = await generateTicketPDF(
+      { ...ticket.toJSON(), type },
+      statusHistory.map(s => s.toJSON()),
+      comments.map(c => c.toJSON()),
+      type
+    );
+
+    // Enviar PDF
+    const prefixes = { failure: "INC", spare: "REP", purchase: "COM", assistance: "ASI" };
+    const ticketNumber = `${prefixes[type]}-${String(id).padStart(6, "0")}`;
+    
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="Informe_${ticketNumber}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error("Error generating PDF:", err);
+    res.status(500).json({ error: "Error al generar PDF" });
   }
 });
 

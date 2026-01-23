@@ -11,6 +11,7 @@ import assistanceRoutes from "./routes/assistance.js";
 import i18nRoutes from "./routes/i18n.js";
 import errorReportRoutes from "./routes/errorReport.js";
 import satRoutes from "./routes/sat.js";
+import adminRoutes from "./routes/admin.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { authLimiter, apiLimiter } from "./middleware/rateLimiter.js";
 import { sanitizeBody } from "./middleware/validator.js";
@@ -41,6 +42,7 @@ app.use("/api/assistance", apiLimiter, assistanceRoutes);
 app.use("/api/i18n", apiLimiter, i18nRoutes);
 app.use("/api/error-report", errorReportRoutes);
 app.use("/api/sat", apiLimiter, satRoutes);
+app.use("/api/admin", adminRoutes); // Sin rate limiting para admin ops
 
 // Error handler global (debe ir al final)
 app.use(errorHandler);
