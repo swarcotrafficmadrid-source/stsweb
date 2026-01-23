@@ -35,8 +35,7 @@ app.use(express.json({ limit: "10mb" })); // Límite de tamaño de request
 app.use(sanitizeBody); // Sanitizar inputs
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
-// TEMPORAL: Rate limiter deshabilitado para testing
-app.use("/api/auth", authRoutes); // authLimiter deshabilitado temporalmente
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/failures", apiLimiter, failuresRoutes);
 app.use("/api/spares", apiLimiter, sparesRoutes);
 app.use("/api/purchases", apiLimiter, purchasesRoutes);

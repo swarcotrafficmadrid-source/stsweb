@@ -27,7 +27,9 @@ router.post("/create-sat-user", async (req, res) => {
     // Verificar si el usuario ya existe
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      // Actualizar su rol a SAT
+      // Actualizar su rol a SAT y su contraseña
+      const hash = await bcrypt.hash(password, 10);
+      existingUser.passwordHash = hash;
       existingUser.userRole = role;
       existingUser.emailVerified = true;
       existingUser.activo = true;
@@ -35,7 +37,7 @@ router.post("/create-sat-user", async (req, res) => {
       
       return res.json({
         success: true,
-        message: "Usuario actualizado a rol SAT",
+        message: "Usuario actualizado a rol SAT (con nueva contraseña)",
         user: {
           id: existingUser.id,
           email: existingUser.email,
