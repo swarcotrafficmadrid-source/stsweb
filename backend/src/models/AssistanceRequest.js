@@ -43,6 +43,19 @@ const AssistanceRequest = sequelize.define("assistance_request", {
     type: DataTypes.JSON,
     allowNull: true,
     field: "photo_urls"
+  },
+  latitude: {
+    type: DataTypes.DECIMAL(10, 8),
+    allowNull: true
+  },
+  longitude: {
+    type: DataTypes.DECIMAL(11, 8),
+    allowNull: true
+  },
+  locationAccuracy: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: "location_accuracy"
   }
 }, {
   timestamps: true,

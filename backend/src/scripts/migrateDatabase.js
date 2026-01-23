@@ -275,6 +275,50 @@ async function migrate() {
       }
     }
 
+    // V3.0 - Geolocalización: Agregar campos GPS a assistance_requests
+    console.log("7️⃣  Agregando campos GPS a 'assistance_requests'...");
+    try {
+      await queryInterface.addColumn("assistance_requests", "latitude", {
+        type: sequelize.Sequelize.DECIMAL(10, 8),
+        allowNull: true
+      });
+      console.log("   ✅ Campo 'latitude' agregado");
+    } catch (err) {
+      if (err.message.includes("Duplicate column")) {
+        console.log("   ⚠️  Campo 'latitude' ya existe");
+      } else {
+        throw err;
+      }
+    }
+
+    try {
+      await queryInterface.addColumn("assistance_requests", "longitude", {
+        type: sequelize.Sequelize.DECIMAL(11, 8),
+        allowNull: true
+      });
+      console.log("   ✅ Campo 'longitude' agregado");
+    } catch (err) {
+      if (err.message.includes("Duplicate column")) {
+        console.log("   ⚠️  Campo 'longitude' ya existe");
+      } else {
+        throw err;
+      }
+    }
+
+    try {
+      await queryInterface.addColumn("assistance_requests", "location_accuracy", {
+        type: sequelize.Sequelize.INTEGER,
+        allowNull: true
+      });
+      console.log("   ✅ Campo 'location_accuracy' agregado\n");
+    } catch (err) {
+      if (err.message.includes("Duplicate column")) {
+        console.log("   ⚠️  Campo 'location_accuracy' ya existe\n");
+      } else {
+        throw err;
+      }
+    }
+
     console.log("🎉 ¡Migración completada con éxito!\n");
     console.log("📊 Resumen:");
     console.log("   V2.0 - Sistema de Archivos:");
@@ -285,7 +329,9 @@ async function migrate() {
     console.log("\n   V2.1 - Integración Empresarial:");
     console.log("   - webhooks: +tabla nueva");
     console.log("   - api_keys: +tabla nueva");
-    console.log("\n✅ Base de datos lista para producción v2.1");
+    console.log("\n   V3.0 - Geolocalización + QR + Chatbot:");
+    console.log("   - assistance_requests: +3 campos GPS (latitude, longitude, location_accuracy)");
+    console.log("\n✅ Base de datos lista para producción v3.0");
 
   } catch (error) {
     console.error("\n❌ Error durante la migración:", error.message);
