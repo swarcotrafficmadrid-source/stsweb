@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api.js";
 import { useTranslatedMap } from "../lib/i18n.js";
 import FileUploader from "../components/FileUploader.jsx";
+import LocationCapture from "../components/LocationCapture.jsx";
 
 export default function Assistance({ token, lang = "es" }) {
   const [assistanceType, setAssistanceType] = useState("remota");
@@ -10,6 +11,7 @@ export default function Assistance({ token, lang = "es" }) {
   const [lugar, setLugar] = useState("");
   const [descripcionFalla, setDescripcionFalla] = useState("");
   const [uploadedPhotos, setUploadedPhotos] = useState([]);
+  const [location, setLocation] = useState(null); // GPS data: { latitude, longitude, accuracy }
   const [createdRequest, setCreatedRequest] = useState(null);
   const [reviewing, setReviewing] = useState(false);
   const [errors, setErrors] = useState({});
@@ -176,7 +178,11 @@ export default function Assistance({ token, lang = "es" }) {
           lugar: lugar.trim() || null,
           descripcionFalla: descripcionFalla.trim(),
           photosCount: photoUrls.length,
-          photoUrls: photoUrls.length > 0 ? photoUrls : null
+          photoUrls: photoUrls.length > 0 ? photoUrls : null,
+          // GPS data (si está disponible)
+          latitude: location?.latitude || null,
+          longitude: location?.longitude || null,
+          locationAccuracy: location?.accuracy || null
         },
         token
       );
@@ -211,6 +217,7 @@ export default function Assistance({ token, lang = "es" }) {
     setLugar("");
     setDescripcionFalla("");
     setUploadedPhotos([]);
+    setLocation(null);
     setErrors({});
     setReviewing(false);
   }
@@ -358,6 +365,15 @@ export default function Assistance({ token, lang = "es" }) {
                 {errors.lugar || t.required}
               </p>
             </div>
+            
+            {/* GPS Location Capture */}
+            <div className="space-y-2">
+              <LocationCapture 
+                onLocationCaptured={setLocation} 
+                lang={lang} 
+              />
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm text-slate-600">{t.fechaLabel}</label>
               <input

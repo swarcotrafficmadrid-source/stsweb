@@ -6,11 +6,14 @@ import SATTicketDetail from "../components/SATTicketDetail.jsx";
 import SATDashboard from "../components/SATDashboard.jsx";
 import AnalyticsDashboard from "../components/AnalyticsDashboard.jsx";
 import WebhooksPanel from "../components/WebhooksPanel.jsx";
+import QRGenerator from "../components/QRGenerator.jsx";
+import TicketsMap from "../components/TicketsMap.jsx";
 
 export default function SATPanel({ token, user, lang = "es" }) {
-  const [view, setView] = useState("dashboard"); // dashboard, tickets, ticket-detail, analytics, webhooks
+  const [view, setView] = useState("dashboard"); // dashboard, tickets, ticket-detail, analytics, webhooks, qr, map
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [filter, setFilter] = useState({ type: "", status: "" });
+  const [tickets, setTickets] = useState([]);
 
   const copy = {
     es: {
@@ -19,6 +22,8 @@ export default function SATPanel({ token, user, lang = "es" }) {
       allTickets: "Todos los Tickets",
       analytics: "Analytics",
       webhooks: "Webhooks",
+      qrGenerator: "Códigos QR",
+      ticketsMap: "Mapa",
       apiDocs: "API REST",
       failures: "Incidencias",
       spares: "Repuestos",
@@ -32,6 +37,8 @@ export default function SATPanel({ token, user, lang = "es" }) {
       allTickets: "All Tickets",
       analytics: "Analytics",
       webhooks: "Webhooks",
+      qrGenerator: "QR Codes",
+      ticketsMap: "Map",
       apiDocs: "REST API",
       failures: "Failures",
       spares: "Spares",
@@ -120,6 +127,26 @@ export default function SATPanel({ token, user, lang = "es" }) {
               >
                 {t.webhooks}
               </button>
+              <button
+                onClick={() => setView("qr")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  view === "qr"
+                    ? "bg-swarcoBlue text-white"
+                    : "text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                {t.qrGenerator}
+              </button>
+              <button
+                onClick={() => setView("map")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  view === "map"
+                    ? "bg-swarcoBlue text-white"
+                    : "text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                {t.ticketsMap}
+              </button>
             </nav>
           </div>
         </div>
@@ -163,6 +190,18 @@ export default function SATPanel({ token, user, lang = "es" }) {
 
         {view === "webhooks" && (
           <WebhooksPanel token={token} lang={lang} />
+        )}
+
+        {view === "qr" && (
+          <QRGenerator token={token} lang={lang} />
+        )}
+
+        {view === "map" && (
+          <TicketsMap 
+            tickets={tickets} 
+            onTicketClick={viewTicketDetail}
+            lang={lang} 
+          />
         )}
       </main>
     </div>

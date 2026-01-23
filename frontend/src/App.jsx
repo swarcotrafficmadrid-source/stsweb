@@ -9,6 +9,7 @@ import Spares from "./pages/Spares.jsx";
 import Purchases from "./pages/Purchases.jsx";
 import Assistance from "./pages/Assistance.jsx";
 import SATPanel from "./pages/SATPanel.jsx";
+import ChatbotWidget from "./components/ChatbotWidget.jsx";
 import { useTranslatedMap } from "./lib/i18n.js";
 
 const pages = {
@@ -661,6 +662,9 @@ export default function App() {
           onAuthError={handleAuthError}
         />
       </main>
+
+      {/* Chatbot Widget - Aparece en todas las páginas */}
+      <ChatbotWidget token={token} lang={lang} />
     </div>
   );
 }
