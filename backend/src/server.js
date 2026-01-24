@@ -21,7 +21,8 @@ import publicApiRoutes from "./routes/publicApi.js";
 import qrRoutes from "./routes/qr.js";
 import chatbotRoutes from "./routes/chatbot.js";
 import { errorHandler } from "./middleware/errorHandler.js";
-import { authLimiter, apiLimiter, adminLimiter } from "./middleware/rateLimiterRedis.js";
+// TEMPORAL: Usar rate limiter in-memory hasta configurar Redis
+import { authLimiter, apiLimiter, adminLimiter } from "./middleware/rateLimiter.js";
 import { sanitizeBody } from "./middleware/validator.js";
 
 dotenv.config();
