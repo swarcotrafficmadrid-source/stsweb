@@ -77,14 +77,14 @@ async function sendWebhook(webhook, eventType, payload) {
         lastTriggeredAt: new Date(),
         failureCount: 0
       });
-      console.log(`✅ Webhook disparado: ${webhook.name} → ${eventType}`);
+      console.log(`[OK] Webhook disparado: ${webhook.name} - ${eventType}`);
     } else {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
   } catch (error) {
     // Error al enviar webhook
-    console.error(`❌ Error webhook ${webhook.name}:`, error.message);
+    console.error(`[ERROR] Error webhook ${webhook.name}:`, error.message);
     
     const newFailureCount = webhook.failureCount + 1;
     await webhook.update({

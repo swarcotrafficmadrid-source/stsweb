@@ -22,9 +22,9 @@ try {
   const bucketName = process.env.STORAGE_BUCKET_NAME || "swarco-tickets-files";
   bucket = storage.bucket(bucketName);
   
-  console.log(`✅ Google Cloud Storage configurado: ${bucketName}`);
+  console.log(`[OK] Google Cloud Storage configurado: ${bucketName}`);
 } catch (error) {
-  console.error("⚠️  Error al configurar Google Cloud Storage:", error.message);
+  console.error("[WARNING] Error al configurar Google Cloud Storage:", error.message);
 }
 
 /**
@@ -111,9 +111,9 @@ export async function uploadFile(fileBuffer, originalName, mimetype, folder = "g
         .toBuffer();
       
       const reduction = Math.round((1 - processedBuffer.length / fileBuffer.length) * 100);
-      console.log(`✅ Imagen optimizada: ${(fileBuffer.length / 1024).toFixed(0)}KB → ${(processedBuffer.length / 1024).toFixed(0)}KB (-${reduction}%)`);
+      console.log(`[OK] Imagen optimizada: ${(fileBuffer.length / 1024).toFixed(0)}KB a ${(processedBuffer.length / 1024).toFixed(0)}KB (-${reduction}%)`);
     } catch (err) {
-      console.error("⚠️  Error al comprimir imagen, usando original:", err.message);
+      console.error("[WARNING] Error al comprimir imagen, usando original:", err.message);
       processedBuffer = fileBuffer;
     }
   }
@@ -208,10 +208,10 @@ export async function deleteFile(filePath) {
 
   try {
     await bucket.file(filePath).delete();
-    console.log(`✅ Archivo eliminado: ${filePath}`);
+    console.log(`[OK] Archivo eliminado: ${filePath}`);
     return true;
   } catch (error) {
-    console.error(`❌ Error al eliminar archivo ${filePath}:`, error.message);
+    console.error(`[ERROR] Error al eliminar archivo ${filePath}:`, error.message);
     return false;
   }
 }
@@ -284,7 +284,7 @@ export async function cleanupOrphanFiles(validPaths) {
     }
   }
 
-  console.log(`🧹 Limpieza completada. Archivos eliminados: ${deletedFiles.length}`);
+  console.log(`[CLEAN] Limpieza completada. Archivos eliminados: ${deletedFiles.length}`);
   return deletedFiles;
 }
 

@@ -10,7 +10,7 @@ router.post("/", async (req, res) => {
     // Enviar email a soporte
     await sendMail({
       to: "sfr.support@swarco.com",
-      subject: `⚠️ Error en Frontend - Portal SWARCO Traffic Spain`,
+      subject: `[ERROR] Error en Frontend - Portal SWARCO Traffic Spain`,
       text: `
 Error detectado en el frontend:
 
@@ -26,7 +26,7 @@ Stack trace:
 ${stack}
       `,
       html: `
-        <h2 style="color: #F29200;">⚠️ Error en Frontend</h2>
+        <h2 style="color: #F29200;">[ERROR] Error en Frontend</h2>
         <p><strong>Mensaje:</strong> ${message}</p>
         <p><strong>URL:</strong> ${url}</p>
         <p><strong>Navegador:</strong> ${userAgent}</p>
