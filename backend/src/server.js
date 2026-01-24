@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import compression from "compression";
 import dotenv from "dotenv";
 
 import { sequelize } from "./models/index.js";
@@ -20,7 +21,7 @@ import publicApiRoutes from "./routes/publicApi.js";
 import qrRoutes from "./routes/qr.js";
 import chatbotRoutes from "./routes/chatbot.js";
 import { errorHandler } from "./middleware/errorHandler.js";
-import { authLimiter, apiLimiter } from "./middleware/rateLimiter.js";
+import { authLimiter, apiLimiter, adminLimiter } from "./middleware/rateLimiterRedis.js";
 import { sanitizeBody } from "./middleware/validator.js";
 
 dotenv.config();
@@ -29,6 +30,15 @@ dotenv.config();
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'undefined') {
   console.error('❌ CRITICAL: JWT_SECRET no está configurado');
   process.exit(1);
+}
+
+// ✅ SEGURIDAD: Verificar que JWT_SECRET es lo suficientemente fuerte
+if (process.env.JWT_SECRET.length < 32) {
+  console.error('❌ CRITICAL: JWT_SECRET debe tener mínimo 32 caracteres');
+  console.error('   Secret actual: ' + process.env.JWT_SECRET.length + ' caracteres');
+  console.error('   Generar con: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64\'))"');
+  console.warn('⚠️ CONTINUANDO CON SECRET DÉBIL (cambiar en producción)');
+  // No hacer exit para permitir desarrollo, pero advertir
 }
 
 if (!process.env.DB_HOST || !process.env.DB_NAME) {
@@ -50,7 +60,38 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors());
+// ✅ CORS restrictivo - Solo dominios autorizados
+const allowedOrigins = [
+  'https://staging.swarcotrafficspain.com',
+  'https://swarcotrafficspain.com',
+  'https://stsweb-wjcs5aw2ka-ew.a.run.app',  // Cloud Run frontend
+  'http://localhost:3000',  // Desarrollo local
+  'http://localhost:5173'   // Vite dev
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Permitir requests sin origin (mobile apps, Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ CORS rejected: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// ✅ OPTIMIZACIÓN: Compresión HTTP (reduce bandwidth 80%)
+app.use(compression({
+  level: 6,  // Balance entre CPU y compresión
+  threshold: 1024  // Solo comprimir respuestas >1KB
+}));
+
 app.use(express.json({ limit: "10mb" })); // Límite de tamaño de request
 app.use(sanitizeBody); // Sanitizar inputs
 
@@ -64,7 +105,7 @@ app.use("/api/i18n", apiLimiter, i18nRoutes);
 app.use("/api/error-report", errorReportRoutes);
 app.use("/api/sat", apiLimiter, satRoutes);
 app.use("/api/client", apiLimiter, clientRoutes);
-app.use("/api/admin", adminRoutes); // Sin rate limiting para admin ops
+app.use("/api/admin", adminLimiter, adminRoutes); // ✅ Rate limiting ESTRICTO para admin
 app.use("/api/upload", apiLimiter, uploadRoutes);
 app.use("/api/webhooks", apiLimiter, webhookRoutes);
 app.use("/api/analytics", apiLimiter, analyticsRoutes);

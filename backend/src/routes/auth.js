@@ -1,10 +1,10 @@
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Router } from "express";
 import { User } from "../models/index.js";
 import { sendMail } from "../utils/mailer.js";
 import { requireAuth } from "../middleware/auth.js";
 import crypto from "crypto";
+import { hashPassword, comparePassword } from "../utils/bcryptWorker.js";
 
 const router = Router();
 
@@ -42,7 +42,7 @@ router.post("/register", async (req, res) => {
   }
 
   try {
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await hashPassword(password);  // ✅ Worker thread (no bloquea)
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
     const user = await User.create({
@@ -421,7 +421,7 @@ router.post("/reset", async (req, res) => {
   if (user.resetPasswordExpiresAt.getTime() < Date.now()) {
     return res.status(400).send("Token expirado");
   }
-  const hash = await bcrypt.hash(password, 10);
+  const hash = await hashPassword(password);  // ✅ Worker thread
   await user.update({
     passwordHash: hash,
     resetPasswordToken: null,

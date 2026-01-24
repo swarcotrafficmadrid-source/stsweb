@@ -54,3 +54,10 @@ export const apiLimiter = rateLimiter({
   max: 100,
   message: "Demasiadas solicitudes. Intenta de nuevo más tarde."
 });
+
+// ✅ SEGURIDAD: Rate limiter ESTRICTO para admin (evita brute force)
+export const adminLimiter = rateLimiter({
+  windowMs: 15 * 60 * 1000,  // 15 minutos
+  max: 10,  // Solo 10 requests por admin cada 15 minutos
+  message: "Demasiados intentos de administración. Contacta con soporte."
+});
