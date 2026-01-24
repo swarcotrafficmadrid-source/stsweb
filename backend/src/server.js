@@ -21,38 +21,29 @@ import publicApiRoutes from "./routes/publicApi.js";
 import qrRoutes from "./routes/qr.js";
 import chatbotRoutes from "./routes/chatbot.js";
 import { errorHandler } from "./middleware/errorHandler.js";
-// TEMPORAL: Usar rate limiter in-memory hasta configurar Redis
 import { authLimiter, apiLimiter, adminLimiter } from "./middleware/rateLimiter.js";
 import { sanitizeBody } from "./middleware/validator.js";
 
 dotenv.config();
 
-// Validar variables criticas al inicio
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'undefined') {
-  console.error('[CRITICAL] JWT_SECRET no esta configurado');
+  console.error('CRITICAL: JWT_SECRET not configured');
   process.exit(1);
 }
 
-// SEGURIDAD: Verificar que JWT_SECRET es lo suficientemente fuerte
 if (process.env.JWT_SECRET.length < 32) {
-  console.error('[CRITICAL] JWT_SECRET debe tener minimo 32 caracteres');
-  console.error('   Secret actual: ' + process.env.JWT_SECRET.length + ' caracteres');
-  console.error('   Generar con: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64\'))"');
-  console.warn('[WARNING] CONTINUANDO CON SECRET DEBIL (cambiar en produccion)');
-  // No hacer exit para permitir desarrollo, pero advertir
+  console.error('WARNING: JWT_SECRET should be at least 32 characters');
 }
 
 if (!process.env.DB_HOST || !process.env.DB_NAME) {
-  console.error('[CRITICAL] Variables de BD no configuradas');
-  console.error('   Verifica: DB_HOST, DB_NAME, DB_USER, DB_PASSWORD');
+  console.error('CRITICAL: Database variables not configured');
   process.exit(1);
 }
 
-console.log('[OK] Variables de entorno validadas');
+console.log('Environment variables validated');
 
 const app = express();
 
-// Security headers
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
@@ -61,24 +52,21 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS restrictivo - Solo dominios autorizados
 const allowedOrigins = [
   'https://staging.swarcotrafficspain.com',
   'https://swarcotrafficspain.com',
-  'https://stsweb-wjcs5aw2ka-ew.a.run.app',  // Cloud Run frontend
-  'http://localhost:3000',  // Desarrollo local
-  'http://localhost:5173'   // Vite dev
+  'https://stsweb-wjcs5aw2ka-ew.a.run.app',
+  'http://localhost:3000',
+  'http://localhost:5173'
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Permitir requests sin origin (mobile apps, Postman)
     if (!origin) return callback(null, true);
-    
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn(`[WARNING] CORS rejected: ${origin}`);
+      console.warn('CORS rejected: ' + origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -87,14 +75,13 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// OPTIMIZACION: Compresion HTTP (reduce bandwidth 80%)
 app.use(compression({
-  level: 6,  // Balance entre CPU y compresión
-  threshold: 1024  // Solo comprimir respuestas >1KB
+  level: 6,
+  threshold: 1024
 }));
 
-app.use(express.json({ limit: "10mb" })); // Límite de tamaño de request
-app.use(sanitizeBody); // Sanitizar inputs
+app.use(express.json({ limit: "10mb" }));
+app.use(sanitizeBody);
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 app.use("/api/auth", authLimiter, authRoutes);
@@ -106,15 +93,14 @@ app.use("/api/i18n", apiLimiter, i18nRoutes);
 app.use("/api/error-report", errorReportRoutes);
 app.use("/api/sat", apiLimiter, satRoutes);
 app.use("/api/client", apiLimiter, clientRoutes);
-app.use("/api/admin", adminLimiter, adminRoutes); // Rate limiting ESTRICTO para admin
+app.use("/api/admin", adminLimiter, adminRoutes);
 app.use("/api/upload", apiLimiter, uploadRoutes);
 app.use("/api/webhooks", apiLimiter, webhookRoutes);
 app.use("/api/analytics", apiLimiter, analyticsRoutes);
-app.use("/api/public", publicApiRoutes); // API pública (autenticación por API Key)
+app.use("/api/public", publicApiRoutes);
 app.use("/api/qr", apiLimiter, qrRoutes);
 app.use("/api/chatbot", apiLimiter, chatbotRoutes);
 
-// Error handler global (debe ir al final)
 app.use(errorHandler);
 
 const port = process.env.PORT || 8080;
@@ -125,32 +111,31 @@ async function start() {
   
   while (attempt < maxRetries) {
     try {
-      console.log(`[RETRY] Intentando conectar a BD (intento ${attempt + 1}/${maxRetries})...`);
+      console.log('Connecting to database (attempt ' + (attempt + 1) + '/' + maxRetries + ')...');
       await sequelize.authenticate();
-      console.log('[OK] Conectado a la base de datos');
+      console.log('Database connected');
       
       const alter = String(process.env.DB_SYNC_ALTER || "").toLowerCase() === "true";
       await sequelize.sync({ alter });
       
       app.listen(port, () => {
-        console.log(`[OK] API listening on ${port}`);
-        console.log(`[READY] Sistema v3.0 iniciado correctamente`);
+        console.log('API listening on port ' + port);
+        console.log('System v3.0 started successfully');
       });
       
-      return; // Éxito, salir del loop
+      return;
       
     } catch (error) {
       attempt++;
-      console.error(`[ERROR] Error conectando a BD (intento ${attempt}/${maxRetries}):`, error.message);
+      console.error('Database connection error (attempt ' + attempt + '/' + maxRetries + '): ' + error.message);
       
       if (attempt >= maxRetries) {
-        console.error('[FATAL] No se pudo conectar a BD despues de', maxRetries, 'intentos');
+        console.error('Could not connect to database after ' + maxRetries + ' attempts');
         process.exit(1);
       }
       
-      // Esperar antes de reintentar (exponential backoff)
       const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000);
-      console.log(`[WAIT] Esperando ${waitTime}ms antes de reintentar...`);
+      console.log('Waiting ' + waitTime + 'ms before retry...');
       await new Promise(resolve => setTimeout(resolve, waitTime));
     }
   }
