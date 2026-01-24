@@ -27,17 +27,17 @@ dotenv.config();
 
 // Validar variables críticas al inicio
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'undefined') {
-  console.error('❌ CRITICAL: JWT_SECRET no está configurado');
+  console.error('[CRITICAL] JWT_SECRET no esta configurado');
   process.exit(1);
 }
 
 if (!process.env.DB_HOST || !process.env.DB_NAME) {
-  console.error('❌ CRITICAL: Variables de BD no configuradas');
+  console.error('[CRITICAL] Variables de BD no configuradas');
   console.error('   Verifica: DB_HOST, DB_NAME, DB_USER, DB_PASSWORD');
   process.exit(1);
 }
 
-console.log('✅ Variables de entorno validadas');
+console.log('[OK] Variables de entorno validadas');
 
 const app = express();
 
@@ -83,32 +83,32 @@ async function start() {
   
   while (attempt < maxRetries) {
     try {
-      console.log(`🔄 Intentando conectar a BD (intento ${attempt + 1}/${maxRetries})...`);
+      console.log('[DB] Intentando conectar a BD (intento ' + (attempt + 1) + '/' + maxRetries + ')...');
       await sequelize.authenticate();
-      console.log('✅ Conectado a la base de datos');
+      console.log('[DB] Conectado a la base de datos');
       
       const alter = String(process.env.DB_SYNC_ALTER || "").toLowerCase() === "true";
       await sequelize.sync({ alter });
       
       app.listen(port, () => {
-        console.log(`✅ API listening on ${port}`);
-        console.log(`🚀 Sistema v3.0 iniciado correctamente`);
+        console.log('[OK] API listening on ' + port);
+        console.log('[OK] Sistema v3.0 iniciado correctamente');
       });
       
-      return; // Éxito, salir del loop
+      return; // Exito, salir del loop
       
     } catch (error) {
       attempt++;
-      console.error(`❌ Error conectando a BD (intento ${attempt}/${maxRetries}):`, error.message);
+      console.error('[ERROR] Error conectando a BD (intento ' + attempt + '/' + maxRetries + '): ' + error.message);
       
       if (attempt >= maxRetries) {
-        console.error('💀 No se pudo conectar a BD después de', maxRetries, 'intentos');
+        console.error('[FATAL] No se pudo conectar a BD despues de ' + maxRetries + ' intentos');
         process.exit(1);
       }
       
       // Esperar antes de reintentar (exponential backoff)
       const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000);
-      console.log(`⏳ Esperando ${waitTime}ms antes de reintentar...`);
+      console.log('[WAIT] Esperando ' + waitTime + 'ms antes de reintentar...');
       await new Promise(resolve => setTimeout(resolve, waitTime));
     }
   }

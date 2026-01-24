@@ -18,7 +18,7 @@ export function errorHandler(err, req, res, next) {
   if (statusCode >= 500) {
     sendMail({
       to: "sfr.support@swarco.com",
-      subject: `⚠️ Error en Portal SWARCO Traffic Spain`,
+      subject: `[ERROR] Portal SWARCO Traffic Spain`,
       text: `
 Error detectado en el sistema:
 
@@ -34,7 +34,7 @@ Stack trace:
 ${err.stack}
       `,
       html: `
-        <h2 style="color: #F29200;">⚠️ Error en Portal SWARCO Traffic Spain</h2>
+        <h2 style="color: #F29200;">[ERROR] Portal SWARCO Traffic Spain</h2>
         <p><strong>Mensaje:</strong> ${message}</p>
         <p><strong>Estado:</strong> ${statusCode}</p>
         <p><strong>URL:</strong> ${req.originalUrl}</p>
