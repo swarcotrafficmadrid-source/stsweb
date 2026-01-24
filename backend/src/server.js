@@ -27,28 +27,28 @@ import { sanitizeBody } from "./middleware/validator.js";
 
 dotenv.config();
 
-// Validar variables críticas al inicio
+// Validar variables criticas al inicio
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'undefined') {
-  console.error('❌ CRITICAL: JWT_SECRET no está configurado');
+  console.error('[CRITICAL] JWT_SECRET no esta configurado');
   process.exit(1);
 }
 
-// ✅ SEGURIDAD: Verificar que JWT_SECRET es lo suficientemente fuerte
+// SEGURIDAD: Verificar que JWT_SECRET es lo suficientemente fuerte
 if (process.env.JWT_SECRET.length < 32) {
-  console.error('❌ CRITICAL: JWT_SECRET debe tener mínimo 32 caracteres');
+  console.error('[CRITICAL] JWT_SECRET debe tener minimo 32 caracteres');
   console.error('   Secret actual: ' + process.env.JWT_SECRET.length + ' caracteres');
   console.error('   Generar con: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64\'))"');
-  console.warn('⚠️ CONTINUANDO CON SECRET DÉBIL (cambiar en producción)');
+  console.warn('[WARNING] CONTINUANDO CON SECRET DEBIL (cambiar en produccion)');
   // No hacer exit para permitir desarrollo, pero advertir
 }
 
 if (!process.env.DB_HOST || !process.env.DB_NAME) {
-  console.error('❌ CRITICAL: Variables de BD no configuradas');
+  console.error('[CRITICAL] Variables de BD no configuradas');
   console.error('   Verifica: DB_HOST, DB_NAME, DB_USER, DB_PASSWORD');
   process.exit(1);
 }
 
-console.log('✅ Variables de entorno validadas');
+console.log('[OK] Variables de entorno validadas');
 
 const app = express();
 
@@ -61,7 +61,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ CORS restrictivo - Solo dominios autorizados
+// CORS restrictivo - Solo dominios autorizados
 const allowedOrigins = [
   'https://staging.swarcotrafficspain.com',
   'https://swarcotrafficspain.com',
@@ -78,7 +78,7 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn(`⚠️ CORS rejected: ${origin}`);
+      console.warn(`[WARNING] CORS rejected: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -87,7 +87,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// ✅ OPTIMIZACIÓN: Compresión HTTP (reduce bandwidth 80%)
+// OPTIMIZACION: Compresion HTTP (reduce bandwidth 80%)
 app.use(compression({
   level: 6,  // Balance entre CPU y compresión
   threshold: 1024  // Solo comprimir respuestas >1KB
@@ -106,7 +106,7 @@ app.use("/api/i18n", apiLimiter, i18nRoutes);
 app.use("/api/error-report", errorReportRoutes);
 app.use("/api/sat", apiLimiter, satRoutes);
 app.use("/api/client", apiLimiter, clientRoutes);
-app.use("/api/admin", adminLimiter, adminRoutes); // ✅ Rate limiting ESTRICTO para admin
+app.use("/api/admin", adminLimiter, adminRoutes); // Rate limiting ESTRICTO para admin
 app.use("/api/upload", apiLimiter, uploadRoutes);
 app.use("/api/webhooks", apiLimiter, webhookRoutes);
 app.use("/api/analytics", apiLimiter, analyticsRoutes);
@@ -125,32 +125,32 @@ async function start() {
   
   while (attempt < maxRetries) {
     try {
-      console.log(`🔄 Intentando conectar a BD (intento ${attempt + 1}/${maxRetries})...`);
+      console.log(`[RETRY] Intentando conectar a BD (intento ${attempt + 1}/${maxRetries})...`);
       await sequelize.authenticate();
-      console.log('✅ Conectado a la base de datos');
+      console.log('[OK] Conectado a la base de datos');
       
       const alter = String(process.env.DB_SYNC_ALTER || "").toLowerCase() === "true";
       await sequelize.sync({ alter });
       
       app.listen(port, () => {
-        console.log(`✅ API listening on ${port}`);
-        console.log(`🚀 Sistema v3.0 iniciado correctamente`);
+        console.log(`[OK] API listening on ${port}`);
+        console.log(`[READY] Sistema v3.0 iniciado correctamente`);
       });
       
       return; // Éxito, salir del loop
       
     } catch (error) {
       attempt++;
-      console.error(`❌ Error conectando a BD (intento ${attempt}/${maxRetries}):`, error.message);
+      console.error(`[ERROR] Error conectando a BD (intento ${attempt}/${maxRetries}):`, error.message);
       
       if (attempt >= maxRetries) {
-        console.error('💀 No se pudo conectar a BD después de', maxRetries, 'intentos');
+        console.error('[FATAL] No se pudo conectar a BD despues de', maxRetries, 'intentos');
         process.exit(1);
       }
       
       // Esperar antes de reintentar (exponential backoff)
       const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000);
-      console.log(`⏳ Esperando ${waitTime}ms antes de reintentar...`);
+      console.log(`[WAIT] Esperando ${waitTime}ms antes de reintentar...`);
       await new Promise(resolve => setTimeout(resolve, waitTime));
     }
   }
