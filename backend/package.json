@@ -1,8 +1,11 @@
 {
   "name": "swarco-ops-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "src/server.js",
   "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "node src/server.js",
     "start": "node src/server.js",
