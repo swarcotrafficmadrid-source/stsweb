@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import compression from "compression";
 import dotenv from "dotenv";
 
 import { sequelize } from "./models/index.js";
@@ -21,29 +20,28 @@ import publicApiRoutes from "./routes/publicApi.js";
 import qrRoutes from "./routes/qr.js";
 import chatbotRoutes from "./routes/chatbot.js";
 import { errorHandler } from "./middleware/errorHandler.js";
-import { authLimiter, apiLimiter, adminLimiter } from "./middleware/rateLimiter.js";
+import { authLimiter, apiLimiter } from "./middleware/rateLimiter.js";
 import { sanitizeBody } from "./middleware/validator.js";
 
 dotenv.config();
 
+// Validar variables críticas al inicio
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'undefined') {
-  console.error('CRITICAL: JWT_SECRET not configured');
+  console.error('❌ CRITICAL: JWT_SECRET no está configurado');
   process.exit(1);
-}
-
-if (process.env.JWT_SECRET.length < 32) {
-  console.error('WARNING: JWT_SECRET should be at least 32 characters');
 }
 
 if (!process.env.DB_HOST || !process.env.DB_NAME) {
-  console.error('CRITICAL: Database variables not configured');
+  console.error('❌ CRITICAL: Variables de BD no configuradas');
+  console.error('   Verifica: DB_HOST, DB_NAME, DB_USER, DB_PASSWORD');
   process.exit(1);
 }
 
-console.log('Environment variables validated');
+console.log('✅ Variables de entorno validadas');
 
 const app = express();
 
+// Security headers
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
@@ -52,36 +50,9 @@ app.use((req, res, next) => {
   next();
 });
 
-const allowedOrigins = [
-  'https://staging.swarcotrafficspain.com',
-  'https://swarcotrafficspain.com',
-  'https://stsweb-wjcs5aw2ka-ew.a.run.app',
-  'http://localhost:3000',
-  'http://localhost:5173'
-];
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn('CORS rejected: ' + origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-app.use(compression({
-  level: 6,
-  threshold: 1024
-}));
-
-app.use(express.json({ limit: "10mb" }));
-app.use(sanitizeBody);
+app.use(cors());
+app.use(express.json({ limit: "10mb" })); // Límite de tamaño de request
+app.use(sanitizeBody); // Sanitizar inputs
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 app.use("/api/auth", authLimiter, authRoutes);
@@ -93,52 +64,51 @@ app.use("/api/i18n", apiLimiter, i18nRoutes);
 app.use("/api/error-report", errorReportRoutes);
 app.use("/api/sat", apiLimiter, satRoutes);
 app.use("/api/client", apiLimiter, clientRoutes);
-app.use("/api/admin", adminLimiter, adminRoutes);
+app.use("/api/admin", adminRoutes); // Sin rate limiting para admin ops
 app.use("/api/upload", apiLimiter, uploadRoutes);
 app.use("/api/webhooks", apiLimiter, webhookRoutes);
 app.use("/api/analytics", apiLimiter, analyticsRoutes);
-app.use("/api/public", publicApiRoutes);
+app.use("/api/public", publicApiRoutes); // API pública (autenticación por API Key)
 app.use("/api/qr", apiLimiter, qrRoutes);
 app.use("/api/chatbot", apiLimiter, chatbotRoutes);
 
+// Error handler global (debe ir al final)
 app.use(errorHandler);
 
 const port = process.env.PORT || 8080;
 
 async function start() {
-  // ARRANCAR SERVIDOR INMEDIATAMENTE (sin esperar BD)
-  app.listen(port, () => {
-    console.log('API listening on port ' + port);
-    console.log('System v3.0 starting...');
-  });
-
-  // CONECTAR A BD EN BACKGROUND (no bloquea startup)
   const maxRetries = 5;
   let attempt = 0;
   
   while (attempt < maxRetries) {
     try {
-      console.log('Connecting to database (attempt ' + (attempt + 1) + '/' + maxRetries + ')...');
+      console.log(`🔄 Intentando conectar a BD (intento ${attempt + 1}/${maxRetries})...`);
       await sequelize.authenticate();
-      console.log('Database connected - System ready');
+      console.log('✅ Conectado a la base de datos');
       
       const alter = String(process.env.DB_SYNC_ALTER || "").toLowerCase() === "true";
       await sequelize.sync({ alter });
       
-      return; // Exito
+      app.listen(port, () => {
+        console.log(`✅ API listening on ${port}`);
+        console.log(`🚀 Sistema v3.0 iniciado correctamente`);
+      });
+      
+      return; // Éxito, salir del loop
       
     } catch (error) {
       attempt++;
-      console.error('Database connection error (attempt ' + attempt + '/' + maxRetries + '): ' + error.message);
+      console.error(`❌ Error conectando a BD (intento ${attempt}/${maxRetries}):`, error.message);
       
       if (attempt >= maxRetries) {
-        console.error('Could not connect to database after ' + maxRetries + ' attempts');
-        console.error('Server running but DB unavailable');
-        return; // Seguir funcionando sin BD
+        console.error('💀 No se pudo conectar a BD después de', maxRetries, 'intentos');
+        process.exit(1);
       }
       
+      // Esperar antes de reintentar (exponential backoff)
       const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000);
-      console.log('Waiting ' + waitTime + 'ms before retry...');
+      console.log(`⏳ Esperando ${waitTime}ms antes de reintentar...`);
       await new Promise(resolve => setTimeout(resolve, waitTime));
     }
   }

@@ -16,14 +16,6 @@ const sequelize = new Sequelize(
     port,
     dialect: "mysql",
     logging: false,
-    // ✅ OPTIMIZACIÓN: Pool de conexiones aumentado 10x
-    pool: {
-      max: 50,        // 50 conexiones máximas (antes: 5 default)
-      min: 5,         // 5 conexiones mínimas siempre activas
-      acquire: 30000, // 30s timeout para adquirir conexión
-      idle: 10000,    // 10s antes de cerrar conexión idle
-      evict: 60000    // Verificar conexiones idle cada 60s
-    },
     ...(socketPath ? { dialectOptions: { socketPath } } : {})
   }
 );
