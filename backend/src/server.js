@@ -106,6 +106,13 @@ app.use(errorHandler);
 const port = process.env.PORT || 8080;
 
 async function start() {
+  // ARRANCAR SERVIDOR INMEDIATAMENTE (sin esperar BD)
+  app.listen(port, () => {
+    console.log('API listening on port ' + port);
+    console.log('System v3.0 starting...');
+  });
+
+  // CONECTAR A BD EN BACKGROUND (no bloquea startup)
   const maxRetries = 5;
   let attempt = 0;
   
@@ -113,17 +120,12 @@ async function start() {
     try {
       console.log('Connecting to database (attempt ' + (attempt + 1) + '/' + maxRetries + ')...');
       await sequelize.authenticate();
-      console.log('Database connected');
+      console.log('Database connected - System ready');
       
       const alter = String(process.env.DB_SYNC_ALTER || "").toLowerCase() === "true";
       await sequelize.sync({ alter });
       
-      app.listen(port, () => {
-        console.log('API listening on port ' + port);
-        console.log('System v3.0 started successfully');
-      });
-      
-      return;
+      return; // Exito
       
     } catch (error) {
       attempt++;
@@ -131,7 +133,8 @@ async function start() {
       
       if (attempt >= maxRetries) {
         console.error('Could not connect to database after ' + maxRetries + ' attempts');
-        process.exit(1);
+        console.error('Server running but DB unavailable');
+        return; // Seguir funcionando sin BD
       }
       
       const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000);
