@@ -27,6 +27,8 @@ export default function Failures({ token, lang = "es" }) {
   const [createdTicket, setCreatedTicket] = useState(null);
   const [reviewing, setReviewing] = useState(false);
   const [errors, setErrors] = useState({});
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const copy = {
     es: {
       title: "Reporte de Incidencia",
@@ -251,11 +253,11 @@ export default function Failures({ token, lang = "es" }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setMessage("");
+    if (submitting) return; // Prevenir doble envío
     if (!validateForm()) {
-      setMessage(t.validationError);
       return;
     }
+    setSubmitting(true);
     try {
       const toCompanyString = (company) => {
         const list = Object.entries(company)
@@ -337,6 +339,8 @@ export default function Failures({ token, lang = "es" }) {
       setReviewing(false);
     } catch (err) {
       setMessage(err.message);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -769,8 +773,12 @@ export default function Failures({ token, lang = "es" }) {
             </>
           ) : (
             <>
-              <button className="bg-swarcoBlue text-white px-4 py-2 rounded-full" type="submit">
-                {t.sendTicket}
+              <button 
+                className="bg-swarcoBlue text-white px-4 py-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed" 
+                type="submit"
+                disabled={submitting}
+              >
+                {submitting ? "Enviando..." : t.sendTicket}
               </button>
               <button
                 type="button"

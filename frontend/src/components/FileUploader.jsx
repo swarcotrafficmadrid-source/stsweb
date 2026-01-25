@@ -9,6 +9,7 @@ export default function FileUploader({
   maxSize = 5,
   onUploadComplete,
   onUploadError,
+  onFileRemove,
   allowVideo = false,
   lang = "es"
 }) {
@@ -143,7 +144,18 @@ export default function FileUploader({
   }
 
   function removeFile(url) {
-    setUploadedFiles(prev => prev.filter(f => f.url !== url));
+    const updatedFiles = uploadedFiles.filter(f => f.url !== url);
+    setUploadedFiles(updatedFiles);
+    
+    // Notificar al padre que se eliminó un archivo
+    if (onFileRemove) {
+      onFileRemove(url);
+    }
+    
+    // También notificar con la lista actualizada
+    if (onUploadComplete) {
+      onUploadComplete(updatedFiles);
+    }
   }
 
   return (

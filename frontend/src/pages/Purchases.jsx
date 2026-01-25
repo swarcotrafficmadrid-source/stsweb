@@ -12,6 +12,7 @@ export default function Purchases({ token, lang = "es" }) {
   const [reviewing, setReviewing] = useState(false);
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const copy = {
     es: {
@@ -141,11 +142,13 @@ export default function Purchases({ token, lang = "es" }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (submitting) return; // Prevenir doble envío
     setMessage("");
     if (!validateForm()) {
       setMessage(t.validationError);
       return;
     }
+    setSubmitting(true);
     try {
       const data = await apiRequest(
         "/api/purchases",
@@ -180,6 +183,8 @@ export default function Purchases({ token, lang = "es" }) {
       setReviewing(false);
     } catch (err) {
       setMessage(err.message);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -421,8 +426,12 @@ export default function Purchases({ token, lang = "es" }) {
             </>
           ) : (
             <>
-              <button className="bg-swarcoBlue text-white px-4 py-2 rounded-full" type="submit">
-                {t.sendRequest}
+              <button 
+                className="bg-swarcoBlue text-white px-4 py-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed" 
+                type="submit"
+                disabled={submitting}
+              >
+                {submitting ? "Enviando..." : t.sendRequest}
               </button>
               <button
                 type="button"
