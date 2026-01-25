@@ -82,8 +82,7 @@ gcloud run deploy $BACKEND_SERVICE \
   --concurrency 80 \
   --timeout 300 \
   --memory 512Mi \
-  --cpu 1 \
-  --quiet
+  --cpu 1
 
 echo "✅ Backend desplegado"
 echo ""
@@ -190,8 +189,7 @@ gcloud run deploy $FRONTEND_SERVICE \
   --platform managed \
   --allow-unauthenticated \
   --memory 256Mi \
-  --cpu 1 \
-  --quiet
+  --cpu 1
 
 FRONTEND_URL=$(gcloud run services describe $FRONTEND_SERVICE --region $REGION --format='value(status.url)')
 echo "✅ Frontend desplegado"
