@@ -22,6 +22,9 @@ router.post("/", requireAuth, async (req, res) => {
   
   const purchaseRequest = await PurchaseRequest.create({
     userId: req.user.id,
+    titulo: titulo.trim(),
+    proyecto: proyecto.trim(),
+    pais: pais.trim(),
     equipo: equipmentsList,
     cantidad: equipments.reduce((sum, eq) => sum + (eq.cantidad || 0), 0),
     descripcion: `Proyecto: ${proyecto} | País: ${pais} | ${titulo}`

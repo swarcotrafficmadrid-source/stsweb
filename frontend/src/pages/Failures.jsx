@@ -502,7 +502,7 @@ export default function Failures({ token, lang = "es" }) {
                     <input
                       type="checkbox"
                       className="accent-swarcoBlue"
-                      checked={eq.company.dsta && eq.company.lacroix}
+                      checked={eq.company.dsta || eq.company.lacroix}
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setEquipments((prev) => prev.map((item, idx) =>

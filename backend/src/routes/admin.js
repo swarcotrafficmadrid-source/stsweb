@@ -10,7 +10,11 @@ router.post("/create-sat-user", async (req, res) => {
     const { adminKey, email, password, nombre, apellidos, role = "sat_admin" } = req.body;
 
     // Verificar admin key
-    const expectedKey = process.env.ADMIN_SECRET_KEY || "CHANGE_THIS_IN_PRODUCTION";
+    const expectedKey = process.env.ADMIN_SECRET_KEY;
+    if (!expectedKey) {
+      console.error("[CRITICAL] ADMIN_SECRET_KEY no configurado");
+      return res.status(500).json({ error: "Configuración del servidor incorrecta" });
+    }
     if (adminKey !== expectedKey) {
       return res.status(403).json({ error: "Clave de administrador inválida" });
     }

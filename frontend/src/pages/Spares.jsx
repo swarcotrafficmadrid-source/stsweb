@@ -391,7 +391,7 @@ export default function Spares({ token, lang = "es" }) {
                     <input
                       type="checkbox"
                       className="accent-swarcoBlue"
-                      checked={spare.company.dsta && spare.company.lacroix}
+                      checked={spare.company.dsta || spare.company.lacroix}
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setSpares((prev) => prev.map((item, idx) =>

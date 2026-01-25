@@ -87,7 +87,6 @@ export default function App() {
     try {
       return localStorage.getItem("token");
     } catch (e) {
-      console.warn("localStorage no disponible, usando sessionStorage");
       return sessionStorage.getItem("token");
     }
   });

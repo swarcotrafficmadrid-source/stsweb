@@ -1,6 +1,4 @@
-const API_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://stsweb-backend-964379250608.europe-west1.run.app";
+const API_URL = import.meta.env.VITE_API_URL || "https://stsweb-backend-964379250608.europe-west1.run.app";
 
 export async function apiRequest(path, method = "GET", body, token, options = {}) {
   const timeout = options.timeout || 30000; // 30 segundos por defecto

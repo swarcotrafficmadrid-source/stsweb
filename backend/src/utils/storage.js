@@ -156,45 +156,28 @@ export async function uploadFile(fileBuffer, originalName, mimetype, folder = "g
       }
     });
 
-    if (process.env.STORAGE_PUBLIC === "true") {
-      await thumbFile.makePublic();
-      thumbnailUrl = `https://storage.googleapis.com/${bucket.name}/${thumbPath}`;
-    } else {
-      const [thumbSignedUrl] = await thumbFile.getSignedUrl({
-        action: "read",
-        expires: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 días
-      });
-      thumbnailUrl = thumbSignedUrl;
-    }
-  }
-
-  // Hacer el archivo público o generar URL firmada
-  if (process.env.STORAGE_PUBLIC === "true") {
-    await file.makePublic();
-    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
-    return { 
-      url: publicUrl, 
-      fileName, 
-      path: filePath,
-      thumbnailUrl,
-      originalSize: fileBuffer.length,
-      compressedSize: processedBuffer.length
-    };
-  } else {
-    // Generar URL firmada (válida por 7 días)
-    const [signedUrl] = await file.getSignedUrl({
+    // Siempre usar URL firmada para thumbnail
+    const [thumbSignedUrl] = await thumbFile.getSignedUrl({
       action: "read",
       expires: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 días
     });
-    return { 
-      url: signedUrl, 
-      fileName, 
-      path: filePath,
-      thumbnailUrl,
-      originalSize: fileBuffer.length,
-      compressedSize: processedBuffer.length
-    };
+    thumbnailUrl = thumbSignedUrl;
   }
+
+  // Siempre usar URL firmada (no intentar hacer público)
+  const [signedUrl] = await file.getSignedUrl({
+    action: "read",
+    expires: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 días
+  });
+  
+  return { 
+    url: signedUrl, 
+    fileName, 
+    path: filePath,
+    thumbnailUrl,
+    originalSize: fileBuffer.length,
+    compressedSize: processedBuffer.length
+  };
 }
 
 /**

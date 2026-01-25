@@ -76,13 +76,20 @@ export default function FileUploader({
         formData.append("folder", folder);
 
         // Simular progreso (ya que FormData no tiene progress real en fetch)
-        const uploadPromise = fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8080"}/api/upload`, {
+        const API_URL = import.meta.env.VITE_API_URL || "https://stsweb-backend-964379250608.europe-west1.run.app";
+        const uploadPromise = fetch(`${API_URL}/api/upload`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`
           },
           body: formData
-        }).then(res => res.json());
+        }).then(async res => {
+          if (!res.ok) {
+            const error = await res.json().catch(() => ({ error: "Error al subir archivo" }));
+            throw new Error(error.error || `Error ${res.status}`);
+          }
+          return res.json();
+        });
 
         // Simular progreso visual
         const progressInterval = setInterval(() => {

@@ -4,11 +4,12 @@ import { Router } from "express";
 import { User } from "../models/index.js";
 import { sendMail } from "../utils/mailer.js";
 import { requireAuth } from "../middleware/auth.js";
+import { loginLimiter, registerLimiter } from "../middleware/rateLimiter.js";
 import crypto from "crypto";
 
 const router = Router();
 
-router.post("/register", async (req, res) => {
+router.post("/register", registerLimiter, async (req, res) => {
   const nombreRaw = (req.body.nombre || "").trim();
   const apellidosRaw = (req.body.apellidos || "").trim();
   const emailRaw = (req.body.email || "").trim();
@@ -141,38 +142,43 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
-  const { identifier, password } = req.body;
-  if (!identifier || !password) {
-    return res.status(400).json({ error: "Datos incompletos" });
+router.post("/login", loginLimiter, async (req, res) => {
+  try {
+    const { identifier, password } = req.body;
+    if (!identifier || !password) {
+      return res.status(400).json({ error: "Datos incompletos" });
+    }
+
+    const user = await User.findOne({
+      where: { email: identifier }
+    }) || await User.findOne({ where: { usuario: identifier } });
+
+    if (!user) {
+      return res.status(401).json({ error: "Credenciales inválidas" });
+    }
+    if (!user.emailVerified) {
+      return res.status(403).json({ error: "Cuenta no verificada" });
+    }
+
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) {
+      return res.status(401).json({ error: "Credenciales inválidas" });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, nombre: user.nombre, apellidos: user.apellidos, rol: user.rol, userRole: user.userRole },
+      process.env.JWT_SECRET,
+      { expiresIn: "8h" }
+    );
+
+    return res.json({
+      token,
+      user: { id: user.id, email: user.email, usuario: user.usuario, nombre: user.nombre, apellidos: user.apellidos, rol: user.rol, userRole: user.userRole }
+    });
+  } catch (err) {
+    console.error("Error en login:", err);
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
-
-  const user = await User.findOne({
-    where: { email: identifier }
-  }) || await User.findOne({ where: { usuario: identifier } });
-
-  if (!user) {
-    return res.status(401).json({ error: "Credenciales inválidas" });
-  }
-  if (!user.emailVerified) {
-    return res.status(403).json({ error: "Cuenta no verificada" });
-  }
-
-  const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) {
-    return res.status(401).json({ error: "Credenciales inválidas" });
-  }
-
-  const token = jwt.sign(
-    { id: user.id, email: user.email, nombre: user.nombre, apellidos: user.apellidos, rol: user.rol, userRole: user.userRole },
-    process.env.JWT_SECRET,
-    { expiresIn: "8h" }
-  );
-
-  return res.json({
-    token,
-    user: { id: user.id, email: user.email, usuario: user.usuario, nombre: user.nombre, apellidos: user.apellidos, rol: user.rol, userRole: user.userRole }
-  });
 });
 
 router.get("/me", requireAuth, async (req, res) => {

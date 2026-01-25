@@ -516,7 +516,7 @@ export default function Dashboard({ token, lang = "es", activeTab = "home", onTa
                 <label className="text-sm text-slate-600">{t.telefono}</label>
                 <div className="flex gap-2">
                   <input className="w-24 border border-slate-300 rounded-lg px-2 py-2.5 bg-slate-100" value={country.dial} readOnly />
-                  <input className="flex-1 border border-slate-300 rounded-lg px-3 py-2.5" value={telefono} onChange={(e) => setTelefono(e.target.value.replace(/\\D/g, ""))} inputMode="numeric" />
+                  <input className="flex-1 border border-slate-300 rounded-lg px-3 py-2.5" value={telefono} onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ""))} inputMode="numeric" />
                 </div>
               </div>
               <div className="md:col-span-2">

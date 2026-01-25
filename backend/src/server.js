@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import { sequelize } from "./models/index.js";
+import { runMigrations } from "./migrations/index.js";
 import authRoutes from "./routes/auth.js";
 import failuresRoutes from "./routes/failures.js";
 import sparesRoutes from "./routes/spares.js";
@@ -20,7 +21,7 @@ import publicApiRoutes from "./routes/publicApi.js";
 import qrRoutes from "./routes/qr.js";
 import chatbotRoutes from "./routes/chatbot.js";
 import { errorHandler } from "./middleware/errorHandler.js";
-import { authLimiter, apiLimiter } from "./middleware/rateLimiter.js";
+import { apiLimiter } from "./middleware/rateLimiter.js";
 import { sanitizeBody } from "./middleware/validator.js";
 
 dotenv.config();
@@ -50,12 +51,17 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "https://staging.swarcotrafficspain.com",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-API-Key"]
+}));
 app.use(express.json({ limit: "10mb" })); // Límite de tamaño de request
 app.use(sanitizeBody); // Sanitizar inputs
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
-app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/auth", authRoutes); // Rate limiting aplicado por endpoint dentro de auth.js
 app.use("/api/failures", apiLimiter, failuresRoutes);
 app.use("/api/spares", apiLimiter, sparesRoutes);
 app.use("/api/purchases", apiLimiter, purchasesRoutes);
@@ -86,6 +92,9 @@ async function start() {
       console.log('[DB] Intentando conectar a BD (intento ' + (attempt + 1) + '/' + maxRetries + ')...');
       await sequelize.authenticate();
       console.log('[DB] Conectado a la base de datos');
+      
+      // Ejecutar migraciones automáticas
+      await runMigrations(sequelize);
       
       const alter = String(process.env.DB_SYNC_ALTER || "").toLowerCase() === "true";
       await sequelize.sync({ alter });

@@ -6,6 +6,7 @@ const SpareRequest = sequelize.define(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     userId: { type: DataTypes.INTEGER, allowNull: false },
+    titulo: { type: DataTypes.STRING(120), allowNull: true },
     repuesto: { type: DataTypes.STRING(120), allowNull: false },
     cantidad: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
     descripcion: { type: DataTypes.TEXT, allowNull: true },
