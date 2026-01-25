@@ -132,8 +132,11 @@ router.delete(
       const { folder, fileName } = req.params;
       const filePath = `${folder}/${fileName}`;
 
-      // TODO: Verificar que el usuario tenga permiso para eliminar este archivo
-      // (verificar que sea dueño del ticket o sea SAT)
+      // Solo SAT admin/technician pueden eliminar archivos
+      // Los clientes NO pueden eliminar archivos una vez subidos
+      if (req.user.userRole !== "sat_admin" && req.user.userRole !== "sat_technician") {
+        return res.status(403).json({ error: "No tienes permisos para eliminar archivos" });
+      }
 
       const success = await deleteFile(filePath);
 

@@ -13,7 +13,8 @@ router.get("/", requireAuth, async (req, res) => {
 });
 
 router.post("/", requireAuth, async (req, res) => {
-  const { tipo, fecha, hora, lugar, descripcionFalla, photosCount, photoUrls } = req.body;
+  const { tipo, fecha, hora, lugar, descripcionFalla, photosCount, photoUrls,
+          latitude, longitude, locationAccuracy } = req.body;
   if (!tipo || !descripcionFalla) {
     return res.status(400).json({ error: "Datos incompletos" });
   }
@@ -26,7 +27,10 @@ router.post("/", requireAuth, async (req, res) => {
     lugar: lugar || null,
     descripcionFalla,
     photosCount: photosCount || 0,
-    photoUrls: photoUrls || null
+    photoUrls: photoUrls || null,
+    latitude: latitude || null,
+    longitude: longitude || null,
+    locationAccuracy: locationAccuracy || null
   });
 
   const requestNumber = `ASI-${String(assistanceRequest.id).padStart(6, "0")}`;

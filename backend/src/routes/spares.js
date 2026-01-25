@@ -100,6 +100,35 @@ ${sparesText}`,
     console.error("Error sending spare request email:", err);
   }
 
+  // Email al usuario
+  try {
+    await sendMail({
+      to: req.user.email,
+      subject: `Solicitud de repuesto recibida ${requestNumber}`,
+      text: `Hola,
+
+Tu solicitud de repuesto ha sido recibida y está siendo procesada.
+
+Número de solicitud: ${requestNumber}
+Título: ${titulo}
+
+Nuestro equipo se pondrá en contacto contigo pronto.
+
+Saludos,
+Equipo SWARCO Traffic Spain`,
+      html: `
+        <h2 style="color: #006BAB;">Solicitud recibida</h2>
+        <p>Tu solicitud de repuesto ha sido recibida y está siendo procesada.</p>
+        <p><strong>Número de solicitud:</strong> ${requestNumber}</p>
+        <p><strong>Título:</strong> ${titulo}</p>
+        <p>Nuestro equipo se pondrá en contacto contigo pronto.</p>
+        <p>Saludos,<br>Equipo SWARCO Traffic Spain</p>
+      `
+    });
+  } catch (err) {
+    console.error("Error sending user confirmation email:", err);
+  }
+
   // Disparar webhook
   webhookTicketCreated({ ...spareRequest.toJSON(), type: "spare", requestNumber }, models).catch(err => 
     console.error("Error webhook:", err)
