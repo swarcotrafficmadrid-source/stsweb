@@ -20,6 +20,7 @@ import analyticsRoutes from "./routes/analytics.js";
 import publicApiRoutes from "./routes/publicApi.js";
 import qrRoutes from "./routes/qr.js";
 import chatbotRoutes from "./routes/chatbot.js";
+import databaseRoutes from "./routes/database.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
 import { sanitizeBody } from "./middleware/validator.js";
@@ -77,6 +78,7 @@ app.use("/api/analytics", apiLimiter, analyticsRoutes);
 app.use("/api/public", publicApiRoutes); // API pública (autenticación por API Key)
 app.use("/api/qr", apiLimiter, qrRoutes);
 app.use("/api/chatbot", apiLimiter, chatbotRoutes);
+app.use("/api/database", databaseRoutes); // Panel de admin de BD (sin rate limiting)
 
 // Error handler global (debe ir al final)
 app.use(errorHandler);

@@ -9,6 +9,7 @@ import Spares from "./pages/Spares.jsx";
 import Purchases from "./pages/Purchases.jsx";
 import Assistance from "./pages/Assistance.jsx";
 import SATPanel from "./pages/SATPanel.jsx";
+import DatabaseAdmin from "./pages/DatabaseAdmin.jsx";
 import ChatbotWidget from "./components/ChatbotWidget.jsx";
 import { useTranslatedMap } from "./lib/i18n.js";
 
@@ -18,7 +19,8 @@ const pages = {
   spares: Spares,
   purchases: Purchases,
   assistance: Assistance,
-  sat: SATPanel
+  sat: SATPanel,
+  database: DatabaseAdmin
 };
 
 function getBrowserLang() {
@@ -634,19 +636,33 @@ export default function App() {
                   </svg>
                 </button>
                 {isSATUser && (
-                  <button
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:text-swarcoBlue"
-                    onClick={() => setPage("sat")}
-                    aria-label="Panel SAT"
-                    title="Panel SAT"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
-                      <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
-                      <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
-                      <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
-                    </svg>
-                  </button>
+                  <>
+                    <button
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:text-swarcoBlue"
+                      onClick={() => setPage("sat")}
+                      aria-label="Panel SAT"
+                      title="Panel SAT"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+                        <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+                        <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+                      </svg>
+                    </button>
+                    <button
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:text-red-600"
+                      onClick={() => setPage("database")}
+                      aria-label="Base de Datos"
+                      title="Administrar Base de Datos"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <ellipse cx="12" cy="6" rx="8" ry="3" stroke="currentColor" strokeWidth="1.5" />
+                        <path d="M4 6v6c0 1.657 3.582 3 8 3s8-1.343 8-3V6" stroke="currentColor" strokeWidth="1.5" />
+                        <path d="M4 12v6c0 1.657 3.582 3 8 3s8-1.343 8-3v-6" stroke="currentColor" strokeWidth="1.5" />
+                      </svg>
+                    </button>
+                  </>
                 )}
                 <button
                   className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:text-swarcoBlue"
