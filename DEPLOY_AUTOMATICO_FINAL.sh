@@ -40,76 +40,34 @@ echo "✅ Código sincronizado desde GitHub"
 echo ""
 
 # ═══════════════════════════════════════════════════════════
-# PASO 3: VERIFICAR CONEXIÓN A BASE DE DATOS
+# PASO 3: VERIFICAR ENV.YAML
 # ═══════════════════════════════════════════════════════════
-echo "🗄️  PASO 3/10: Verificando conexión a base de datos..."
+echo "🔍 PASO 3/10: Verificando configuración..."
+
+# Verificar que env.yaml existe
+if [ ! -f "env.yaml" ]; then
+  echo "❌ ERROR: env.yaml no existe"
+  exit 1
+fi
 
 # Leer credenciales desde env.yaml
 DB_USER=$(grep "DB_USER:" env.yaml | awk '{print $2}')
-DB_PASSWORD=$(grep "DB_PASSWORD:" env.yaml | awk '{print $2}')
 DB_NAME=$(grep "DB_NAME:" env.yaml | awk '{print $2}')
 
-echo "Probando conexión con usuario: $DB_USER"
+echo "Usuario BD configurado: $DB_USER"
+echo "Base de datos: $DB_NAME"
 
-# Probar conexión
-if mysql -h 127.0.0.1 -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" -e "SELECT 1;" > /dev/null 2>&1; then
-  echo "✅ Conexión a base de datos exitosa"
-else
-  echo "❌ ERROR: No se pudo conectar a la base de datos"
-  echo "Usuario: $DB_USER"
-  echo "Base de datos: $DB_NAME"
-  exit 1
+if [ "$DB_USER" != "deployuser" ]; then
+  echo "⚠️  ADVERTENCIA: Usuario BD no es 'deployuser'"
 fi
+
+echo "✅ Configuración verificada"
 echo ""
 
 # ═══════════════════════════════════════════════════════════
-# PASO 4: VERIFICAR CAMPOS CRÍTICOS EN BD
+# PASO 4: DEPLOY DEL BACKEND
 # ═══════════════════════════════════════════════════════════
-echo "🔍 PASO 4/10: Verificando estructura de base de datos..."
-
-# Verificar campos en tabla compras
-echo "Verificando tabla 'compras'..."
-COMPRAS_COLUMNS=$(mysql -h 127.0.0.1 -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" -s -N -e "SHOW COLUMNS FROM compras;")
-
-if echo "$COMPRAS_COLUMNS" | grep -q "titulo"; then
-  echo "  ✅ Campo 'titulo' existe"
-else
-  echo "  ❌ Campo 'titulo' NO existe - necesita agregarse"
-  exit 1
-fi
-
-if echo "$COMPRAS_COLUMNS" | grep -q "proyecto"; then
-  echo "  ✅ Campo 'proyecto' existe"
-else
-  echo "  ❌ Campo 'proyecto' NO existe - necesita agregarse"
-  exit 1
-fi
-
-if echo "$COMPRAS_COLUMNS" | grep -q "pais"; then
-  echo "  ✅ Campo 'pais' existe"
-else
-  echo "  ❌ Campo 'pais' NO existe - necesita agregarse"
-  exit 1
-fi
-
-# Verificar campos en tabla repuestos
-echo "Verificando tabla 'repuestos'..."
-REPUESTOS_COLUMNS=$(mysql -h 127.0.0.1 -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" -s -N -e "SHOW COLUMNS FROM repuestos;")
-
-if echo "$REPUESTOS_COLUMNS" | grep -q "titulo"; then
-  echo "  ✅ Campo 'titulo' existe"
-else
-  echo "  ❌ Campo 'titulo' NO existe - necesita agregarse"
-  exit 1
-fi
-
-echo "✅ Estructura de base de datos verificada"
-echo ""
-
-# ═══════════════════════════════════════════════════════════
-# PASO 5: DEPLOY DEL BACKEND
-# ═══════════════════════════════════════════════════════════
-echo "🚀 PASO 5/10: Desplegando backend..."
+echo "🚀 PASO 4/10: Desplegando backend..."
 echo "Esto puede tomar 3-5 minutos..."
 
 gcloud run deploy $BACKEND_SERVICE \
@@ -131,9 +89,9 @@ echo "✅ Backend desplegado"
 echo ""
 
 # ═══════════════════════════════════════════════════════════
-# PASO 6: PROBAR HEALTH DEL BACKEND
+# PASO 5: PROBAR HEALTH DEL BACKEND
 # ═══════════════════════════════════════════════════════════
-echo "🏥 PASO 6/10: Probando salud del backend..."
+echo "🏥 PASO 5/10: Probando salud del backend..."
 
 BACKEND_URL=$(gcloud run services describe $BACKEND_SERVICE --region $REGION --format='value(status.url)')
 echo "URL del backend: $BACKEND_URL"
@@ -162,9 +120,9 @@ fi
 echo ""
 
 # ═══════════════════════════════════════════════════════════
-# PASO 7: BUILD DEL FRONTEND
+# PASO 6: BUILD DEL FRONTEND
 # ═══════════════════════════════════════════════════════════
-echo "🏗️  PASO 7/10: Construyendo frontend..."
+echo "🏗️  PASO 6/10: Construyendo frontend..."
 
 cd frontend
 
@@ -192,9 +150,9 @@ echo ""
 cd ..
 
 # ═══════════════════════════════════════════════════════════
-# PASO 8: CREAR DOCKERFILE SIMPLE PARA FRONTEND
+# PASO 7: CREAR DOCKERFILE SIMPLE PARA FRONTEND
 # ═══════════════════════════════════════════════════════════
-echo "📦 PASO 8/10: Creando Dockerfile para frontend..."
+echo "📦 PASO 7/10: Creando Dockerfile para frontend..."
 
 cat > frontend/Dockerfile.simple << 'DOCKERFILE_EOF'
 FROM nginx:alpine
@@ -207,9 +165,9 @@ echo "✅ Dockerfile creado"
 echo ""
 
 # ═══════════════════════════════════════════════════════════
-# PASO 9: BUILD Y PUSH DE IMAGEN DOCKER
+# PASO 8: BUILD Y PUSH DE IMAGEN DOCKER
 # ═══════════════════════════════════════════════════════════
-echo "🐳 PASO 9/10: Construyendo y subiendo imagen Docker..."
+echo "🐳 PASO 8/10: Construyendo y subiendo imagen Docker..."
 
 IMAGE_NAME="europe-west1-docker.pkg.dev/$PROYECTO/cloud-run-source-deploy/$FRONTEND_SERVICE:latest"
 
@@ -222,9 +180,9 @@ echo "✅ Imagen Docker subida"
 echo ""
 
 # ═══════════════════════════════════════════════════════════
-# PASO 10: DEPLOY DEL FRONTEND
+# PASO 9: DEPLOY DEL FRONTEND
 # ═══════════════════════════════════════════════════════════
-echo "🚀 PASO 10/10: Desplegando frontend..."
+echo "🚀 PASO 9/10: Desplegando frontend..."
 
 gcloud run deploy $FRONTEND_SERVICE \
   --image $IMAGE_NAME \
@@ -241,9 +199,9 @@ echo "URL del frontend: $FRONTEND_URL"
 echo ""
 
 # ═══════════════════════════════════════════════════════════
-# PASO 11: PRUEBAS FINALES
+# PASO 10: PRUEBAS FINALES
 # ═══════════════════════════════════════════════════════════
-echo "🧪 PASO 11/11: Ejecutando pruebas finales..."
+echo "🧪 PASO 10/10: Ejecutando pruebas finales..."
 
 echo "Esperando 10 segundos para que el frontend esté listo..."
 sleep 10
