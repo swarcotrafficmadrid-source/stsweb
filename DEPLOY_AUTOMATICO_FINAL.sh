@@ -69,13 +69,19 @@ echo ""
 echo "🚀 PASO 4/10: Desplegando backend..."
 echo "Esto puede tomar 3-5 minutos..."
 
+# Leer variables críticas desde env.yaml
+DB_PASSWORD=$(grep "DB_PASSWORD:" env.yaml | awk '{print $2}')
+JWT_SECRET=$(grep "JWT_SECRET:" env.yaml | awk '{print $2}')
+ADMIN_SECRET_KEY=$(grep "ADMIN_SECRET_KEY:" env.yaml | awk '{print $2}')
+SMTP_PASS=$(grep "SMTP_PASS:" env.yaml | awk '{print $2}')
+
 gcloud run deploy $BACKEND_SERVICE \
   --source ./backend \
   --region $REGION \
   --platform managed \
   --allow-unauthenticated \
   --add-cloudsql-instances $PROYECTO:$REGION:swarco-mysql \
-  --env-vars-file ./env.yaml \
+  --update-env-vars "NODE_ENV=production,DB_NAME=swarco_ops,DB_USER=deployuser,DB_PASSWORD=$DB_PASSWORD,DB_SYNC_ALTER=false,JWT_SECRET=$JWT_SECRET,DB_SOCKET=/cloudsql/ticketswarcotrafficspain:europe-west1:swarco-mysql,STORAGE_BUCKET_NAME=swarco-tickets-files,ADMIN_SECRET_KEY=$ADMIN_SECRET_KEY,MAIL_PROVIDER=gmail_api,GMAIL_IMPERSONATE=sat@swarcotrafficspain.com,GMAIL_FROM=sat@swarcotrafficspain.com,SMTP_HOST=smtp.gmail.com,SMTP_PORT=465,SMTP_USER=sat@swarcotrafficspain.com,SMTP_PASS=$SMTP_PASS,SMTP_FROM=sat@swarcotrafficspain.com,SMTP_SECURE=true,SMTP_NOTIFY_TO=sat@swarcotrafficspain.com,VERIFY_BASE_URL=https://stsweb-964379250608.europe-west1.run.app,RESET_BASE_URL=https://stsweb-964379250608.europe-west1.run.app/reset,TRANSLATE_PROJECT_ID=ticketswarcotrafficspain" \
   --min-instances 1 \
   --max-instances 10 \
   --concurrency 80 \
@@ -84,6 +90,17 @@ gcloud run deploy $BACKEND_SERVICE \
   --cpu 1
 
 echo "✅ Backend desplegado"
+
+# Configurar variables base64 (service accounts) por separado
+echo "Configurando service accounts..."
+GMAIL_SA=$(grep "GMAIL_SERVICE_ACCOUNT_JSON:" env.yaml | awk '{print $2}')
+TRANSLATE_SA=$(grep "TRANSLATE_SERVICE_ACCOUNT_JSON:" env.yaml | awk '{print $2}')
+
+gcloud run services update $BACKEND_SERVICE \
+  --region $REGION \
+  --update-env-vars "GMAIL_SERVICE_ACCOUNT_JSON=$GMAIL_SA,TRANSLATE_SERVICE_ACCOUNT_JSON=$TRANSLATE_SA"
+
+echo "✅ Service accounts configurados"
 echo ""
 
 # ═══════════════════════════════════════════════════════════
