@@ -16,33 +16,12 @@ echo "════════════════════════�
 echo ""
 
 # ═══════════════════════════════════════════════════════════
-# PASO 1: VERIFICAR AUTENTICACIÓN Y PROYECTO
+# PASO 1: VERIFICAR PROYECTO
 # ═══════════════════════════════════════════════════════════
-echo "🔍 PASO 1/10: Verificando autenticación y proyecto..."
-
-# Verificar que hay una cuenta activa
-ACTIVE_ACCOUNT=$(gcloud config get-value account 2>/dev/null)
-if [ -z "$ACTIVE_ACCOUNT" ]; then
-  echo "⚠️  No hay cuenta activa, configurando..."
-  # Obtener la primera cuenta disponible
-  FIRST_ACCOUNT=$(gcloud auth list --filter=status:ACTIVE --format="value(account)" 2>/dev/null | head -n 1)
-  if [ -n "$FIRST_ACCOUNT" ]; then
-    gcloud config set account "$FIRST_ACCOUNT"
-    echo "✅ Cuenta configurada: $FIRST_ACCOUNT"
-  else
-    echo "❌ ERROR: No hay cuentas autenticadas"
-    echo "Ejecuta: gcloud auth login"
-    exit 1
-  fi
-else
-  echo "✅ Cuenta activa: $ACTIVE_ACCOUNT"
-fi
-
-# Verificar proyecto
+echo "🔍 PASO 1/10: Verificando proyecto..."
 CURRENT_PROJECT=$(gcloud config get-value project 2>/dev/null)
 if [ "$CURRENT_PROJECT" != "$PROYECTO" ]; then
-  echo "❌ Proyecto incorrecto: $CURRENT_PROJECT"
-  echo "Configurando proyecto correcto..."
+  echo "Configurando proyecto..."
   gcloud config set project $PROYECTO
 fi
 echo "✅ Proyecto: $PROYECTO"
