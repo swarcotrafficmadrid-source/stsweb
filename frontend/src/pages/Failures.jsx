@@ -27,7 +27,6 @@ export default function Failures({ token, lang = "es" }) {
   const [createdTicket, setCreatedTicket] = useState(null);
   const [reviewing, setReviewing] = useState(false);
   const [errors, setErrors] = useState({});
-  const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const copy = {
     es: {
