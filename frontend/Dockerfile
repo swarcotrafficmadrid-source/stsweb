@@ -9,7 +9,7 @@ ENV VITE_STAGING_USER=$VITE_STAGING_USER
 ARG VITE_STAGING_PASS
 ENV VITE_STAGING_PASS=$VITE_STAGING_PASS
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN npm cache clean --force && npm install --legacy-peer-deps
 COPY . .
 RUN npm run build
 
