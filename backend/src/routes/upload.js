@@ -12,6 +12,16 @@ const upload = multer({
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB máximo
     files: 5 // Máximo 5 archivos por request
+  },
+  fileFilter: (req, file, cb) => {
+    // Log para debugging
+    console.log("[MULTER] Archivo recibido:", {
+      fieldname: file.fieldname,
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      encoding: file.encoding
+    });
+    cb(null, true);
   }
 });
 
@@ -26,15 +36,36 @@ router.post(
   upload.single("file"),
   async (req, res) => {
     try {
+      console.log("[UPLOAD] Iniciando upload:", {
+        hasFile: !!req.file,
+        hasUser: !!req.user,
+        userId: req.user?.id,
+        folder: req.body?.folder
+      });
+
       if (!req.file) {
+        console.error("[UPLOAD] Error: No se proporcionó archivo");
         return res.status(400).json({ error: "No se proporcionó ningún archivo" });
       }
 
       const { folder = "general" } = req.body;
-      const { buffer, originalname, mimetype } = req.file;
+      const { buffer, originalname, mimetype, size } = req.file;
+
+      console.log("[UPLOAD] Archivo recibido:", {
+        originalname,
+        mimetype,
+        size: `${(size / 1024).toFixed(2)}KB`,
+        folder
+      });
 
       // Subir a Google Cloud Storage
       const result = await uploadFile(buffer, originalname, mimetype, folder);
+
+      console.log("[UPLOAD] ✅ Archivo subido exitosamente:", {
+        fileName: result.fileName,
+        path: result.path,
+        urlLength: result.url?.length || 0
+      });
 
       res.json({
         success: true,
@@ -44,13 +75,20 @@ router.post(
           path: result.path,
           originalName: originalname,
           size: buffer.length,
-          type: mimetype
+          type: mimetype,
+          thumbnailUrl: result.thumbnailUrl
         }
       });
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("[UPLOAD] ❌ Error completo:", {
+        message: error.message,
+        stack: error.stack?.split("\n").slice(0, 5).join("\n"),
+        hasFile: !!req.file,
+        fileName: req.file?.originalname
+      });
       res.status(500).json({ 
-        error: error.message || "Error al subir el archivo" 
+        error: error.message || "Error al subir el archivo",
+        details: process.env.NODE_ENV === "development" ? error.stack : undefined
       });
     }
   }

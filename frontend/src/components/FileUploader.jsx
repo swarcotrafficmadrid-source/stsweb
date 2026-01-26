@@ -82,12 +82,30 @@ export default function FileUploader({
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`
+            // NO incluir Content-Type - el navegador lo establece automáticamente con el boundary para FormData
           },
           body: formData
         }).then(async res => {
           if (!res.ok) {
-            const error = await res.json().catch(() => ({ error: "Error al subir archivo" }));
-            throw new Error(error.error || `Error ${res.status}`);
+            let errorData;
+            try {
+              errorData = await res.json();
+            } catch {
+              errorData = { error: `Error ${res.status}: ${res.statusText}` };
+            }
+            
+            // Mensajes de error más específicos
+            if (res.status === 401) {
+              throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
+            } else if (res.status === 403) {
+              throw new Error("No tienes permisos para subir archivos.");
+            } else if (res.status === 429) {
+              throw new Error("Demasiadas solicitudes. Por favor, espera un momento.");
+            } else if (res.status === 413) {
+              throw new Error("El archivo es demasiado grande.");
+            } else {
+              throw new Error(errorData.error || `Error al subir archivo (${res.status})`);
+            }
           }
           return res.json();
         });
@@ -120,11 +138,17 @@ export default function FileUploader({
         }
       } catch (error) {
         console.error("Upload error:", error);
-        errors.push({ file: file.name, error: error.message });
+        const errorMessage = error.message || "Error desconocido al subir archivo";
+        errors.push({ file: file.name, error: errorMessage });
         setProgress(prev => ({
           ...prev,
-          [fileId]: { name: file.name, percent: 0, status: "error", error: error.message }
+          [fileId]: { name: file.name, percent: 0, status: "error", error: errorMessage }
         }));
+        
+        // Si es error de autenticación, mostrar mensaje más claro
+        if (errorMessage.includes("Sesión expirada") || errorMessage.includes("401")) {
+          console.warn("⚠️ Token de autenticación inválido o expirado");
+        }
       }
     }
 

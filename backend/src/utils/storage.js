@@ -51,7 +51,17 @@ function validateFileSize(size, maxSizeMB) {
  * @returns {Promise<{url: string, fileName: string, path: string}>}
  */
 export async function uploadFile(fileBuffer, originalName, mimetype, folder = "general") {
+  console.log("[STORAGE] Iniciando upload:", {
+    originalName,
+    mimetype,
+    size: `${(fileBuffer.length / 1024).toFixed(2)}KB`,
+    folder,
+    hasBucket: !!bucket,
+    bucketName: bucket?.name || "no configurado"
+  });
+  
   if (!bucket) {
+    console.error("[STORAGE] ❌ Google Cloud Storage no está configurado");
     throw new Error("Google Cloud Storage no está configurado");
   }
 
@@ -128,16 +138,32 @@ export async function uploadFile(fileBuffer, originalName, mimetype, folder = "g
   // Subir archivo principal
   const file = bucket.file(filePath);
 
-  await file.save(processedBuffer, {
-    metadata: {
-      contentType: isImage ? "image/jpeg" : mimetype,
+  try {
+    console.log("[STORAGE] Subiendo archivo a GCS:", {
+      filePath,
+      size: `${(processedBuffer.length / 1024).toFixed(2)}KB`
+    });
+    
+    await file.save(processedBuffer, {
       metadata: {
-        originalName,
-        uploadedAt: new Date().toISOString(),
-        compressed: isImage
+        contentType: isImage ? "image/jpeg" : mimetype,
+        metadata: {
+          originalName,
+          uploadedAt: new Date().toISOString(),
+          compressed: isImage
+        }
       }
-    }
-  });
+    });
+    
+    console.log("[STORAGE] ✅ Archivo guardado en GCS");
+  } catch (error) {
+    console.error("[STORAGE] ❌ Error guardando archivo en GCS:", {
+      message: error.message,
+      code: error.code,
+      filePath
+    });
+    throw new Error(`Error al guardar archivo en almacenamiento: ${error.message}`);
+  }
 
   // Subir thumbnail si existe
   let thumbnailUrl = null;
@@ -165,19 +191,33 @@ export async function uploadFile(fileBuffer, originalName, mimetype, folder = "g
   }
 
   // Siempre usar URL firmada (no intentar hacer público)
-  const [signedUrl] = await file.getSignedUrl({
-    action: "read",
-    expires: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 días
-  });
-  
-  return { 
-    url: signedUrl, 
-    fileName, 
-    path: filePath,
-    thumbnailUrl,
-    originalSize: fileBuffer.length,
-    compressedSize: processedBuffer.length
-  };
+  try {
+    console.log("[STORAGE] Generando URL firmada...");
+    const [signedUrl] = await file.getSignedUrl({
+      action: "read",
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 días
+    });
+    
+    console.log("[STORAGE] ✅ URL firmada generada:", {
+      urlLength: signedUrl.length,
+      hasThumbnail: !!thumbnailUrl
+    });
+    
+    return { 
+      url: signedUrl, 
+      fileName, 
+      path: filePath,
+      thumbnailUrl,
+      originalSize: fileBuffer.length,
+      compressedSize: processedBuffer.length
+    };
+  } catch (error) {
+    console.error("[STORAGE] ❌ Error generando URL firmada:", {
+      message: error.message,
+      code: error.code
+    });
+    throw new Error(`Error al generar URL del archivo: ${error.message}`);
+  }
 }
 
 /**
