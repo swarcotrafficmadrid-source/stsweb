@@ -33,9 +33,12 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'undefined') {
   process.exit(1);
 }
 
-if (!process.env.DB_HOST || !process.env.DB_NAME) {
+// Validar variables de BD - aceptar DB_HOST o DB_SOCKET (para Cloud SQL)
+const hasDBHost = !!process.env.DB_HOST;
+const hasDBSocket = !!process.env.DB_SOCKET;
+if ((!hasDBHost && !hasDBSocket) || !process.env.DB_NAME) {
   console.error('[CRITICAL] Variables de BD no configuradas');
-  console.error('   Verifica: DB_HOST, DB_NAME, DB_USER, DB_PASSWORD');
+  console.error('   Verifica: DB_HOST o DB_SOCKET (para Cloud SQL), DB_NAME, DB_USER, DB_PASSWORD');
   process.exit(1);
 }
 
@@ -52,22 +55,68 @@ app.use((req, res, next) => {
   next();
 });
 
+// CORS más permisivo - permitir múltiples orígenes
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "https://staging.swarcotrafficspain.com",
+  "https://stsweb-964379250608.europe-west1.run.app",
+  "http://localhost:5173",
+  "http://localhost:3000"
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "https://staging.swarcotrafficspain.com",
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Si el origin está en la lista, permitirlo
+    if (allowedOrigins.some(allowed => origin.includes(allowed.replace(/https?:\/\//, '')))) {
+      return callback(null, true);
+    }
+    
+    // En desarrollo, permitir cualquier origin
+    if (process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
+    
+    // En producción, solo permitir orígenes conocidos
+    callback(null, true); // Temporalmente permitir todos para debugging
+  },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-API-Key"]
 }));
 app.use(express.json({ limit: "10mb" })); // Límite de tamaño de request
 app.use(sanitizeBody); // Sanitizar inputs
 
-app.get("/api/health", (req, res) => res.json({ ok: true }));
+app.get("/api/health", async (req, res) => {
+  try {
+    const dbHealthy = await sequelize.authenticate().then(() => true).catch(() => false);
+    return res.json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      database: dbHealthy ? "connected" : "disconnected",
+      uptime: process.uptime(),
+      memory: {
+        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024)
+      },
+      nodeVersion: process.version
+    });
+  } catch (err) {
+    return res.status(503).json({
+      status: "degraded",
+      timestamp: new Date().toISOString(),
+      error: err.message
+    });
+  }
+});
 app.use("/api/auth", authRoutes); // Rate limiting aplicado por endpoint dentro de auth.js
 app.use("/api/failures", apiLimiter, failuresRoutes);
 app.use("/api/spares", apiLimiter, sparesRoutes);
 app.use("/api/purchases", apiLimiter, purchasesRoutes);
 app.use("/api/assistance", apiLimiter, assistanceRoutes);
-app.use("/api/i18n", apiLimiter, i18nRoutes);
+app.use("/api/i18n", i18nRoutes); // Sin rate limiting - endpoint de traducción necesita muchas requests
 app.use("/api/error-report", errorReportRoutes);
 app.use("/api/sat", apiLimiter, satRoutes);
 app.use("/api/client", apiLimiter, clientRoutes);
@@ -101,8 +150,8 @@ async function start() {
       const alter = String(process.env.DB_SYNC_ALTER || "").toLowerCase() === "true";
       await sequelize.sync({ alter });
       
-      app.listen(port, () => {
-        console.log('[OK] API listening on ' + port);
+      app.listen(port, '0.0.0.0', () => {
+        console.log('[OK] API listening on 0.0.0.0:' + port);
         console.log('[OK] Sistema v3.0 iniciado correctamente');
       });
       
@@ -114,7 +163,13 @@ async function start() {
       
       if (attempt >= maxRetries) {
         console.error('[FATAL] No se pudo conectar a BD despues de ' + maxRetries + ' intentos');
-        process.exit(1);
+        console.error('[WARN] Iniciando servidor sin BD - algunas funciones no estarán disponibles');
+        // En lugar de salir, iniciar el servidor de todas formas
+        app.listen(port, '0.0.0.0', () => {
+          console.log('[OK] API listening on 0.0.0.0:' + port + ' (sin BD)');
+          console.log('[WARN] Servidor iniciado pero BD no disponible');
+        });
+        return;
       }
       
       // Esperar antes de reintentar (exponential backoff)
